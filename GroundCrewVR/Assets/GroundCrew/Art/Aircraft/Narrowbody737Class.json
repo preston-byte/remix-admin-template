@@ -1,0 +1,2668 @@
+{
+ "id": "Narrowbody737Class",
+ "label": "Narrowbody, 737-800 class",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward (nose), +X = aircraft left; origin = nose-gear ground contact",
+ "dimensions": {
+  "length": 39.47,
+  "fuselageWidth": 3.76,
+  "fuselageHeight": 4.01,
+  "wingspan": 35.65,
+  "floorHeight": 2.7
+ },
+ "triangles": {
+  "LOD0": 60083,
+  "LOD1": 21975,
+  "LOD2": 5527
+ },
+ "lodGroups": [
+  "LOD0",
+  "LOD1",
+  "LOD2"
+ ],
+ "movingParts": [
+  {
+   "path": "Narrowbody737Class/LOD0/Wing_L/Flap_Inboard_L",
+   "kind": "control",
+   "surface": "flap",
+   "hingeAxis": [
+    -0.98626,
+    -0.1032,
+    0.12898
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 40.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Wing_L/Flap_Outboard_L",
+   "kind": "control",
+   "surface": "flap",
+   "hingeAxis": [
+    -0.9512,
+    -0.09723,
+    0.29285
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 40.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Wing_L/Aileron_L",
+   "kind": "control",
+   "surface": "aileron",
+   "hingeAxis": [
+    -0.95169,
+    -0.09167,
+    0.29306
+   ],
+   "minAngle": -20.0,
+   "maxAngle": 20.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Wing_R/Flap_Inboard_R",
+   "kind": "control",
+   "surface": "flap",
+   "hingeAxis": [
+    -0.98626,
+    0.1032,
+    -0.12898
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 40.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Wing_R/Flap_Outboard_R",
+   "kind": "control",
+   "surface": "flap",
+   "hingeAxis": [
+    -0.9512,
+    0.09723,
+    -0.29285
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 40.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Wing_R/Aileron_R",
+   "kind": "control",
+   "surface": "aileron",
+   "hingeAxis": [
+    -0.95169,
+    0.09167,
+    -0.29306
+   ],
+   "minAngle": -20.0,
+   "maxAngle": 20.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Stabilizer_L/Elevator_L",
+   "kind": "control",
+   "surface": "elevator",
+   "hingeAxis": [
+    -0.9268,
+    -0.1138,
+    0.35791
+   ],
+   "minAngle": -25.0,
+   "maxAngle": 20.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Stabilizer_R/Elevator_R",
+   "kind": "control",
+   "surface": "elevator",
+   "hingeAxis": [
+    -0.9268,
+    0.1138,
+    -0.35791
+   ],
+   "minAngle": -25.0,
+   "maxAngle": 20.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Fin/Rudder",
+   "kind": "control",
+   "surface": "rudder",
+   "hingeAxis": [
+    -0.0,
+    -0.97105,
+    0.23886
+   ],
+   "minAngle": -27.0,
+   "maxAngle": 27.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Engine_L/Fan_L",
+   "kind": "fan",
+   "hingeAxis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Engine_R/Fan_R",
+   "kind": "fan",
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/NoseGear/NoseGear_Steer",
+   "kind": "steering",
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": -78.0,
+   "maxAngle": 78.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/NoseGear/NoseGear_Steer/NoseGear_Wheel_L",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/NoseGear/NoseGear_Steer/NoseGear_Wheel_R",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/MainGear_L/MainGear_L_Wheel_Out",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/MainGear_L/MainGear_L_Wheel_In",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/MainGear_R/MainGear_R_Wheel_Out",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/MainGear_R/MainGear_R_Wheel_In",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/Door_1L",
+   "kind": "door",
+   "doorType": "pax",
+   "opens": "out",
+   "side": "L",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -1.0,
+    0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 170.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/Door_1R",
+   "kind": "door",
+   "doorType": "pax",
+   "opens": "out",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 170.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/Door_2L",
+   "kind": "door",
+   "doorType": "pax",
+   "opens": "out",
+   "side": "L",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -1.0,
+    0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 170.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/Door_2R",
+   "kind": "door",
+   "doorType": "pax",
+   "opens": "out",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 170.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/Exit_L1",
+   "kind": "door",
+   "doorType": "overwing",
+   "opens": "out",
+   "side": "L",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 80.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/Exit_L2",
+   "kind": "door",
+   "doorType": "overwing",
+   "opens": "out",
+   "side": "L",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 80.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/Exit_R1",
+   "kind": "door",
+   "doorType": "overwing",
+   "opens": "out",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 80.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/Exit_R2",
+   "kind": "door",
+   "doorType": "overwing",
+   "opens": "out",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 80.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/CargoDoor_Fwd",
+   "kind": "door",
+   "doorType": "cargo",
+   "opens": "in",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 95.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Doors/CargoDoor_Aft",
+   "kind": "door",
+   "doorType": "cargo",
+   "opens": "in",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 95.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Interior/LavDoor_1",
+   "kind": "door",
+   "doorType": "lavatory",
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 95.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Interior/LavDoor_2",
+   "kind": "door",
+   "doorType": "lavatory",
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 95.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Interior/LavDoor_3",
+   "kind": "door",
+   "doorType": "lavatory",
+   "hingeAxis": [
+    -0.0,
+    -1.0,
+    0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 95.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD0/Interior/FlightDeckDoor",
+   "kind": "door",
+   "doorType": "flightdeck",
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 100.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Wing_L/Flap_Inboard_L",
+   "kind": "control",
+   "surface": "flap",
+   "hingeAxis": [
+    -0.98626,
+    -0.1032,
+    0.12898
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 40.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Wing_L/Flap_Outboard_L",
+   "kind": "control",
+   "surface": "flap",
+   "hingeAxis": [
+    -0.9512,
+    -0.09723,
+    0.29285
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 40.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Wing_L/Aileron_L",
+   "kind": "control",
+   "surface": "aileron",
+   "hingeAxis": [
+    -0.95169,
+    -0.09167,
+    0.29306
+   ],
+   "minAngle": -20.0,
+   "maxAngle": 20.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Wing_R/Flap_Inboard_R",
+   "kind": "control",
+   "surface": "flap",
+   "hingeAxis": [
+    -0.98626,
+    0.1032,
+    -0.12898
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 40.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Wing_R/Flap_Outboard_R",
+   "kind": "control",
+   "surface": "flap",
+   "hingeAxis": [
+    -0.9512,
+    0.09723,
+    -0.29285
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 40.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Wing_R/Aileron_R",
+   "kind": "control",
+   "surface": "aileron",
+   "hingeAxis": [
+    -0.95169,
+    0.09167,
+    -0.29306
+   ],
+   "minAngle": -20.0,
+   "maxAngle": 20.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Stabilizer_L/Elevator_L",
+   "kind": "control",
+   "surface": "elevator",
+   "hingeAxis": [
+    -0.9268,
+    -0.1138,
+    0.35791
+   ],
+   "minAngle": -25.0,
+   "maxAngle": 20.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Stabilizer_R/Elevator_R",
+   "kind": "control",
+   "surface": "elevator",
+   "hingeAxis": [
+    -0.9268,
+    0.1138,
+    -0.35791
+   ],
+   "minAngle": -25.0,
+   "maxAngle": 20.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Fin/Rudder",
+   "kind": "control",
+   "surface": "rudder",
+   "hingeAxis": [
+    -0.0,
+    -0.97105,
+    0.23886
+   ],
+   "minAngle": -27.0,
+   "maxAngle": 27.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Engine_L/Fan_L",
+   "kind": "fan",
+   "hingeAxis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Engine_R/Fan_R",
+   "kind": "fan",
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/NoseGear/NoseGear_Steer",
+   "kind": "steering",
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": -78.0,
+   "maxAngle": 78.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/NoseGear/NoseGear_Steer/NoseGear_Wheel_L",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/NoseGear/NoseGear_Steer/NoseGear_Wheel_R",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/MainGear_L/MainGear_L_Wheel_Out",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/MainGear_L/MainGear_L_Wheel_In",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/MainGear_R/MainGear_R_Wheel_Out",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/MainGear_R/MainGear_R_Wheel_In",
+   "kind": "wheel",
+   "hingeAxis": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "minAngle": -1000000000.0,
+   "maxAngle": 1000000000.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/Door_1L",
+   "kind": "door",
+   "doorType": "pax",
+   "opens": "out",
+   "side": "L",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -1.0,
+    0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 170.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/Door_1R",
+   "kind": "door",
+   "doorType": "pax",
+   "opens": "out",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 170.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/Door_2L",
+   "kind": "door",
+   "doorType": "pax",
+   "opens": "out",
+   "side": "L",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -1.0,
+    0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 170.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/Door_2R",
+   "kind": "door",
+   "doorType": "pax",
+   "opens": "out",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 170.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/Exit_L1",
+   "kind": "door",
+   "doorType": "overwing",
+   "opens": "out",
+   "side": "L",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 80.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/Exit_L2",
+   "kind": "door",
+   "doorType": "overwing",
+   "opens": "out",
+   "side": "L",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 80.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/Exit_R1",
+   "kind": "door",
+   "doorType": "overwing",
+   "opens": "out",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 80.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/Exit_R2",
+   "kind": "door",
+   "doorType": "overwing",
+   "opens": "out",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 80.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/CargoDoor_Fwd",
+   "kind": "door",
+   "doorType": "cargo",
+   "opens": "in",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 95.0
+  },
+  {
+   "path": "Narrowbody737Class/LOD1/Doors/CargoDoor_Aft",
+   "kind": "door",
+   "doorType": "cargo",
+   "opens": "in",
+   "side": "R",
+   "removable": false,
+   "hingeAxis": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "minAngle": 0.0,
+   "maxAngle": 95.0
+  }
+ ],
+ "doors": [
+  {
+   "name": "Door_1L",
+   "side": "L",
+   "type": "pax",
+   "opens": "out",
+   "width": 0.86,
+   "height": 1.83,
+   "sillHeight": 2.7,
+   "maxAngle": 170,
+   "removable": false
+  },
+  {
+   "name": "Door_1R",
+   "side": "R",
+   "type": "pax",
+   "opens": "out",
+   "width": 0.76,
+   "height": 1.65,
+   "sillHeight": 2.7,
+   "maxAngle": 170,
+   "removable": false
+  },
+  {
+   "name": "Door_2L",
+   "side": "L",
+   "type": "pax",
+   "opens": "out",
+   "width": 0.84,
+   "height": 1.83,
+   "sillHeight": 2.7,
+   "maxAngle": 170,
+   "removable": false
+  },
+  {
+   "name": "Door_2R",
+   "side": "R",
+   "type": "pax",
+   "opens": "out",
+   "width": 0.76,
+   "height": 1.65,
+   "sillHeight": 2.7,
+   "maxAngle": 170,
+   "removable": false
+  },
+  {
+   "name": "Exit_L1",
+   "side": "L",
+   "type": "overwing",
+   "opens": "out",
+   "width": 0.51,
+   "height": 0.97,
+   "sillHeight": 3.2,
+   "maxAngle": 80,
+   "removable": false
+  },
+  {
+   "name": "Exit_L2",
+   "side": "L",
+   "type": "overwing",
+   "opens": "out",
+   "width": 0.51,
+   "height": 0.97,
+   "sillHeight": 3.2,
+   "maxAngle": 80,
+   "removable": false
+  },
+  {
+   "name": "Exit_R1",
+   "side": "R",
+   "type": "overwing",
+   "opens": "out",
+   "width": 0.51,
+   "height": 0.97,
+   "sillHeight": 3.2,
+   "maxAngle": 80,
+   "removable": false
+  },
+  {
+   "name": "Exit_R2",
+   "side": "R",
+   "type": "overwing",
+   "opens": "out",
+   "width": 0.51,
+   "height": 0.97,
+   "sillHeight": 3.2,
+   "maxAngle": 80,
+   "removable": false
+  },
+  {
+   "name": "CargoDoor_Fwd",
+   "side": "R",
+   "type": "cargo",
+   "opens": "in",
+   "width": 1.3,
+   "height": 1.22,
+   "sillHeight": 1.32,
+   "maxAngle": 95,
+   "removable": false
+  },
+  {
+   "name": "CargoDoor_Aft",
+   "side": "R",
+   "type": "cargo",
+   "opens": "in",
+   "width": 1.22,
+   "height": 1.3,
+   "sillHeight": 1.32,
+   "maxAngle": 95,
+   "removable": false
+  }
+ ],
+ "holds": [
+  {
+   "name": "Hold_Fwd",
+   "center": [
+    0.0,
+    1.915,
+    -5.7
+   ],
+   "size": [
+    2.896,
+    1.29,
+    7.7
+   ],
+   "maxMassKg": 3500
+  },
+  {
+   "name": "Hold_Aft",
+   "center": [
+    0.0,
+    1.915,
+    -22.1
+   ],
+   "size": [
+    2.896,
+    1.29,
+    7.5
+   ],
+   "maxMassKg": 4800
+  }
+ ],
+ "seats": [
+  {
+   "seat": "1C",
+   "position": [
+    0.465,
+    3.2,
+    -3.3
+   ]
+  },
+  {
+   "seat": "1B",
+   "position": [
+    0.895,
+    3.2,
+    -3.3
+   ]
+  },
+  {
+   "seat": "1A",
+   "position": [
+    1.325,
+    3.2,
+    -3.3
+   ]
+  },
+  {
+   "seat": "1D",
+   "position": [
+    -0.465,
+    3.2,
+    -3.3
+   ]
+  },
+  {
+   "seat": "1E",
+   "position": [
+    -0.895,
+    3.2,
+    -3.3
+   ]
+  },
+  {
+   "seat": "1F",
+   "position": [
+    -1.325,
+    3.2,
+    -3.3
+   ]
+  },
+  {
+   "seat": "2C",
+   "position": [
+    0.465,
+    3.2,
+    -4.087
+   ]
+  },
+  {
+   "seat": "2B",
+   "position": [
+    0.895,
+    3.2,
+    -4.087
+   ]
+  },
+  {
+   "seat": "2A",
+   "position": [
+    1.325,
+    3.2,
+    -4.087
+   ]
+  },
+  {
+   "seat": "2D",
+   "position": [
+    -0.465,
+    3.2,
+    -4.087
+   ]
+  },
+  {
+   "seat": "2E",
+   "position": [
+    -0.895,
+    3.2,
+    -4.087
+   ]
+  },
+  {
+   "seat": "2F",
+   "position": [
+    -1.325,
+    3.2,
+    -4.087
+   ]
+  },
+  {
+   "seat": "3C",
+   "position": [
+    0.465,
+    3.2,
+    -4.874
+   ]
+  },
+  {
+   "seat": "3B",
+   "position": [
+    0.895,
+    3.2,
+    -4.874
+   ]
+  },
+  {
+   "seat": "3A",
+   "position": [
+    1.325,
+    3.2,
+    -4.874
+   ]
+  },
+  {
+   "seat": "3D",
+   "position": [
+    -0.465,
+    3.2,
+    -4.874
+   ]
+  },
+  {
+   "seat": "3E",
+   "position": [
+    -0.895,
+    3.2,
+    -4.874
+   ]
+  },
+  {
+   "seat": "3F",
+   "position": [
+    -1.325,
+    3.2,
+    -4.874
+   ]
+  },
+  {
+   "seat": "4C",
+   "position": [
+    0.465,
+    3.2,
+    -5.661
+   ]
+  },
+  {
+   "seat": "4B",
+   "position": [
+    0.895,
+    3.2,
+    -5.661
+   ]
+  },
+  {
+   "seat": "4A",
+   "position": [
+    1.325,
+    3.2,
+    -5.661
+   ]
+  },
+  {
+   "seat": "4D",
+   "position": [
+    -0.465,
+    3.2,
+    -5.661
+   ]
+  },
+  {
+   "seat": "4E",
+   "position": [
+    -0.895,
+    3.2,
+    -5.661
+   ]
+  },
+  {
+   "seat": "4F",
+   "position": [
+    -1.325,
+    3.2,
+    -5.661
+   ]
+  },
+  {
+   "seat": "5C",
+   "position": [
+    0.465,
+    3.2,
+    -6.448
+   ]
+  },
+  {
+   "seat": "5B",
+   "position": [
+    0.895,
+    3.2,
+    -6.448
+   ]
+  },
+  {
+   "seat": "5A",
+   "position": [
+    1.325,
+    3.2,
+    -6.448
+   ]
+  },
+  {
+   "seat": "5D",
+   "position": [
+    -0.465,
+    3.2,
+    -6.448
+   ]
+  },
+  {
+   "seat": "5E",
+   "position": [
+    -0.895,
+    3.2,
+    -6.448
+   ]
+  },
+  {
+   "seat": "5F",
+   "position": [
+    -1.325,
+    3.2,
+    -6.448
+   ]
+  },
+  {
+   "seat": "6C",
+   "position": [
+    0.465,
+    3.2,
+    -7.235
+   ]
+  },
+  {
+   "seat": "6B",
+   "position": [
+    0.895,
+    3.2,
+    -7.235
+   ]
+  },
+  {
+   "seat": "6A",
+   "position": [
+    1.325,
+    3.2,
+    -7.235
+   ]
+  },
+  {
+   "seat": "6D",
+   "position": [
+    -0.465,
+    3.2,
+    -7.235
+   ]
+  },
+  {
+   "seat": "6E",
+   "position": [
+    -0.895,
+    3.2,
+    -7.235
+   ]
+  },
+  {
+   "seat": "6F",
+   "position": [
+    -1.325,
+    3.2,
+    -7.235
+   ]
+  },
+  {
+   "seat": "7C",
+   "position": [
+    0.465,
+    3.2,
+    -8.022
+   ]
+  },
+  {
+   "seat": "7B",
+   "position": [
+    0.895,
+    3.2,
+    -8.022
+   ]
+  },
+  {
+   "seat": "7A",
+   "position": [
+    1.325,
+    3.2,
+    -8.022
+   ]
+  },
+  {
+   "seat": "7D",
+   "position": [
+    -0.465,
+    3.2,
+    -8.022
+   ]
+  },
+  {
+   "seat": "7E",
+   "position": [
+    -0.895,
+    3.2,
+    -8.022
+   ]
+  },
+  {
+   "seat": "7F",
+   "position": [
+    -1.325,
+    3.2,
+    -8.022
+   ]
+  },
+  {
+   "seat": "8C",
+   "position": [
+    0.465,
+    3.2,
+    -8.809
+   ]
+  },
+  {
+   "seat": "8B",
+   "position": [
+    0.895,
+    3.2,
+    -8.809
+   ]
+  },
+  {
+   "seat": "8A",
+   "position": [
+    1.325,
+    3.2,
+    -8.809
+   ]
+  },
+  {
+   "seat": "8D",
+   "position": [
+    -0.465,
+    3.2,
+    -8.809
+   ]
+  },
+  {
+   "seat": "8E",
+   "position": [
+    -0.895,
+    3.2,
+    -8.809
+   ]
+  },
+  {
+   "seat": "8F",
+   "position": [
+    -1.325,
+    3.2,
+    -8.809
+   ]
+  },
+  {
+   "seat": "9C",
+   "position": [
+    0.465,
+    3.2,
+    -9.596
+   ]
+  },
+  {
+   "seat": "9B",
+   "position": [
+    0.895,
+    3.2,
+    -9.596
+   ]
+  },
+  {
+   "seat": "9A",
+   "position": [
+    1.325,
+    3.2,
+    -9.596
+   ]
+  },
+  {
+   "seat": "9D",
+   "position": [
+    -0.465,
+    3.2,
+    -9.596
+   ]
+  },
+  {
+   "seat": "9E",
+   "position": [
+    -0.895,
+    3.2,
+    -9.596
+   ]
+  },
+  {
+   "seat": "9F",
+   "position": [
+    -1.325,
+    3.2,
+    -9.596
+   ]
+  },
+  {
+   "seat": "10C",
+   "position": [
+    0.465,
+    3.2,
+    -10.383
+   ]
+  },
+  {
+   "seat": "10B",
+   "position": [
+    0.895,
+    3.2,
+    -10.383
+   ]
+  },
+  {
+   "seat": "10A",
+   "position": [
+    1.325,
+    3.2,
+    -10.383
+   ]
+  },
+  {
+   "seat": "10D",
+   "position": [
+    -0.465,
+    3.2,
+    -10.383
+   ]
+  },
+  {
+   "seat": "10E",
+   "position": [
+    -0.895,
+    3.2,
+    -10.383
+   ]
+  },
+  {
+   "seat": "10F",
+   "position": [
+    -1.325,
+    3.2,
+    -10.383
+   ]
+  },
+  {
+   "seat": "11C",
+   "position": [
+    0.465,
+    3.2,
+    -11.82
+   ]
+  },
+  {
+   "seat": "11B",
+   "position": [
+    0.895,
+    3.2,
+    -11.82
+   ]
+  },
+  {
+   "seat": "11A",
+   "position": [
+    1.325,
+    3.2,
+    -11.82
+   ]
+  },
+  {
+   "seat": "11D",
+   "position": [
+    -0.465,
+    3.2,
+    -11.82
+   ]
+  },
+  {
+   "seat": "11E",
+   "position": [
+    -0.895,
+    3.2,
+    -11.82
+   ]
+  },
+  {
+   "seat": "11F",
+   "position": [
+    -1.325,
+    3.2,
+    -11.82
+   ]
+  },
+  {
+   "seat": "12C",
+   "position": [
+    0.465,
+    3.2,
+    -12.607
+   ]
+  },
+  {
+   "seat": "12B",
+   "position": [
+    0.895,
+    3.2,
+    -12.607
+   ]
+  },
+  {
+   "seat": "12A",
+   "position": [
+    1.325,
+    3.2,
+    -12.607
+   ]
+  },
+  {
+   "seat": "12D",
+   "position": [
+    -0.465,
+    3.2,
+    -12.607
+   ]
+  },
+  {
+   "seat": "12E",
+   "position": [
+    -0.895,
+    3.2,
+    -12.607
+   ]
+  },
+  {
+   "seat": "12F",
+   "position": [
+    -1.325,
+    3.2,
+    -12.607
+   ]
+  },
+  {
+   "seat": "13C",
+   "position": [
+    0.465,
+    3.2,
+    -13.394
+   ]
+  },
+  {
+   "seat": "13B",
+   "position": [
+    0.895,
+    3.2,
+    -13.394
+   ]
+  },
+  {
+   "seat": "13A",
+   "position": [
+    1.325,
+    3.2,
+    -13.394
+   ]
+  },
+  {
+   "seat": "13D",
+   "position": [
+    -0.465,
+    3.2,
+    -13.394
+   ]
+  },
+  {
+   "seat": "13E",
+   "position": [
+    -0.895,
+    3.2,
+    -13.394
+   ]
+  },
+  {
+   "seat": "13F",
+   "position": [
+    -1.325,
+    3.2,
+    -13.394
+   ]
+  },
+  {
+   "seat": "14C",
+   "position": [
+    0.465,
+    3.2,
+    -14.181
+   ]
+  },
+  {
+   "seat": "14B",
+   "position": [
+    0.895,
+    3.2,
+    -14.181
+   ]
+  },
+  {
+   "seat": "14A",
+   "position": [
+    1.325,
+    3.2,
+    -14.181
+   ]
+  },
+  {
+   "seat": "14D",
+   "position": [
+    -0.465,
+    3.2,
+    -14.181
+   ]
+  },
+  {
+   "seat": "14E",
+   "position": [
+    -0.895,
+    3.2,
+    -14.181
+   ]
+  },
+  {
+   "seat": "14F",
+   "position": [
+    -1.325,
+    3.2,
+    -14.181
+   ]
+  },
+  {
+   "seat": "15C",
+   "position": [
+    0.465,
+    3.2,
+    -14.968
+   ]
+  },
+  {
+   "seat": "15B",
+   "position": [
+    0.895,
+    3.2,
+    -14.968
+   ]
+  },
+  {
+   "seat": "15A",
+   "position": [
+    1.325,
+    3.2,
+    -14.968
+   ]
+  },
+  {
+   "seat": "15D",
+   "position": [
+    -0.465,
+    3.2,
+    -14.968
+   ]
+  },
+  {
+   "seat": "15E",
+   "position": [
+    -0.895,
+    3.2,
+    -14.968
+   ]
+  },
+  {
+   "seat": "15F",
+   "position": [
+    -1.325,
+    3.2,
+    -14.968
+   ]
+  },
+  {
+   "seat": "16C",
+   "position": [
+    0.465,
+    3.2,
+    -15.755
+   ]
+  },
+  {
+   "seat": "16B",
+   "position": [
+    0.895,
+    3.2,
+    -15.755
+   ]
+  },
+  {
+   "seat": "16A",
+   "position": [
+    1.325,
+    3.2,
+    -15.755
+   ]
+  },
+  {
+   "seat": "16D",
+   "position": [
+    -0.465,
+    3.2,
+    -15.755
+   ]
+  },
+  {
+   "seat": "16E",
+   "position": [
+    -0.895,
+    3.2,
+    -15.755
+   ]
+  },
+  {
+   "seat": "16F",
+   "position": [
+    -1.325,
+    3.2,
+    -15.755
+   ]
+  },
+  {
+   "seat": "17C",
+   "position": [
+    0.465,
+    3.2,
+    -16.542
+   ]
+  },
+  {
+   "seat": "17B",
+   "position": [
+    0.895,
+    3.2,
+    -16.542
+   ]
+  },
+  {
+   "seat": "17A",
+   "position": [
+    1.325,
+    3.2,
+    -16.542
+   ]
+  },
+  {
+   "seat": "17D",
+   "position": [
+    -0.465,
+    3.2,
+    -16.542
+   ]
+  },
+  {
+   "seat": "17E",
+   "position": [
+    -0.895,
+    3.2,
+    -16.542
+   ]
+  },
+  {
+   "seat": "17F",
+   "position": [
+    -1.325,
+    3.2,
+    -16.542
+   ]
+  },
+  {
+   "seat": "18C",
+   "position": [
+    0.465,
+    3.2,
+    -17.329
+   ]
+  },
+  {
+   "seat": "18B",
+   "position": [
+    0.895,
+    3.2,
+    -17.329
+   ]
+  },
+  {
+   "seat": "18A",
+   "position": [
+    1.325,
+    3.2,
+    -17.329
+   ]
+  },
+  {
+   "seat": "18D",
+   "position": [
+    -0.465,
+    3.2,
+    -17.329
+   ]
+  },
+  {
+   "seat": "18E",
+   "position": [
+    -0.895,
+    3.2,
+    -17.329
+   ]
+  },
+  {
+   "seat": "18F",
+   "position": [
+    -1.325,
+    3.2,
+    -17.329
+   ]
+  },
+  {
+   "seat": "19C",
+   "position": [
+    0.465,
+    3.2,
+    -18.116
+   ]
+  },
+  {
+   "seat": "19B",
+   "position": [
+    0.895,
+    3.2,
+    -18.116
+   ]
+  },
+  {
+   "seat": "19A",
+   "position": [
+    1.325,
+    3.2,
+    -18.116
+   ]
+  },
+  {
+   "seat": "19D",
+   "position": [
+    -0.465,
+    3.2,
+    -18.116
+   ]
+  },
+  {
+   "seat": "19E",
+   "position": [
+    -0.895,
+    3.2,
+    -18.116
+   ]
+  },
+  {
+   "seat": "19F",
+   "position": [
+    -1.325,
+    3.2,
+    -18.116
+   ]
+  },
+  {
+   "seat": "20C",
+   "position": [
+    0.465,
+    3.2,
+    -18.903
+   ]
+  },
+  {
+   "seat": "20B",
+   "position": [
+    0.895,
+    3.2,
+    -18.903
+   ]
+  },
+  {
+   "seat": "20A",
+   "position": [
+    1.325,
+    3.2,
+    -18.903
+   ]
+  },
+  {
+   "seat": "20D",
+   "position": [
+    -0.465,
+    3.2,
+    -18.903
+   ]
+  },
+  {
+   "seat": "20E",
+   "position": [
+    -0.895,
+    3.2,
+    -18.903
+   ]
+  },
+  {
+   "seat": "20F",
+   "position": [
+    -1.325,
+    3.2,
+    -18.903
+   ]
+  },
+  {
+   "seat": "21C",
+   "position": [
+    0.465,
+    3.2,
+    -19.69
+   ]
+  },
+  {
+   "seat": "21B",
+   "position": [
+    0.895,
+    3.2,
+    -19.69
+   ]
+  },
+  {
+   "seat": "21A",
+   "position": [
+    1.325,
+    3.2,
+    -19.69
+   ]
+  },
+  {
+   "seat": "21D",
+   "position": [
+    -0.465,
+    3.2,
+    -19.69
+   ]
+  },
+  {
+   "seat": "21E",
+   "position": [
+    -0.895,
+    3.2,
+    -19.69
+   ]
+  },
+  {
+   "seat": "21F",
+   "position": [
+    -1.325,
+    3.2,
+    -19.69
+   ]
+  },
+  {
+   "seat": "22C",
+   "position": [
+    0.465,
+    3.2,
+    -20.477
+   ]
+  },
+  {
+   "seat": "22B",
+   "position": [
+    0.895,
+    3.2,
+    -20.477
+   ]
+  },
+  {
+   "seat": "22A",
+   "position": [
+    1.325,
+    3.2,
+    -20.477
+   ]
+  },
+  {
+   "seat": "22D",
+   "position": [
+    -0.465,
+    3.2,
+    -20.477
+   ]
+  },
+  {
+   "seat": "22E",
+   "position": [
+    -0.895,
+    3.2,
+    -20.477
+   ]
+  },
+  {
+   "seat": "22F",
+   "position": [
+    -1.325,
+    3.2,
+    -20.477
+   ]
+  },
+  {
+   "seat": "23C",
+   "position": [
+    0.465,
+    3.2,
+    -21.264
+   ]
+  },
+  {
+   "seat": "23B",
+   "position": [
+    0.895,
+    3.2,
+    -21.264
+   ]
+  },
+  {
+   "seat": "23A",
+   "position": [
+    1.325,
+    3.2,
+    -21.264
+   ]
+  },
+  {
+   "seat": "23D",
+   "position": [
+    -0.465,
+    3.2,
+    -21.264
+   ]
+  },
+  {
+   "seat": "23E",
+   "position": [
+    -0.895,
+    3.2,
+    -21.264
+   ]
+  },
+  {
+   "seat": "23F",
+   "position": [
+    -1.325,
+    3.2,
+    -21.264
+   ]
+  },
+  {
+   "seat": "24C",
+   "position": [
+    0.465,
+    3.2,
+    -22.051
+   ]
+  },
+  {
+   "seat": "24B",
+   "position": [
+    0.895,
+    3.2,
+    -22.051
+   ]
+  },
+  {
+   "seat": "24A",
+   "position": [
+    1.325,
+    3.2,
+    -22.051
+   ]
+  },
+  {
+   "seat": "24D",
+   "position": [
+    -0.465,
+    3.2,
+    -22.051
+   ]
+  },
+  {
+   "seat": "24E",
+   "position": [
+    -0.895,
+    3.2,
+    -22.051
+   ]
+  },
+  {
+   "seat": "24F",
+   "position": [
+    -1.325,
+    3.2,
+    -22.051
+   ]
+  },
+  {
+   "seat": "25C",
+   "position": [
+    0.465,
+    3.2,
+    -22.838
+   ]
+  },
+  {
+   "seat": "25B",
+   "position": [
+    0.895,
+    3.2,
+    -22.838
+   ]
+  },
+  {
+   "seat": "25A",
+   "position": [
+    1.325,
+    3.2,
+    -22.838
+   ]
+  },
+  {
+   "seat": "25D",
+   "position": [
+    -0.465,
+    3.2,
+    -22.838
+   ]
+  },
+  {
+   "seat": "25E",
+   "position": [
+    -0.895,
+    3.2,
+    -22.838
+   ]
+  },
+  {
+   "seat": "25F",
+   "position": [
+    -1.325,
+    3.2,
+    -22.838
+   ]
+  },
+  {
+   "seat": "26C",
+   "position": [
+    0.465,
+    3.2,
+    -23.625
+   ]
+  },
+  {
+   "seat": "26B",
+   "position": [
+    0.895,
+    3.2,
+    -23.625
+   ]
+  },
+  {
+   "seat": "26A",
+   "position": [
+    1.325,
+    3.2,
+    -23.625
+   ]
+  },
+  {
+   "seat": "26D",
+   "position": [
+    -0.465,
+    3.2,
+    -23.625
+   ]
+  },
+  {
+   "seat": "26E",
+   "position": [
+    -0.895,
+    3.2,
+    -23.625
+   ]
+  },
+  {
+   "seat": "26F",
+   "position": [
+    -1.325,
+    3.2,
+    -23.625
+   ]
+  },
+  {
+   "seat": "27C",
+   "position": [
+    0.465,
+    3.2,
+    -24.412
+   ]
+  },
+  {
+   "seat": "27B",
+   "position": [
+    0.895,
+    3.2,
+    -24.412
+   ]
+  },
+  {
+   "seat": "27A",
+   "position": [
+    1.325,
+    3.2,
+    -24.412
+   ]
+  },
+  {
+   "seat": "27D",
+   "position": [
+    -0.465,
+    3.2,
+    -24.412
+   ]
+  },
+  {
+   "seat": "27E",
+   "position": [
+    -0.895,
+    3.2,
+    -24.412
+   ]
+  },
+  {
+   "seat": "27F",
+   "position": [
+    -1.325,
+    3.2,
+    -24.412
+   ]
+  },
+  {
+   "seat": "28C",
+   "position": [
+    0.465,
+    3.2,
+    -25.199
+   ]
+  },
+  {
+   "seat": "28B",
+   "position": [
+    0.895,
+    3.2,
+    -25.199
+   ]
+  },
+  {
+   "seat": "28A",
+   "position": [
+    1.325,
+    3.2,
+    -25.199
+   ]
+  },
+  {
+   "seat": "28D",
+   "position": [
+    -0.465,
+    3.2,
+    -25.199
+   ]
+  },
+  {
+   "seat": "28E",
+   "position": [
+    -0.895,
+    3.2,
+    -25.199
+   ]
+  },
+  {
+   "seat": "28F",
+   "position": [
+    -1.325,
+    3.2,
+    -25.199
+   ]
+  }
+ ],
+ "servicePoints": {
+  "SP_AirStart": {
+   "position": [
+    0.0,
+    0.8,
+    -12.95
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_MainGear_L_In_Aft": {
+   "position": [
+    2.43,
+    0.0,
+    -16.385
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_MainGear_L_In_Fwd": {
+   "position": [
+    2.43,
+    0.0,
+    -14.815
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_MainGear_L_Out_Aft": {
+   "position": [
+    3.29,
+    0.0,
+    -16.385
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_MainGear_L_Out_Fwd": {
+   "position": [
+    3.29,
+    0.0,
+    -14.815
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_MainGear_R_In_Aft": {
+   "position": [
+    -2.43,
+    0.0,
+    -16.385
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_MainGear_R_In_Fwd": {
+   "position": [
+    -2.43,
+    0.0,
+    -14.815
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_MainGear_R_Out_Aft": {
+   "position": [
+    -3.29,
+    0.0,
+    -16.385
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_MainGear_R_Out_Fwd": {
+   "position": [
+    -3.29,
+    0.0,
+    -14.815
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_NoseGear_Aft": {
+   "position": [
+    0.0,
+    0.0,
+    -0.545
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Chock_NoseGear_Fwd": {
+   "position": [
+    0.0,
+    0.0,
+    0.545
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Cone_Engine_L": {
+   "position": [
+    4.9,
+    0.0,
+    -7.7
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Cone_Engine_R": {
+   "position": [
+    -4.9,
+    0.0,
+    -7.7
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Cone_Nose": {
+   "position": [
+    0.0,
+    0.0,
+    5.55
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Cone_Tail": {
+   "position": [
+    0.0,
+    0.0,
+    -36.92
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Cone_WingTip_L": {
+   "position": [
+    18.15,
+    0.0,
+    -19.4684
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_Cone_WingTip_R": {
+   "position": [
+    -18.15,
+    0.0,
+    -19.4684
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "SP_GPU": {
+   "position": [
+    -1.1404,
+    1.5428,
+    0.701
+   ],
+   "normal": [
+    -0.6906,
+    -0.7166,
+    0.0983
+   ]
+  },
+  "SP_Interphone": {
+   "position": [
+    0.0,
+    0.95,
+    0.0
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ]
+  },
+  "SP_LavService": {
+   "position": [
+    -1.1713,
+    2.2938,
+    -30.1524
+   ],
+   "normal": [
+    -0.7499,
+    -0.6163,
+    -0.2406
+   ]
+  },
+  "SP_PCA": {
+   "position": [
+    0.0,
+    0.8,
+    -11.75
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ]
+  },
+  "SP_PotableWater": {
+   "position": [
+    -1.2276,
+    1.9433,
+    -28.952
+   ],
+   "normal": [
+    -0.7158,
+    -0.6685,
+    -0.2018
+   ]
+  },
+  "SP_RefuelCoupling": {
+   "position": [
+    -9.8,
+    2.6199,
+    -15.6933
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ]
+  },
+  "SP_RefuelPanel": {
+   "position": [
+    -9.5,
+    2.5825,
+    -15.5405
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ]
+  },
+  "SP_Sill_CargoDoor_Aft": {
+   "position": [
+    -1.0472,
+    1.2788,
+    -20.86
+   ],
+   "normal": [
+    -0.5667,
+    -0.8239,
+    -0.0
+   ],
+   "sillHeight": 1.32
+  },
+  "SP_Sill_CargoDoor_Fwd": {
+   "position": [
+    -1.0472,
+    1.2788,
+    -4.5
+   ],
+   "normal": [
+    -0.5667,
+    -0.8239,
+    -0.0
+   ],
+   "sillHeight": 1.32
+  },
+  "SP_Sill_Door_1L": {
+   "position": [
+    1.8815,
+    2.6933,
+    -0.9276
+   ],
+   "normal": [
+    0.9899,
+    -0.1337,
+    0.0475
+   ],
+   "sillHeight": 2.7
+  },
+  "SP_Sill_Door_1R": {
+   "position": [
+    -1.8791,
+    2.6934,
+    -0.8775
+   ],
+   "normal": [
+    -0.9899,
+    -0.1329,
+    0.05
+   ],
+   "sillHeight": 2.7
+  },
+  "SP_Sill_Door_2L": {
+   "position": [
+    1.8598,
+    2.6913,
+    -27.524
+   ],
+   "normal": [
+    0.9816,
+    -0.1732,
+    -0.0802
+   ],
+   "sillHeight": 2.7
+  },
+  "SP_Sill_Door_2R": {
+   "position": [
+    -1.8631,
+    2.6914,
+    -27.4839
+   ],
+   "normal": [
+    -0.9821,
+    -0.1714,
+    -0.0779
+   ],
+   "sillHeight": 2.7
+  },
+  "SP_StaticGround": {
+   "position": [
+    0.0,
+    0.4,
+    -0.25
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ]
+  },
+  "SP_TowFitting": {
+   "position": [
+    0.0,
+    0.34,
+    0.3
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ]
+  }
+ },
+ "notes": "Generated by GroundCrewVR/Tools/AircraftGenerator. Positions marked APPROX in specs.py should be checked against the manufacturer's airport-planning document before they drive gameplay."
+}

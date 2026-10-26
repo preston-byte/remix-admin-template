@@ -21,3 +21,7 @@
 .idea/
 .DS_Store
 crashlytics-build.properties
+
+# Python
+__pycache__/
+*.pyc

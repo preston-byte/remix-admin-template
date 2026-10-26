@@ -37,9 +37,13 @@ GroundCrewVR/
       Player/              ComfortSettings, LocomotionComfortApplier, FingertipSetup,
                            QuestPerformanceSettings
       UI/                  WristTablet
+      Aircraft/            AircraftRig (doors, flaps, steering, wheels, fans, beacon, LODs)
     Scripts/Editor/        ← editor tools (assembly GroundCrew.Editor)
       Phase1SandboxBuilder.cs   menu: Ground Crew > Build Phase 1 Sandbox Scene
+      AircraftPlacer.cs         menu: Ground Crew > Place Aircraft on Stand 24
       ProceduralMeshes.cs       cone + wheel-chock meshes for the sandbox
+    Art/Aircraft/          ← generated .glb aircraft + JSON sidecars
+  Tools/AircraftGenerator/ ← Python generator for the aircraft models
 ```
 
 Unity generates the `.meta` files, `Data/`, `Generated/` and `Scenes/` folders when you run the builder.
@@ -166,7 +170,43 @@ Start the scene. You spawn facing station **C**: **A** is front-left, **B** fron
 
 ---
 
-## 6. Troubleshooting
+## 6. Aircraft models (Phase 2 preview)
+
+Generated 737-class and A320-class aircraft are in `Assets/GroundCrew/Art/Aircraft/`. They come from `Tools/AircraftGenerator/`; see its README for what each model contains. You can preview them in a browser before trying them in Unity.
+
+**To use them in Unity:**
+
+1. **Window → Package Manager → + → Add package by name:** `com.unity.cloud.gltfast`. This is Unity's official glTF importer; without it Unity can't read `.glb` files.
+2. Once it's installed, the two `.glb` files import as models. Reimport the `Aircraft` folder if they don't.
+3. Build the sandbox scene, then use **Ground Crew → Place Aircraft on Stand 24 → 737-class** (or **A320-class**). This:
+   - parks the aircraft on the stop bar
+   - adds `AircraftRig`
+   - adds static colliders to the airframe
+   - adds a pedestal by the nose with **DOORS**, **BEACON** and **FLAPS** buttons
+4. Save the scene, then **Build And Run**.
+
+**On the Quest, check that:**
+
+- [ ] The aircraft stands on its wheels at the stop bar, and you can walk under the wings and around the engines.
+- [ ] **DOORS** opens and closes every door. Pax doors swing forward. The 737 cargo doors go *in* and up; the A320's go *out* and up.
+- [ ] Through an open door you see the cabin (seats, bins) or the hold.
+- [ ] **BEACON** flashes the red anti-collision lights on the top and belly.
+- [ ] **FLAPS** lowers the flaps to 15°.
+- [ ] Frame rate stays at ~72 fps (wrist tablet) while you look at the whole aircraft.
+
+`AircraftRig` gives gameplay code these methods:
+- `SetOpen01("Door_1L", 1)`
+- `SetFlaps(t)`
+- `SetSteering(deg)`
+- `RollWheels(metres)`
+- `FanRpm`
+- `SetBeacon(bool)`
+
+Phase 2 builds the real interactions on top of these: door handles you grab, holds as placement zones, service points as sockets.
+
+---
+
+## 7. Troubleshooting
 
 | Symptom | Fix |
 |---|---|
@@ -177,4 +217,6 @@ Start the scene. You spawn facing station **C**: **A** is front-left, **B** fron
 | Buttons can't be pressed | The console should show a FingertipSetup warning; the rig needs XRI poke interactors (Starter Assets rig has them). |
 | Tablet sits in the wrong place on your wrist | Select `Wrist Tablet` under *Left Controller* in the scene and adjust its local position/rotation. |
 | Held objects stutter | Make sure the `Systems` object (QuestPerformanceSettings) is in the scene; it matches physics to the display rate. |
+| Aircraft menu says "model not imported" | Install glTFast (see §6) and reimport `Assets/GroundCrew/Art/Aircraft`. |
+| Aircraft looks too shiny / costs too much on Quest | glTFast imports glTF PBR materials. For Quest, switch them to URP *Simple Lit*, keeping colour and emission. |
 | Compile errors mentioning XRI members | Copy the exact errors and your XRI version from Package Manager; they'll be adapted. |

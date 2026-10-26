@@ -112,6 +112,8 @@ AircraftDefinition (ScriptableObject)
   turnaroundTemplate ref
 ```
 
+**Status:** generated models implementing this contract exist for both aircraft (`Tools/AircraftGenerator`, `Assets/GroundCrew/Art/Aircraft`). Their JSON sidecar carries the data an `AircraftDefinition` needs, and `AircraftRig` drives the moving parts.
+
 Prefab contract: the model prefab contains empty transforms named `SP_<ServicePointId>` (for example `SP_GPU`, `SP_RefuelPanel`, `SP_Door1L`, `SP_FwdCargo`, `SP_NoseGearTow`, `SP_Chock_MLG_L_Fwd`). An `AircraftView` binder finds them by name, then spawns sockets, zones and handles from the definition.
 
 ---

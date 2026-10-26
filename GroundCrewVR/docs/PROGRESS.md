@@ -33,15 +33,23 @@ Known limitations in Phase 1:
 - `LocomotionComfortApplier` drives the Starter Assets `ControllerInputActionManager` by property name. If XRI renames those properties, comfort switching logs a warning and the defaults stay.
 - Wrist tablet offset is a best guess; it may need a per-player tweak.
 
-## Phase 2 — 737-class aircraft  ⏳
-- [ ] Asset decision (commission / licence / in-house) and 737-class model brief (see ARCHITECTURE §9)
-- [ ] `AircraftDefinition` + service-point prefab contract + `AircraftView` binder
-- [ ] Exterior with LODs; gear, wheels, engines, control surfaces (static/animated)
-- [ ] Cargo holds (fwd/aft bulk) as `PlacementZone`s with real limits
-- [ ] 737 cargo doors: inward plug door, counterbalance
-- [ ] Passenger doors (1L/2L/1R/2R) open/close; overwing exits (interaction only)
-- [ ] Cabin interior: seats, overhead bins, galleys, lavatories, flight-deck door, cabin lighting (streamed)
+## Phase 2 — Aircraft  ⏳ (models done, gameplay binding next)
+
+Done (models type-checked and rendered outside Unity; 🧪 in Unity/Quest):
+- [x] Procedural generator for both aircraft from published dimensions: `Tools/AircraftGenerator` (737-class **and** A320-class, so Phase 5's model work is done early)
+- [x] Exterior with 3 LODs (~60k / 22k / 5.5k tris); engines (737 flat short-duct vs A320 round long-duct), gear, wheels, winglets / sharklets, flap-track fairings, antennas
+- [x] Moving parts: all passenger doors, overwing exits, cargo doors (737 inward plug, A320 outward + bulk door), flaps, ailerons, elevators, rudder, fans, nose-gear steering, wheels
+- [x] Exterior lights as nodes (beacons, nav, strobes)
+- [x] Interior: cabin lining, floor, 168 / 162 seats with seat map, bins, galleys, lavatories with doors, cabin lights, flight deck with door; cargo holds with volumes and limits
+- [x] Service-point contract (`SP_*` nodes + JSON sidecar), origin at the nose-gear contact point
+- [x] `AircraftRig` runtime API + LODGroup setup; `AircraftPlacer` editor menu with a door/beacon/flaps test pedestal
+
+Remaining:
+- [ ] `AircraftDefinition` ScriptableObject generated from the sidecar + `AircraftView` binder (holds → `PlacementZone`, service points → `TypedSocketInteractor`, door handles → `RotaryHandle`)
+- [ ] Grab-to-open door handles (737 cargo door: unlatch, push in and up, counterbalance)
 - [ ] Aircraft state: power (battery/APU/ext), beacon, brakes, doors
+- [ ] Swap glTFast PBR materials for URP Simple Lit; on-device performance pass
+- [ ] Optional: artist-made models following the same node contract
 
 ## Phase 3 — First complete turnaround  ⬜
 - [ ] Simulation layer: `TurnaroundSession`, task graph, clock, rules/validators, scoring
@@ -54,8 +62,8 @@ Known limitations in Phase 1:
 - [ ] Vehicle framework: enter/exit, steering wheel, gear lever, throttle/brake, parking brake, horn, lights, reverse beeper
 - [ ] Baggage tractor + carts (coupling), pushback tug (tow bar / towbarless), fuel truck, catering truck
 
-## Phase 5 — A320-class aircraft  ⬜
-- [ ] A320 data set + model; outward hydraulic cargo doors; workflow differences
+## Phase 5 — A320-class aircraft  ⬜ (model already generated in Phase 2)
+- [ ] A320 workflow differences: hydraulic cargo door operation (hand pump / selector), containerised (ULD) loading, different sill heights for GSE
 
 ## Phase 6 — Advanced services  ⬜
 - [ ] Refuelling with bonding/deadman/quantity; potable water; waste; catering lift; GPU/PCA/air start; de-icing; maintenance calls & failures

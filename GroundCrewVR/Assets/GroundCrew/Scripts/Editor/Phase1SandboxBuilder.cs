@@ -45,6 +45,9 @@ namespace GroundCrew.EditorTools
 
         static Palette s_Mat;
 
+        /// <summary>Shared generated materials (also used by other Ground Crew editor tools).</summary>
+        internal static Palette Materials => s_Mat ?? (s_Mat = new Palette());
+
         [MenuItem("Ground Crew/Build Phase 1 Sandbox Scene", priority = 0)]
         public static void Build()
         {
@@ -134,11 +137,14 @@ namespace GroundCrew.EditorTools
             // Stand markings: lead-in line, stop bar and an equipment restraint line (decor for now;
             // Phase 2 parks the aircraft on this stand).
             var markings = new GameObject("Stand Markings").transform;
-            Box("Lead-in line", markings, new Vector3(0f, 0.004f, 24f), new Vector3(0.15f, 0.005f, 36f), s_Mat.Yellow, false, true);
-            Box("Stop bar", markings, new Vector3(0f, 0.004f, 8f), new Vector3(3f, 0.005f, 0.2f), s_Mat.Yellow, false, true);
-            Box("Restraint line L", markings, new Vector3(-6f, 0.004f, 14f), new Vector3(0.12f, 0.005f, 12f), s_Mat.Red, false, true);
-            Box("Restraint line R", markings, new Vector3(6f, 0.004f, 14f), new Vector3(0.12f, 0.005f, 12f), s_Mat.Red, false, true);
-            var standSign = Text3D(markings, new Vector3(0f, 3.2f, 12f), "<b>STAND 24</b>\n<size=50%>TRAINING AREA</size>", 6f, new Vector2(8f, 3f), Color.white);
+            // Nose-gear stop bar at z = 12 leaves room for the ~4-5 m nose overhang in front of the
+            // training stations (see AircraftPlacer).
+            Box("Lead-in line", markings, new Vector3(0f, 0.004f, 30f), new Vector3(0.15f, 0.005f, 36f), s_Mat.Yellow, false, true);
+            Box("Stop bar", markings, new Vector3(0f, 0.004f, 12f), new Vector3(3f, 0.005f, 0.2f), s_Mat.Yellow, false, true);
+            Box("Restraint line L", markings, new Vector3(-6.5f, 0.004f, 18f), new Vector3(0.12f, 0.005f, 14f), s_Mat.Red, false, true);
+            Box("Restraint line R", markings, new Vector3(6.5f, 0.004f, 18f), new Vector3(0.12f, 0.005f, 14f), s_Mat.Red, false, true);
+            var standSign = Text3D(markings, new Vector3(-9f, 3.2f, 12f), "<b>STAND 24</b>\n<size=50%>TRAINING AREA</size>", 6f, new Vector2(8f, 3f), Color.white);
+            standSign.transform.rotation = Quaternion.LookRotation(new Vector3(-9f, 0f, 12f).normalized, Vector3.up);
             standSign.gameObject.name = "Stand sign";
         }
 
@@ -587,17 +593,17 @@ namespace GroundCrew.EditorTools
 
         // ------------------------------------------------------------------ primitive helpers
 
-        static GameObject Box(string name, Transform parent, Vector3 localPosition, Vector3 size, Material material, bool collider, bool isStatic)
+        internal static GameObject Box(string name, Transform parent, Vector3 localPosition, Vector3 size, Material material, bool collider, bool isStatic)
         {
             return Primitive(PrimitiveType.Cube, name, parent, localPosition, size, material, collider, isStatic);
         }
 
-        static GameObject Cylinder(string name, Transform parent, Vector3 localPosition, Vector3 scale, Material material)
+        internal static GameObject Cylinder(string name, Transform parent, Vector3 localPosition, Vector3 scale, Material material)
         {
             return Primitive(PrimitiveType.Cylinder, name, parent, localPosition, scale, material, false, false);
         }
 
-        static GameObject Sphere(string name, Transform parent, Vector3 localPosition, float diameter, Material material)
+        internal static GameObject Sphere(string name, Transform parent, Vector3 localPosition, float diameter, Material material)
         {
             return Primitive(PrimitiveType.Sphere, name, parent, localPosition, Vector3.one * diameter, material, true, false);
         }
@@ -625,7 +631,7 @@ namespace GroundCrew.EditorTools
                 StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.ReflectionProbeStatic);
         }
 
-        static TextMeshPro Text3D(Transform parent, Vector3 localPosition, string text, float fontSize, Vector2 box, Color color)
+        internal static TextMeshPro Text3D(Transform parent, Vector3 localPosition, string text, float fontSize, Vector2 box, Color color)
         {
             var go = new GameObject("Text");
             go.transform.SetParent(parent, false);
@@ -664,7 +670,7 @@ namespace GroundCrew.EditorTools
         // ------------------------------------------------------------------ editor utilities
 
         /// <summary>Set serialized fields by name, e.g. Props(c, ("maxAngle", 90f)).</summary>
-        static void Props(Object target, params (string name, object value)[] values)
+        internal static void Props(Object target, params (string name, object value)[] values)
         {
             var so = new SerializedObject(target);
             foreach (var entry in values)
@@ -733,7 +739,7 @@ namespace GroundCrew.EditorTools
         }
 
         /// <summary>Generated materials, saved under Assets/GroundCrew/Generated/Materials.</summary>
-        sealed class Palette
+        internal sealed class Palette
         {
             public readonly Material Concrete = Lit("Concrete", new Color(0.46f, 0.46f, 0.47f), 0.1f);
             public readonly Material Pad = Lit("Pad", new Color(0.36f, 0.37f, 0.39f), 0.1f);
