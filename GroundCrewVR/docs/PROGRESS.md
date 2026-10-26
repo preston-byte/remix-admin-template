@@ -36,7 +36,8 @@ Known limitations in Phase 1:
 ## Phase 2 — Aircraft  ⏳ (models done, gameplay binding next)
 
 Done (models type-checked and rendered outside Unity; 🧪 in Unity/Quest):
-- [x] Procedural generator for both aircraft from published dimensions: `Tools/AircraftGenerator` (737-class **and** A320-class, so Phase 5's model work is done early)
+- [x] Procedural generator for both aircraft: `Tools/AircraftGenerator` (737-class **and** A320-class, so Phase 5's model work is done early)
+- [x] Shapes traced from Boeing D6-58325-7 and Airbus A320 AC drawings (fuselage outlines, wing/tailplane planforms, fins); door sills, cargo doors and clearances checked against the manufacturer tables
 - [x] Exterior with 3 LODs (~60k / 22k / 5.5k tris); engines (737 flat short-duct vs A320 round long-duct), gear, wheels, winglets / sharklets, flap-track fairings, antennas
 - [x] Moving parts: all passenger doors, overwing exits, cargo doors (737 inward plug, A320 outward + bulk door), flaps, ailerons, elevators, rudder, fans, nose-gear steering, wheels
 - [x] Exterior lights as nodes (beacons, nav, strobes)

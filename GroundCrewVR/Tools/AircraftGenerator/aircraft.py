@@ -53,7 +53,34 @@ MATERIALS = {
 
 # ====================================================================== fuselage
 
+def pchip(xs, ys):
+    """Shape-preserving (monotone) cubic interpolation, sampled densely; returns (x, y) arrays."""
+    x = np.asarray(xs, dtype=float)
+    y = np.asarray(ys, dtype=float)
+    if len(x) < 3:
+        return x, y
+    h = np.diff(x)
+    d = np.diff(y) / h
+    m = np.zeros_like(y)
+    for k in range(1, len(x) - 1):
+        if d[k - 1] * d[k] > 0:
+            w1, w2 = 2 * h[k] + h[k - 1], h[k] + 2 * h[k - 1]
+            m[k] = (w1 + w2) / (w1 / d[k - 1] + w2 / d[k])
+    m[0], m[-1] = d[0], d[-1]
+    xd, yd = [], []
+    for k in range(len(x) - 1):
+        t = np.linspace(0, 1, 12, endpoint=False)
+        h00, h10, h01, h11 = 2 * t ** 3 - 3 * t ** 2 + 1, t ** 3 - 2 * t ** 2 + t, -2 * t ** 3 + 3 * t ** 2, t ** 3 - t ** 2
+        xd.append(x[k] + t * h[k])
+        yd.append(h00 * y[k] + h10 * h[k] * m[k] + h01 * y[k + 1] + h11 * h[k] * m[k + 1])
+    xd.append([x[-1]])
+    yd.append([y[-1]])
+    return np.concatenate(xd), np.concatenate(yd)
+
+
 class Fuselage:
+    """Fuselage outline from the traced profile tables in specs.py (level aircraft)."""
+
     def __init__(self, sp):
         self.sp = sp
         self.L = sp["length"]
@@ -61,27 +88,29 @@ class Fuselage:
         self.H = sp["height"]
         self.zb = sp["keel_z"]
         self.wall = sp["wall"]
+        pr = sp["profile"]
+        nose = np.asarray(pr["nose"], dtype=float)
+        self.Ln = float(nose[-1, 0])
+        self._nose = [pchip(nose[:, 0], nose[:, k]) for k in (1, 2, 3)]
+        tb = np.asarray(pr["tail_bottom"], dtype=float)
+        tt = np.asarray(pr["tail_top"], dtype=float)
+        th = np.asarray(pr["tail_half"], dtype=float)
+        self.Lt = float(min(tb[0, 0], tt[0, 0], th[0, 0]))
+        self._tail = [pchip(tt[:, 0], tt[:, 1]), pchip(tb[:, 0], tb[:, 1]), pchip(th[:, 0], th[:, 1])]
+        top0, bot0, _ = (np.interp(0.0, x, y) for x, y in self._nose)
+        self.tip_z = self.zb + 0.5 * (top0 + bot0)
 
     def section(self, s):
         """(zc, half-width a, half-height h) at station s."""
-        sp, zb, zt, W2 = self.sp, self.zb, self.zb + self.H, self.W2
-        Ln, Lt, tip = sp["nose_length"], sp["tail_start"], sp["nose_tip_z"]
-        if s < Ln:
-            t = max(s / Ln, 0.0)
-            pt, qt = sp["nose_top_shape"]
-            pb, qb = sp["nose_bottom_shape"]
-            pw, qw = sp["nose_width_shape"]
-            top = tip + (zt - tip) * (1 - (1 - t) ** pt) ** qt
-            bot = tip - (tip - zb) * (1 - (1 - t) ** pb) ** qb
-            a = W2 * (1 - (1 - t) ** pw) ** qw
-        elif s > Lt:
-            t = min((s - Lt) / (self.L - Lt), 1.0)
-            top = zt - (zt - sp["tail_tip_top"]) * t ** sp["tail_top_exp"]
-            bot = zb + (sp["tail_tip_bottom"] - zb) * t ** sp["tail_bottom_exp"]
-            a = W2 - (W2 - sp["tail_tip_halfwidth"]) * t ** sp["tail_width_exp"]
+        if s <= self.Ln:
+            top, bot, a = (float(np.interp(s, x, y)) for x, y in self._nose)
         else:
-            top, bot, a = zt, zb, W2
-        return (top + bot) / 2.0, a, (top - bot) / 2.0
+            top, bot, a = self.H, 0.0, self.W2
+        if s >= self.Lt:
+            tops = [(float(np.interp(s, x, y)) if s >= x[0] else d) for (x, y), d in zip(self._tail, (self.H, 0.0, self.W2))]
+            top, bot, a = tops
+        top, bot = self.zb + top, self.zb + bot
+        return (top + bot) / 2.0, max(a, 0.0), max((top - bot) / 2.0, 0.0)
 
     def point(self, s, theta):
         zc, a, h = self.section(s)
@@ -133,7 +162,7 @@ def door_theta_range(fus, d):
 
 
 def build_fuselage(fus, sp, lod, airframe, parts, interior):
-    L, Ln, Lt = fus.L, sp["nose_length"], sp["tail_start"]
+    L, Ln, Lt = fus.L, fus.Ln, fus.Lt
     doors = sp["doors"] if lod["openings"] else []
     wall = fus.wall
 
@@ -179,7 +208,7 @@ def build_fuselage(fus, sp, lod, airframe, parts, interior):
 
     uv = np.stack(np.meshgrid(S / L, np.arange(nv) / nv, indexing="ij"), axis=-1)
     grid(airframe.buf("Paint"), rings, N, closed=True, mask=mask, uv=uv)
-    fan(airframe.buf("Paint"), rings[0], [0.0, 0.0, sp["nose_tip_z"]], [-1.0, 0.0, 0.0])
+    fan(airframe.buf("Paint"), rings[0], [0.0, 0.0, fus.tip_z], [-1.0, 0.0, 0.0])
     zc_end = fus.section(L)[0]
     fan(airframe.buf("Exhaust"), rings[-1], [L + 0.01, 0.0, zc_end], [1.0, 0.0, 0.0])
 
@@ -299,6 +328,29 @@ def build_door(fus, sp, d, lod):
     return part
 
 
+POST_THETA = 3.5 * D   # half-width of the windscreen centre post, as an angle from the crown
+
+
+def resolve_pane_corner(fus, corner, side):
+    """("c", z): point on the centre post at height z; ("p", s, z): side point at station s, height z.
+    Returns (s, theta)."""
+    if corner[0] == "c":
+        z = corner[1]
+        lo, hi = 0.05, fus.Ln
+        for _ in range(40):     # crest height rises monotonically along the nose
+            mid = 0.5 * (lo + hi)
+            zc, a, h = fus.section(mid)
+            if zc + h * math.cos(POST_THETA) < z:
+                lo = mid
+            else:
+                hi = mid
+        s, theta = 0.5 * (lo + hi), POST_THETA
+    else:
+        s, z = corner[1], corner[2]
+        theta = fus.theta_for_z(s, z, "L")
+    return s, theta if side == "L" else 2 * math.pi - theta
+
+
 def build_windows(fus, sp, lod, airframe):
     if not lod["windows"]:
         return []
@@ -320,7 +372,7 @@ def build_windows(fus, sp, lod, airframe):
     # flight-deck windows
     for pane in sp["windshield"]:
         for side in ("L", "R"):
-            corners = [(s, (t * D) if side == "L" else 2 * math.pi - t * D) for s, t in pane]
+            corners = [resolve_pane_corner(fus, c, side) for c in pane]
             n_s, n_t = (9, 9) if lod["corner"] > 1 else (4, 4)
             P = np.zeros((n_s, n_t, 3))
             N = np.zeros((n_s, n_t, 3))
@@ -492,36 +544,23 @@ def fixed_buf_material(kind):
 CONTROL_RANGES = {"flap": (0.0, 40.0), "aileron": (-20.0, 20.0), "elevator": (-25.0, 20.0), "rudder": (-27.0, 27.0)}
 
 
+def wing_tip_y(w):
+    return w["stations"][-1][0]
+
+
 def wing_planform(w):
-    tanL, tand = math.tan(w["le_sweep"] * D), math.tan(w["dihedral"] * D)
-
-    def le(y):
-        return np.array([w["root_le_s"] + y * tanL, y, w["root_z"] + y * tand])
-
-    root_te = w["root_le_s"] + w["root_chord"]
-    tip_te = le(w["tip_y"])[0] + w["tip_chord"]
-
-    def chord(y):
-        if y <= w["kink_y"]:
-            te = root_te + (w["te_kink_s"] - root_te) * (y / w["kink_y"])
-        else:
-            te = w["te_kink_s"] + (tip_te - w["te_kink_s"]) * (y - w["kink_y"]) / (w["tip_y"] - w["kink_y"])
-        return te - le(y)[0]
-
-    def tc(y):
-        if y <= w["kink_y"]:
-            return w["tc_root"] + (w["tc_kink"] - w["tc_root"]) * y / w["kink_y"]
-        return w["tc_kink"] + (w["tc_tip"] - w["tc_kink"]) * (y - w["kink_y"]) / (w["tip_y"] - w["kink_y"])
-
-    ys = [0.0, w["kink_y"], w["tip_y"]]
-    st = [{"span": y, "le": le(y), "chord": chord(y), "tc": tc(y), "twist": w["washout"] * y / w["tip_y"],
-           "roll": w["dihedral"], "camber": 0.02} for y in ys]
-    return Planform(st), le, chord
+    """Planform from the traced (y, LE, TE, t/c, twist) stations; positive twist = washout (nose down)."""
+    tand = math.tan(w["dihedral"] * D)
+    st = [{"span": y, "le": np.array([le_s, y, w["root_z"] + y * tand]), "chord": te_s - le_s, "tc": tc,
+           "twist": -tw, "roll": w["dihedral"], "camber": 0.02}
+          for y, le_s, te_s, tc, tw in w["stations"]]
+    return Planform(st)
 
 
 def winglet_stations(w, pf, lod):
-    wl = w["winglet"]
-    tip = pf.at(w["tip_y"])
+    """Blended winglet (737): the tip section curves up through an arc, then a straight swept blade."""
+    wl = w["tip"]
+    tip = pf.at(wing_tip_y(w))
     phi0, phi1 = w["dihedral"] * D, wl["cant"] * D
     R = wl["radius"]
     p0 = np.asarray(tip["le"])
@@ -547,6 +586,24 @@ def winglet_stations(w, pf, lod):
                     "chord": end["chord"] + (wl["tip_chord"] - end["chord"]) * f,
                     "tc": wl["tc"], "twist": tip["twist"], "roll": math.degrees(phi1), "camber": 0.0})
     return [dict(tip, camber=tip.get("camber", 0.02))] + out
+
+
+def wingtip_fence(buf, w, pf, lod):
+    """Classic A320 wing-tip fence: a thin arrowhead plate above (swept back) and below (pointing forward)."""
+    f = w["tip"]
+    tip = pf.at(wing_tip_y(w))
+    le = np.asarray(tip["le"]) + np.array([0.0, 0.04, 0.0])
+    n = max(4, lod["foil"] // 2)
+
+    def st(s_le, dz, chord):
+        return {"span": 0.0, "le": le + np.array([s_le, 0.0, dz]), "chord": chord, "tc": 0.07, "twist": 0.0, "roll": 90.0}
+
+    upper = [st(-0.10, -0.05, f["chord"]), st(0.55 * f["chord"], f["up"] * 0.6, 0.55 * f["chord"]),
+             st(0.80 * f["chord"], f["up"], 0.18 * f["chord"])]
+    loft_sections(buf, upper, n, 0.0, 1.0, cap_start=False, cap_end=True)
+    lower = [st(-f["ahead"], -f["down"], 0.20 * f["chord"]), st(-0.55 * f["ahead"], -f["down"] * 0.55, 0.45 * f["chord"]),
+             st(-0.10, 0.05, 0.62 * f["chord"])]
+    loft_sections(buf, lower, n, 0.0, 1.0, cap_start=True, cap_end=False)
 
 
 def mirror(part_or_buf_parts):
@@ -587,37 +644,36 @@ def flap_fairings(buf, w, pf, lod):
 
 def build_wings(sp, lod, lod_key):
     w = sp["wing"]
-    pf, le, chord = wing_planform(w)
+    pf = wing_planform(w)
+    tip_y = wing_tip_y(w)
+    blended = w["tip"]["type"] == "blended"
     lod = dict(lod, key=lod_key)
-    left = Part("Wing_L")
-    controls = []
     n_extra = {0: 6, 1: 3, 2: 0}[lod_key]
-    spans = sorted(set([0.6, w["kink_y"], w["tip_y"]] + list(np.linspace(0.6, w["tip_y"], n_extra + 2))))
-    build_surface(pf, spans, w["controls"], w["hinge"], lod, left.buf("WingGrey"), left.buf("WingGrey"),
-                  controls, "", 1.0, CONTROL_RANGES, cap_tip=False)
-    for c in controls:
-        c.name = c.name + "_L"
-    wl = winglet_stations(w, pf, lod)
-    loft_sections(left.buf("Paint"), wl, lod["foil"], 0.0, 1.0, cap_start=False, cap_end=True)
-    flap_fairings(left.buf("WingGrey"), w, pf, lod)
-    left.children.extend(controls)
-
-    right = Part("Wing_R")
-    rc = []
-    build_surface(pf, spans, w["controls"], w["hinge"], lod, right.buf("WingGrey"), right.buf("WingGrey"),
-                  rc, "", 1.0, CONTROL_RANGES, cap_tip=False)
-    loft_sections(right.buf("Paint"), winglet_stations(w, pf, lod), lod["foil"], 0.0, 1.0, cap_start=False, cap_end=True)
-    flap_fairings(right.buf("WingGrey"), w, pf, lod)
-    for c in rc:
-        c.name = c.name + "_R"
-    right.children.extend(rc)
-    mirror([right])
-    return left, right, pf
+    spans = sorted(set([0.6, tip_y] + [st[0] for st in w["stations"] if st[0] > 0.6] +
+                       list(np.linspace(0.6, tip_y, n_extra + 2))))
+    sides = []
+    for suffix in ("_L", "_R"):
+        part = Part("Wing" + suffix)
+        controls = []
+        build_surface(pf, spans, w["controls"], w["hinge"], lod, part.buf("WingGrey"), part.buf("WingGrey"),
+                      controls, "", 1.0, CONTROL_RANGES, cap_tip=not blended)
+        for c in controls:
+            c.name = c.name + suffix
+        if blended:
+            loft_sections(part.buf("Paint"), winglet_stations(w, pf, lod), lod["foil"], 0.0, 1.0, cap_start=False, cap_end=True)
+        else:
+            wingtip_fence(part.buf("Paint"), w, pf, lod)
+        flap_fairings(part.buf("WingGrey"), w, pf, lod)
+        part.children.extend(controls)
+        if suffix == "_R":
+            mirror([part])
+        sides.append(part)
+    return sides[0], sides[1], pf
 
 
 def build_htail(sp, lod, lod_key):
     t = sp["htail"]
-    tanL, tand = math.tan(t["le_sweep"] * D), math.tan(t["dihedral"] * D)
+    tanL, tand = (t["tip_le_s"] - t["root_le_s"]) / t["semi_span"], math.tan(t["dihedral"] * D)
 
     def st(y, chord):
         return {"span": y, "le": np.array([t["root_le_s"] + y * tanL, y, t["root_z"] + y * tand]),
@@ -687,21 +743,33 @@ def build_engine(sp, lod, side, wing_pf):
     def scaled(points):
         return np.asarray(points, dtype=float) * R
 
+    # 737 "hamster pouch": the inlet lip is an oval with a flat bottom, and the cowl stays flatter
+    # underneath back to the fan case. The fan duct itself stays round, so the cowl never cuts into it.
+    lip_flat = flatten - 0.06
+
+    def squash(local, f):
+        y, z = local[..., 1], local[..., 2]
+        r = np.maximum(np.hypot(y, z), 1e-6)
+        t = np.clip(-z / (0.7 * r), 0.0, 1.0)            # 0 at the equator -> 1 towards the bottom
+        t = t * t * (3 - 2 * t)
+        local[..., 1] = y * (1 + (1 - f) * 0.35 * t)
+        local[..., 2] = np.where(z < 0, z * (1 - (1 - f) * np.clip(-z / r, 0.0, 1.0) ** 0.5), z)
+        return local
+
     def deform_outer(local):
         if flatten >= 0.999:
             return local
         x = local[..., 0] / R
-        f = np.where(x < 1.2, flatten, np.where(x > 2.4, 1.0, flatten + (1 - flatten) * (x - 1.2) / 1.2))
-        local[..., 2] = np.where(local[..., 2] < 0, local[..., 2] * f, local[..., 2])
-        return local
+        f = np.where(x < 0.3, lip_flat + (flatten - lip_flat) * x / 0.3,
+                     np.where(x < 1.6, flatten, np.where(x > 2.7, 1.0, flatten + (1 - flatten) * (x - 1.6) / 1.1)))
+        return squash(local, f)
 
     def deform_inner(local):
         if flatten >= 0.999:
             return local
         x = local[..., 0] / R
-        f = np.where(x > 0.3, 1.0, flatten + (1 - flatten) * x / 0.3)
-        local[..., 2] = np.where(local[..., 2] < 0, local[..., 2] * f, local[..., 2])
-        return local
+        f = np.where(x < 0.3, lip_flat + (1 - lip_flat) * x / 0.3, 1.0)
+        return squash(local, f)
 
     part = Part(f"Engine_{side}", origin, extras={"kind": "engine"})
     outer, inner = scaled(prof["outer"]), scaled(prof["inner"])
@@ -759,11 +827,16 @@ def tyre(buf_rubber, buf_hub, centre, diameter, width, segments):
     cylinder(buf_hub, centre - axis * hw, centre + axis * hw, r_in * 1.01, max(8, segments // 2))
 
 
+def pitch_drop(sp, s):
+    """How much a point at station s is lowered by the nose-down pitch (rotation about the main gear)."""
+    return (sp["main_gear"]["s"] - s) * math.tan(sp.get("pitch_deg", 0.0) * D)
+
+
 def build_nose_gear(fus, sp, lod):
     g = sp["nose_gear"]
     s = g["s"]
     R = g["tyre_d"] / 2
-    axle_z = R
+    axle_z = R + pitch_drop(sp, s)   # the model is tilted nose-down about the main gear afterwards
     top_z = fus.section(s)[0] - fus.section(s)[2] + 0.35
     seg = lod["small"]
     gear = Part("NoseGear", np.array([s, 0.0, top_z]), extras={"kind": "gear"})
@@ -932,7 +1005,7 @@ def build_interior(fus, sp, holds_out, seats_out):
     interior.children.append(fdd)
 
     # Main panel top ~0.9 m above the floor, below the windshield sill; pilots' eye ~1.1 m.
-    s_panel = sp["windshield"][0][0][0] + 0.45
+    s_panel = sp["windshield"][0][3][1] + 0.45   # behind the front windscreen's lower edge
     pw = min(1.0, fus.inner_halfwidth(s_panel, zf + 0.7) - 0.08)
     tilt_p = [[math.cos(-15 * D), 0, -math.sin(-15 * D)], [0, 1, 0], [math.sin(-15 * D), 0, math.cos(-15 * D)]]
     box(interior.buf("Cockpit"), [s_panel, 0, zf + 0.62], (0.08, 2 * pw, 0.5), axes=tilt_p)
@@ -956,7 +1029,7 @@ def service_points(fus, sp, wing_pf):
     pts = {}
     for name, (where, s, z) in sp["service_points"].items():
         if where == "C":
-            pts[name] = {"position": [s, 0.0, z], "normal": [0, 0, -1.0]}
+            pts[name] = {"position": [s, 0.0, z + pitch_drop(sp, s)], "normal": [0, 0, -1.0]}
         elif where in ("L", "R"):
             th = fus.theta_for_z(s, z, where)
             p, n = fus.point(s, th), fus.normal(s, th)
@@ -969,21 +1042,22 @@ def service_points(fus, sp, wing_pf):
             pts[name] = {"position": p.tolist(), "normal": [0, 0, -1.0]}
     ng, mg = sp["nose_gear"], sp["main_gear"]
     rn, rm = ng["tyre_d"] / 2, mg["tyre_d"] / 2
-    pts["SP_Chock_NoseGear_Fwd"] = {"position": [ng["s"] - rn - 0.2, 0.0, 0.0], "normal": [0, 0, 1.0]}
-    pts["SP_Chock_NoseGear_Aft"] = {"position": [ng["s"] + rn + 0.2, 0.0, 0.0], "normal": [0, 0, 1.0]}
+    pts["SP_Chock_NoseGear_Fwd"] = {"position": [ng["s"] - rn - 0.2, 0.0, 0.0], "normal": [0, 0, 1.0], "ground": True}
+    pts["SP_Chock_NoseGear_Aft"] = {"position": [ng["s"] + rn + 0.2, 0.0, 0.0], "normal": [0, 0, 1.0], "ground": True}
     for side, sign in (("L", 1), ("R", -1)):
         for k, wn in ((1, "Out"), (-1, "In")):
             y = sign * (mg["y"] + k * mg["spacing"] / 2)
-            pts[f"SP_Chock_MainGear_{side}_{wn}_Fwd"] = {"position": [mg["s"] - rm - 0.22, y, 0.0], "normal": [0, 0, 1.0]}
-            pts[f"SP_Chock_MainGear_{side}_{wn}_Aft"] = {"position": [mg["s"] + rm + 0.22, y, 0.0], "normal": [0, 0, 1.0]}
+            pts[f"SP_Chock_MainGear_{side}_{wn}_Fwd"] = {"position": [mg["s"] - rm - 0.22, y, 0.0], "normal": [0, 0, 1.0], "ground": True}
+            pts[f"SP_Chock_MainGear_{side}_{wn}_Aft"] = {"position": [mg["s"] + rm + 0.22, y, 0.0], "normal": [0, 0, 1.0], "ground": True}
     w = sp["wing"]
-    tip = wing_pf.at(w["tip_y"])
+    tip_y = wing_tip_y(w)
+    tip = wing_pf.at(tip_y)
     e = sp["engine"]
-    pts["SP_Cone_Nose"] = {"position": [-1.5, 0.0, 0.0], "normal": [0, 0, 1.0]}
-    pts["SP_Cone_Tail"] = {"position": [fus.L + 1.5, 0.0, 0.0], "normal": [0, 0, 1.0]}
+    pts["SP_Cone_Nose"] = {"position": [-1.5, 0.0, 0.0], "normal": [0, 0, 1.0], "ground": True}
+    pts["SP_Cone_Tail"] = {"position": [fus.L + 1.5, 0.0, 0.0], "normal": [0, 0, 1.0], "ground": True}
     for side, sign in (("L", 1), ("R", -1)):
-        pts[f"SP_Cone_WingTip_{side}"] = {"position": [float(tip["le"][0]) + tip["chord"] / 2, sign * (w["tip_y"] + 1.0), 0.0], "normal": [0, 0, 1.0]}
-        pts[f"SP_Cone_Engine_{side}"] = {"position": [e["front_s"] - 1.5, sign * e["y"], 0.0], "normal": [0, 0, 1.0]}
+        pts[f"SP_Cone_WingTip_{side}"] = {"position": [float(tip["le"][0]) + tip["chord"] / 2, sign * (tip_y + 1.0), 0.0], "normal": [0, 0, 1.0], "ground": True}
+        pts[f"SP_Cone_Engine_{side}"] = {"position": [e["front_s"] - 1.5, sign * e["y"], 0.0], "normal": [0, 0, 1.0], "ground": True}
     for d in sp["doors"]:
         if d["kind"] in ("pax", "cargo"):
             smid = 0.5 * (d["s"][0] + d["s"][1])
@@ -1006,7 +1080,7 @@ def build_lights(fus, sp, wing_pf, lod):
     seg = max(8, lod["small"])
     parts = []
     w = sp["wing"]
-    s_top = w["root_le_s"] + 2.5
+    s_top = float(wing_pf.at(w["root_y"])["le"][0]) + 2.5
     zc, a, h = fus.section(s_top)
     beacon = Part("Beacon_Top", np.array([s_top, 0.0, zc + h]), extras={"kind": "light", "lightType": "beacon"})
     light_dome(beacon.buf("Light_Beacon"), np.array([s_top, 0.0, zc + h - 0.02]), [0, 0, 1.0], 0.1, seg)
@@ -1017,7 +1091,7 @@ def build_lights(fus, sp, wing_pf, lod):
     beacon_b = Part("Beacon_Bottom", np.array([s_bot, 0.0, z_bot]), extras={"kind": "light", "lightType": "beacon"})
     light_dome(beacon_b.buf("Light_Beacon"), np.array([s_bot, 0.0, z_bot + 0.02]), [0, 0, -1.0], 0.1, seg)
     parts.append(beacon_b)
-    tip = wing_pf.at(w["tip_y"])
+    tip = wing_pf.at(wing_tip_y(w))
     cd, up, _ = section_frame(tip)
     for side, sign, mat in (("L", 1, "Light_NavRed"), ("R", -1, "Light_NavGreen")):
         le = np.asarray(tip["le"]) * np.array([1, sign, 1])
@@ -1036,7 +1110,8 @@ def build_lights(fus, sp, wing_pf, lod):
 
 
 def build_antennas(fus, sp, airframe):
-    for s, top in ((9.0, True), (sp["wing"]["root_le_s"] + 6.5, True), (7.0, False), (sp["aft_bulkhead"] - 6.0, False)):
+    root_le = sp["wing"]["stations"][0][1]
+    for s, top in ((9.0, True), (root_le + 6.5, True), (7.0, False), (sp["aft_bulkhead"] - 6.0, False)):
         zc, a, h = fus.section(s)
         z = zc + h if top else zc - h
         sign = 1 if top else -1

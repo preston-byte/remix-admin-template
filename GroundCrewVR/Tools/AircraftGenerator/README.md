@@ -1,11 +1,15 @@
 # Aircraft Generator
 
-Builds the game's two airliners from published dimensions as Quest-ready `.glb` models:
+Builds the game's two airliners as Quest-ready `.glb` models. Their shapes are traced from Boeing's and Airbus's airport-planning drawings; heights, doors and service points come from the same documents. See [`reference/SOURCES.md`](reference/SOURCES.md).
+
+The distinguishing features of each type are modelled:
+- 737: long pointed nose, tall raked windscreen, flat-bottomed CFM56-7 inlets tucked under the wing, 2.44 m blended winglets, dorsal fin fillet, a belly that curves up to a tail cone ending level with the crown, small bulk-cargo doors, and a 0.76° nose-down parked stance.
+- A320: short round nose with a straight-lined window band, round long-duct CFM56-5B nacelles hanging well ahead of the wing, wing-tip fences, a broad fin with no fillet, a straight belly then a straight-line tail upsweep, big container cargo doors plus a bulk door, and a taller stance.
 
 | File | Aircraft | LOD0 / LOD1 / LOD2 triangles |
 |---|---|---|
-| `Narrowbody737Class.glb` | 737-800 class | ~60k / ~22k / ~5.5k |
-| `Narrowbody320Class.glb` | A320-200 class | ~59k / ~22k / ~5.5k |
+| `Narrowbody737Class.glb` | 737-800 class | ~59k / ~22k / ~5.6k |
+| `Narrowbody320Class.glb` | A320-200 class | ~57k / ~21k / ~5.6k |
 
 Output goes to `GroundCrewVR/Assets/GroundCrew/Art/Aircraft/`, together with a `<id>.json` sidecar for each model.
 
@@ -46,7 +50,7 @@ The origin is the nose-gear ground contact, with the nose pointing to +Z. That m
 
 ## Editing
 
-- **Dimensions, doors, interior layout, service points:** edit `specs.py`. Values marked `APPROX` should be checked against the manufacturers' airport-planning documents before they drive gameplay.
+- **Dimensions, outlines, doors, interior layout, service points:** edit `specs.py`. Values marked `APPROX` aren't given in the manufacturer documents and are estimates.
 - **Geometry:** edit `aircraft.py`.
 - **Mesh helpers:** `meshlib.py`.
 - **glTF writer:** `gltf_writer.py`.

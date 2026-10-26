@@ -30,21 +30,27 @@ import specs
 from gltf_writer import GltfBuilder
 
 
-def make_converter(s_origin):
+def make_converter(s_origin, pitch_k, s_pivot):
+    """Aircraft frame -> glTF, tilting the level model nose-down about the main gear (small-angle shear)."""
     def convert(P):
         P = np.asarray(P, dtype=float).reshape(-1, 3)
-        return np.stack([P[:, 1], P[:, 2], s_origin - P[:, 0]], axis=1)
+        return np.stack([P[:, 1], P[:, 2] + (P[:, 0] - s_pivot) * pitch_k, s_origin - P[:, 0]], axis=1)
     return convert
+
+
+PITCH_K = 0.0
 
 
 def vec_convert(v):
     v = np.asarray(v, dtype=float)
-    return np.array([v[1], v[2], -v[0]])
+    return np.array([v[1], v[2] + v[0] * PITCH_K, -v[0]])
 
 
 def export(sp, out_dir):
+    global PITCH_K
     s_origin = sp["nose_gear"]["s"]
-    convert = make_converter(s_origin)
+    PITCH_K = math.tan(math.radians(sp.get("pitch_deg", 0.0)))
+    convert = make_converter(s_origin, PITCH_K, sp["main_gear"]["s"])
     b = GltfBuilder()
     mats = {name: b.material(name, rgb, metallic, rough, emissive) for name, (rgb, metallic, rough, emissive) in aircraft.MATERIALS.items()}
     moving_parts = []
@@ -99,10 +105,12 @@ def export(sp, out_dir):
     service_points = {}
     for name, d in sorted(info["service_points"].items()):
         pos = convert(d["position"])[0]
+        if d.get("ground"):
+            pos[1] = 0.0
         normal = vec_convert(d["normal"])
         service_points[name] = {"position": [round(float(x), 4) for x in pos], "normal": [round(float(x), 4) for x in normal]}
         if "sillHeight" in d:
-            service_points[name]["sillHeight"] = d["sillHeight"]
+            service_points[name]["sillHeight"] = round(float(pos[1]), 3)
         sp_nodes.append(b.node(name, translation=pos))
     sp_root = b.node("ServicePoints", children=sp_nodes)
     root = b.node(sp["id"], children=lod_nodes + [sp_root], extras={"label": sp["label"], "units": "metres",
@@ -118,14 +126,14 @@ def export(sp, out_dir):
         "units": "metres",
         "coordinateSystem": "glTF: +Y up, +Z forward (nose), +X = aircraft left; origin = nose-gear ground contact",
         "dimensions": {"length": sp["length"], "fuselageWidth": sp["width"], "fuselageHeight": sp["height"],
-                       "wingspan": round(2 * (sp["wing"]["tip_y"] + sp["wing"]["winglet"]["radius"] * 0.9), 2),
+                       "wingspan": round(2 * (aircraft.wing_tip_y(sp["wing"]) + (0.73 if sp["wing"]["tip"]["type"] == "blended" else 0.03)), 2),
                        "floorHeight": sp["floor_z"]},
         "triangles": stats,
         "lodGroups": ["LOD0", "LOD1", "LOD2"],
         "movingParts": moving_parts,
         "doors": [{"name": d["name"], "side": d["side"], "type": d["kind"], "opens": d["opens"],
                    "width": round(d["s"][1] - d["s"][0], 3), "height": round(d["z"][1] - d["z"][0], 3),
-                   "sillHeight": d["z"][0], "maxAngle": d["max"], "removable": bool(d.get("removable", False))} for d in sp["doors"]],
+                   "sillHeight": round(d["z"][0] - aircraft.pitch_drop(sp, 0.5 * (d["s"][0] + d["s"][1])), 3), "maxAngle": d["max"], "removable": bool(d.get("removable", False))} for d in sp["doors"]],
         "holds": [{"name": h["name"], "center": [round(float(x), 3) for x in convert(h["center"])[0]],
                    "size": [round(h["size"][1], 3), round(h["size"][2], 3), round(h["size"][0], 3)],
                    "maxMassKg": h["maxMassKg"]} for h in info["holds"]],
