@@ -57,4 +57,35 @@ namespace GroundCrew.Vehicles
         public readonly float NoseGearAngle;
         public TowShearPinEvent(AircraftTowable aircraft, float noseGearAngle) { Aircraft = aircraft; NoseGearAngle = noseGearAngle; }
     }
+
+    /// <summary>
+    /// Equipment docking at an aircraft door changed state (stairs or catering platform at a
+    /// passenger door, belt loader at a hold door). Gap, height error and lateral offset in metres.
+    /// </summary>
+    public readonly struct DockingEvent : IGameEvent
+    {
+        public readonly DoorDockingSensor Sensor;
+        public readonly DockingState State;
+        public readonly string Door;
+        public readonly float Gap, HeightError, Lateral;
+        public DockingEvent(DoorDockingSensor sensor, DockingState state, string door, float gap, float heightError, float lateral)
+        {
+            Sensor = sensor; State = state; Door = door; Gap = gap; HeightError = heightError; Lateral = lateral;
+        }
+    }
+
+    public readonly struct GroundPowerEvent : IGameEvent
+    {
+        public readonly GroundPowerUnit Unit;
+        public readonly bool OutputOn;
+        public GroundPowerEvent(GroundPowerUnit unit, bool outputOn) { Unit = unit; OutputOn = outputOn; }
+    }
+
+    public readonly struct SprayEvent : IGameEvent
+    {
+        public readonly SprayNozzle Nozzle;
+        public readonly bool Spraying;
+        public readonly float LitresLeft;
+        public SprayEvent(SprayNozzle nozzle, bool spraying, float litresLeft) { Nozzle = nozzle; Spraying = spraying; LitresLeft = litresLeft; }
+    }
 }

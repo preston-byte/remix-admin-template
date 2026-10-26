@@ -13,13 +13,17 @@ using Object = UnityEngine.Object;
 namespace GroundCrew.EditorTools
 {
     /// <summary>
-    /// Menu: Ground Crew > Vehicles > Add Phase 4 Vehicles to Sandbox.
+    /// Menu: Ground Crew > Vehicles > Add Vehicles to Sandbox.
     ///
     /// Turns the generated vehicle models (Assets/GroundCrew/Art/Vehicles/*.glb, imported with
     /// glTFast) into working vehicles and parks them around Stand 24:
     ///  - baggage tractor towing three baggage carts (coupled drawbars, turntable steering);
     ///  - pushback tug with its tow bar on the front pin, ready to be latched to the aircraft;
-    ///  - fuel truck and catering truck (scissor lift and platform).
+    ///  - fuel truck and catering truck (scissor lift and platform);
+    ///  - passenger stairs and a belt loader (both report alignment with the aircraft door),
+    ///    a ground power unit, potable-water and lavatory trucks with lifting rear platforms,
+    ///    a de-icing truck (slewing, lifting, telescoping boom with a level basket and spray)
+    ///    and an airside van.
     /// Each drivable vehicle gets a Rigidbody, convex colliders from the generator's Collision_*
     /// hulls, WheelColliders on the wheel nodes, <see cref="VehicleController"/>, lights, synthesised
     /// sound, a seat with a "GRAB TO DRIVE" handle, a grabbable steering wheel and working dash
@@ -28,7 +32,7 @@ namespace GroundCrew.EditorTools
     public static class VehicleAssembler
     {
         const string k_ArtDir = "Assets/GroundCrew/Art/Vehicles";
-        const string k_RootName = "Vehicles (Phase 4)";
+        const string k_RootName = "Ground Vehicles";
 
 #pragma warning disable 0649   // filled by JsonUtility
         [Serializable] class Spec
@@ -39,13 +43,21 @@ namespace GroundCrew.EditorTools
             public WheelSpec[] wheels;
             public TowSpec tow;
             public LiftSpec lift;
+            public StairsSpec stairs;
+            public BeltSpec belt;
+            public BoomSpec boom;
+            public PlatformSpec servicePlatform;
         }
+        [Serializable] class StairsSpec { public float minFloor, maxFloor, flightLength, speed, extensionTravel; }
+        [Serializable] class BeltSpec { public float maxAngle, speed, conveyorSpeed; }
+        [Serializable] class BoomSpec { public float swingDeg, minPitch, maxPitch, extension, fluidLitres, sprayLitresPerSecond; }
+        [Serializable] class PlatformSpec { public float travel, speed; }
         [Serializable] class WheelSpec { public string name; public float radius, width; public bool steer, drive; }
         [Serializable] class TowSpec { public float maxSpeedKmh, torqueScale; }
         [Serializable] class LiftSpec { public float armLength, stowedFloor, maxFloor, speed, platformTravel; }
 #pragma warning restore 0649
 
-        [MenuItem("Ground Crew/Vehicles/Add Phase 4 Vehicles to Sandbox", priority = 30)]
+        [MenuItem("Ground Crew/Vehicles/Add Vehicles to Sandbox", priority = 30)]
         static void AddVehicles()
         {
             if (!Check("BaggageTractor")) return;
@@ -68,11 +80,21 @@ namespace GroundCrew.EditorTools
             var catering = Drivable(Spawn("CateringTruck", root, new Vector3(-16f, 0f, 26f), 180f), "CateringTruck", 540f);
             CateringSetup(catering);
 
+            // Passenger stairs facing the aircraft's left side (door 1L), belt loader facing its
+            // right side (forward hold), service trucks, de-icer and a van parked around the stand.
+            StairsSetup(Drivable(Spawn("PassengerStairs", root, new Vector3(13f, 0f, 16f), 270f), "PassengerStairs", 450f));
+            BeltLoaderSetup(Drivable(Spawn("BeltLoader", root, new Vector3(-12f, 0f, 17f), 90f), "BeltLoader", 450f));
+            GroundPowerSetup(root, new Vector3(5f, 0f, -7f), 0f);
+            ServicePlatformSetup(Drivable(Spawn("WaterTruck", root, new Vector3(20f, 0f, 36f), 180f), "WaterTruck", 540f));
+            ServicePlatformSetup(Drivable(Spawn("LavatoryTruck", root, new Vector3(-21f, 0f, 40f), 180f), "LavatoryTruck", 540f));
+            DeicerSetup(Drivable(Spawn("DeicingTruck", root, new Vector3(27f, 0f, 12f), 180f), "DeicingTruck", 540f));
+            Drivable(Spawn("AirsideVan", root, new Vector3(-24f, 0f, 4f), 0f), "AirsideVan", 540f);
+
             Phase1SandboxBuilder.Text3D(root, new Vector3(-13f, 3f, 9f), "<b>BAGGAGE TRAIN</b>", 3f, new Vector2(6f, 1f), Color.white)
                 .transform.rotation = Quaternion.Euler(0f, 180f, 0f);
             EditorSceneManager.MarkSceneDirty(root.gameObject.scene);
             Selection.activeGameObject = root.gameObject;
-            Debug.Log("[Vehicles] Added baggage tractor + 3 carts, pushback tug + tow bar, fuel truck and catering truck. Save the scene to keep them.");
+            Debug.Log("[Vehicles] Added the ground vehicle fleet around Stand 24. Save the scene to keep it.");
         }
 
         static bool Check(string id)
@@ -299,38 +321,7 @@ namespace GroundCrew.EditorTools
             Phase1SandboxBuilder.Props(rearHitch, ("type", HitchType.Pintle), ("body", rb));
 
             // The drawbar becomes its own body, jointed to the cart at the turntable.
-            drawbar.SetParent(group, true);
-            var barBody = drawbar.gameObject.AddComponent<Rigidbody>();
-            barBody.mass = 35f;
-            barBody.interpolation = RigidbodyInterpolation.Interpolate;
-            var capsule = drawbar.gameObject.AddComponent<CapsuleCollider>();
-            capsule.direction = 2;
-            capsule.radius = 0.06f;
-            capsule.height = 1.4f;
-            capsule.center = drawbar.InverseTransformPoint(Vector3.Lerp(drawbar.position, eye.position, 0.5f));
-            var pivot = drawbar.gameObject.AddComponent<ConfigurableJoint>();
-            pivot.connectedBody = rb;
-            pivot.anchor = Vector3.zero;
-            pivot.axis = Vector3.right;
-            pivot.secondaryAxis = Vector3.up;
-            pivot.xMotion = pivot.yMotion = pivot.zMotion = ConfigurableJointMotion.Locked;
-            pivot.angularXMotion = ConfigurableJointMotion.Limited;
-            pivot.angularYMotion = ConfigurableJointMotion.Limited;
-            pivot.angularZMotion = ConfigurableJointMotion.Locked;
-            pivot.lowAngularXLimit = new SoftJointLimit { limit = -80f };
-            pivot.highAngularXLimit = new SoftJointLimit { limit = 8f };
-            pivot.angularYLimit = new SoftJointLimit { limit = 80f };
-
-            var handleNode = Find(drawbar, "DrawbarHandle");
-            var grab = drawbar.gameObject.AddComponent<XRGrabInteractable>();
-            grab.attachTransform = handleNode;
-            grab.movementType = XRBaseInteractable.MovementType.VelocityTracking;
-            grab.throwOnDetach = false;
-            var coupler = drawbar.gameObject.AddComponent<TowCoupler>();
-            Phase1SandboxBuilder.Props(coupler, ("body", barBody), ("eye", eye), ("accepts", HitchType.Pintle), ("handle", grab),
-                ("startCoupledTo", hitch.GetComponent<TowHitch>()), ("pivotJoint", pivot));
-            var steering = go.AddComponent<TrailerSteering>();
-            Phase1SandboxBuilder.Props(steering, ("trailer", cart), ("drawbar", drawbar), ("coupler", coupler));
+            Drawbar(group, go, rb, cart, hitch.GetComponent<TowHitch>());
             return rear;
         }
 
@@ -396,6 +387,7 @@ namespace GroundCrew.EditorTools
                 ride.enabled = false;   // only its shape is used
                 var rider = platform.gameObject.AddComponent<RideablePlatform>();
                 Phase1SandboxBuilder.Props(rider, ("volume", ride), ("carrier", platform));
+                Docking(platform.gameObject, "Catering truck", Find(platform, "PlatformEdge"), "SP_Sill_Door_", 0.05f, 0.20f, 0.30f, 0.40f);
             }
         }
 
@@ -414,6 +406,240 @@ namespace GroundCrew.EditorTools
             c.center = b.center;
             c.size = b.size;
             c.isTrigger = trigger;
+        }
+
+        // ------------------------------------------------------------------ shared helpers for equipment
+
+        static void SetArray(Object target, string property, Object[] values)
+        {
+            var so = new SerializedObject(target);
+            var p = so.FindProperty(property);
+            p.arraySize = values.Length;
+            for (var i = 0; i < values.Length; i++) p.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>A BoxCollider on its own child, centred and sized in the parent's local space.</summary>
+        static BoxCollider LocalBox(Transform parent, string name, Vector3 centre, Vector3 size, bool trigger = false)
+        {
+            var c = new GameObject(name).AddComponent<BoxCollider>();
+            c.transform.SetParent(parent, false);
+            c.center = centre;
+            c.size = size;
+            c.isTrigger = trigger;
+            return c;
+        }
+
+        static void Rideable(Transform carrier, Vector3 floorCentre, Vector3 floorSize)
+        {
+            var ride = LocalBox(carrier, "Ride Volume", floorCentre + Vector3.up * 1.1f, new Vector3(floorSize.x, 2.2f, floorSize.z), true);
+            ride.enabled = false;   // only its shape is used
+            var rider = carrier.gameObject.AddComponent<RideablePlatform>();
+            Phase1SandboxBuilder.Props(rider, ("volume", ride), ("carrier", carrier));
+        }
+
+        static DoorDockingSensor Docking(GameObject host, string name, Transform edge, string prefix, float maxAbove, float maxBelow, float maxGap, float maxLateral)
+        {
+            if (edge == null) return null;
+            var sensor = host.AddComponent<DoorDockingSensor>();
+            var lamp = FindPrefix(host.transform, "Light_Dock_");
+            GameObject lampGo = null;
+            foreach (var l in lamp) { lampGo = l.gameObject; break; }
+            Phase1SandboxBuilder.Props(sensor, ("equipmentName", name), ("edge", edge), ("sillPrefix", prefix), ("maxAbove", maxAbove),
+                ("maxBelow", maxBelow), ("maxGap", maxGap), ("maxLateral", maxLateral), ("alignedLamp", lampGo));
+            return sensor;
+        }
+
+        static HydraulicAxis Axis(GameObject vehicleGo, string name, Transform target, string hintName, AxisMotion motion, float min, float max,
+            float speed, string plusButton, string plusLabel, string minusButton, string minusLabel, bool inhibitDrive)
+        {
+            if (target == null) return null;
+            var axis = target.gameObject.AddComponent<HydraulicAxis>();
+            Phase1SandboxBuilder.Props(axis, ("functionName", name), ("target", target), ("axisHint", Find(target, hintName)), ("motion", motion),
+                ("min", min), ("max", max), ("speed", speed), ("plusButton", Button(vehicleGo, plusButton, plusLabel, null)),
+                ("minusButton", Button(vehicleGo, minusButton, minusLabel, null)), ("vehicle", vehicleGo.GetComponent<VehicleController>()),
+                ("inhibitDriveWhenDeployed", inhibitDrive));
+            return axis;
+        }
+
+        // ------------------------------------------------------------------ passenger stairs
+
+        static void StairsSetup(GameObject go)
+        {
+            var spec = LoadSpec("PassengerStairs").stairs ?? new StairsSpec { minFloor = 2.2f, maxFloor = 4.1f, flightLength = 6f, speed = 0.1f, extensionTravel = 0.6f };
+            var platform = Find(go.transform, "StairPlatform");
+            var extension = Find(go.transform, "PlatformExtension");
+            var flight = Find(go.transform, "StairFlight");
+            var bottom = Find(go.transform, "FlightBottom");
+            var stairs = go.AddComponent<StairsMechanism>();
+            Phase1SandboxBuilder.Props(stairs, ("vehicle", go.GetComponent<VehicleController>()), ("platform", platform), ("extension", extension),
+                ("flight", flight), ("flightBottom", bottom), ("minFloor", spec.minFloor), ("maxFloor", spec.maxFloor),
+                ("flightLength", spec.flightLength), ("speed", spec.speed), ("extensionTravel", spec.extensionTravel));
+            SetArray(stairs, "upButtons", new Object[] { Button(go, "Btn_StairsUp", "UP", null), Button(go, "Btn_StairsUp_Dash", "STAIRS UP", null) });
+            SetArray(stairs, "downButtons", new Object[] { Button(go, "Btn_StairsDown", "DOWN", null), Button(go, "Btn_StairsDown_Dash", "STAIRS DN", null) });
+            SetArray(stairs, "outButtons", new Object[] { Button(go, "Btn_StairsOut", "PLATE OUT", null), Button(go, "Btn_StairsOut_Dash", "PLATE OUT", null) });
+            SetArray(stairs, "inButtons", new Object[] { Button(go, "Btn_StairsIn", "PLATE IN", null), Button(go, "Btn_StairsIn_Dash", "PLATE IN", null) });
+
+            // Platform floor, bridge plate and a walking slope along the flight (it tilts with the flight).
+            LocalBox(platform, "Floor Collider", new Vector3(0f, -0.04f, 0.80f), new Vector3(1.5f, 0.08f, 1.6f));
+            LocalBox(extension, "Plate Collider", new Vector3(0f, -0.10f, -0.30f), new Vector3(1.3f, 0.04f, 0.6f));
+            if (flight != null && bottom != null)
+            {
+                var slope = new GameObject("Walk Surface").AddComponent<BoxCollider>();
+                slope.transform.SetParent(flight, false);
+                var up = flight.position - bottom.position;
+                // Runs 1 m past the foot so it meets the ground: no tall first step at any height.
+                slope.transform.SetPositionAndRotation(Vector3.Lerp(bottom.position, flight.position, 0.5f) - up.normalized * 0.5f - Vector3.up * 0.04f,
+                    Quaternion.LookRotation(up.normalized, Vector3.up));
+                slope.size = new Vector3(1.2f, 0.05f, up.magnitude + 1f);
+            }
+            Rideable(platform, new Vector3(0f, 0f, 0.8f), new Vector3(1.5f, 0f, 1.6f));
+            Docking(platform.gameObject, "Passenger stairs", Find(go.transform, "PlatformEdge"), "SP_Sill_Door_", 0.03f, 0.15f, 0.25f, 0.35f);
+        }
+
+        // ------------------------------------------------------------------ belt loader
+
+        static void BeltLoaderSetup(GameObject go)
+        {
+            var spec = LoadSpec("BeltLoader").belt ?? new BeltSpec { maxAngle = 23f, speed = 6f, conveyorSpeed = 0.55f };
+            var belt = Find(go.transform, "Belt");
+            if (belt == null) return;
+            Axis(go, "Belt lift", belt, "BeltAxis", AxisMotion.Rotate, 0f, spec.maxAngle, spec.speed, "Btn_BeltUp", "BELT UP", "Btn_BeltDown", "BELT DN", false);
+            // Belt surface and side guards (local: forward along the belt from the rear hinge).
+            LocalBox(belt, "Belt Surface", new Vector3(0f, 0.18f, 3.8f), new Vector3(0.78f, 0.04f, 7.6f));
+            LocalBox(belt, "Guard L", new Vector3(-0.43f, 0.33f, 3.8f), new Vector3(0.07f, 0.30f, 7.6f));
+            LocalBox(belt, "Guard R", new Vector3(0.43f, 0.33f, 3.8f), new Vector3(0.07f, 0.30f, 7.6f));
+            var volume = LocalBox(belt, "Conveyor Volume", new Vector3(0f, 0.45f, 3.8f), new Vector3(0.78f, 0.5f, 7.6f), true);
+            var conveyor = volume.gameObject.AddComponent<ConveyorBelt>();
+            Phase1SandboxBuilder.Props(conveyor, ("belt", belt), ("speed", spec.conveyorSpeed), ("vehicle", go.GetComponent<VehicleController>()),
+                ("inButton", Button(go, "Btn_ConveyorIn", "BELT IN", null)), ("outButton", Button(go, "Btn_ConveyorOut", "BELT OUT", null)),
+                ("stopButton", Button(go, "Btn_ConveyorStop", "STOP", null)));
+            Docking(belt.gameObject, "Belt loader", Find(belt, "BeltEnd"), "SP_Sill_CargoDoor_", 0.10f, 0.20f, 0.35f, 0.50f);
+        }
+
+        // ------------------------------------------------------------------ ground power unit
+
+        static void GroundPowerSetup(Transform root, Vector3 position, float yaw)
+        {
+            var spec = LoadSpec("GroundPowerUnit");
+            var group = new GameObject("Ground Power Unit").transform;
+            group.SetParent(root, false);
+            var go = Spawn("GroundPowerUnit", group, position, yaw);
+            go.name = "GPU";
+            var rb = Body(go, spec);
+            var unit = go.AddComponent<VehicleController>();
+            unit.SetWheels(Wheels(go, spec, rb.mass));
+            Phase1SandboxBuilder.Props(unit, ("displayName", spec.label), ("hasEngine", true), ("maxSpeedKmh", 25f),
+                ("maxSteerAngle", spec.maxSteerDeg), ("motorTorque", 0f), ("brakeTorque", spec.brakeTorque), ("centerOfMass", new Vector3(0f, 0.7f, 0f)));
+            go.AddComponent<AudioSource>();
+            var sound = go.AddComponent<VehicleAudio>();
+            Phase1SandboxBuilder.Props(sound, ("vehicle", unit), ("engine", EngineSound.Diesel), ("reverseAlarm", false));
+            var gpu = go.AddComponent<GroundPowerUnit>();
+            Transform run = null, output = null;
+            foreach (var t in FindPrefix(go.transform, "Light_GpuRun_")) run = t;
+            foreach (var t in FindPrefix(go.transform, "Light_GpuOut_")) output = t;
+            Phase1SandboxBuilder.Props(gpu, ("unit", unit), ("engineButton", Button(go, "Btn_GpuEngine", "ENGINE", null)),
+                ("outputButton", Button(go, "Btn_GpuOutput", "OUTPUT", null)), ("runLamp", run != null ? run.gameObject : null),
+                ("outputLamp", output != null ? output.gameObject : null));
+            Drawbar(group, go, rb, unit, null);
+        }
+
+        /// <summary>Turntable drawbar as its own body, jointed to the trailer; optionally coupled at start.</summary>
+        static TowCoupler Drawbar(Transform group, GameObject trailer, Rigidbody rb, VehicleController controller, TowHitch startCoupledTo)
+        {
+            var drawbar = Find(trailer.transform, "Drawbar");
+            var eye = Find(drawbar, "DrawbarEye");
+            drawbar.SetParent(group, true);
+            var barBody = drawbar.gameObject.AddComponent<Rigidbody>();
+            barBody.mass = 35f;
+            barBody.interpolation = RigidbodyInterpolation.Interpolate;
+            var capsule = drawbar.gameObject.AddComponent<CapsuleCollider>();
+            capsule.direction = 2;
+            capsule.radius = 0.06f;
+            capsule.height = Vector3.Distance(drawbar.position, eye.position);
+            capsule.center = drawbar.InverseTransformPoint(Vector3.Lerp(drawbar.position, eye.position, 0.5f));
+            var pivot = drawbar.gameObject.AddComponent<ConfigurableJoint>();
+            pivot.connectedBody = rb;
+            pivot.anchor = Vector3.zero;
+            pivot.axis = Vector3.right;
+            pivot.secondaryAxis = Vector3.up;
+            pivot.xMotion = pivot.yMotion = pivot.zMotion = ConfigurableJointMotion.Locked;
+            pivot.angularXMotion = ConfigurableJointMotion.Limited;
+            pivot.angularYMotion = ConfigurableJointMotion.Limited;
+            pivot.angularZMotion = ConfigurableJointMotion.Locked;
+            pivot.lowAngularXLimit = new SoftJointLimit { limit = -80f };
+            pivot.highAngularXLimit = new SoftJointLimit { limit = 8f };
+            pivot.angularYLimit = new SoftJointLimit { limit = 80f };
+            var grab = drawbar.gameObject.AddComponent<XRGrabInteractable>();
+            grab.attachTransform = Find(drawbar, "DrawbarHandle");
+            grab.movementType = XRBaseInteractable.MovementType.VelocityTracking;
+            grab.throwOnDetach = false;
+            var coupler = drawbar.gameObject.AddComponent<TowCoupler>();
+            Phase1SandboxBuilder.Props(coupler, ("body", barBody), ("eye", eye), ("accepts", HitchType.Pintle), ("handle", grab),
+                ("startCoupledTo", startCoupledTo), ("pivotJoint", pivot));
+            var steering = trailer.AddComponent<TrailerSteering>();
+            Phase1SandboxBuilder.Props(steering, ("trailer", controller), ("drawbar", drawbar), ("coupler", coupler));
+            return coupler;
+        }
+
+        // ------------------------------------------------------------------ water / lavatory trucks
+
+        static void ServicePlatformSetup(GameObject go)
+        {
+            var platform = Find(go.transform, "ServicePlatform");
+            if (platform == null) return;
+            Axis(go, "Service platform", platform, "LiftAxis", AxisMotion.Translate, 0f, 1.5f, 0.15f, "Btn_PlatformUp", "UP", "Btn_PlatformDown", "DOWN", true);
+            LocalBox(platform, "Floor Collider", new Vector3(0f, -0.03f, 0f), new Vector3(1.6f, 0.06f, 0.9f));
+            Rideable(platform, Vector3.zero, new Vector3(1.6f, 0f, 0.9f));
+        }
+
+        // ------------------------------------------------------------------ de-icing truck
+
+        static void DeicerSetup(GameObject go)
+        {
+            var spec = LoadSpec("DeicingTruck").boom ?? new BoomSpec { swingDeg = 150f, minPitch = -18f, maxPitch = 70f, extension = 4f, fluidLitres = 6000f, sprayLitresPerSecond = 2.5f };
+            var turret = Find(go.transform, "BoomTurret");
+            var boom = Find(go.transform, "Boom");
+            var ext = Find(go.transform, "BoomExt");
+            var basket = Find(go.transform, "Basket");
+            Axis(go, "Slew", turret, "TurretAxis", AxisMotion.Rotate, -spec.swingDeg, spec.swingDeg, 12f, "Btn_SwingPlus", "SWING +", "Btn_SwingMinus", "SWING -", true);
+            Axis(go, "Boom", boom, "BoomAxis", AxisMotion.Rotate, spec.minPitch, spec.maxPitch, 6f, "Btn_BoomUp", "BOOM UP", "Btn_BoomDown", "BOOM DN", true);
+            Axis(go, "Telescope", ext, "ExtAxis", AxisMotion.Translate, 0f, spec.extension, 0.25f, "Btn_BoomOut", "OUT", "Btn_BoomIn", "IN", true);
+            if (basket == null) return;
+            var leveller = go.AddComponent<BasketLeveller>();
+            Phase1SandboxBuilder.Props(leveller, ("basket", basket), ("reference", turret));
+            LocalBox(basket, "Floor Collider", new Vector3(0f, -1.15f, -0.55f), new Vector3(1.1f, 0.06f, 1.0f));
+            Rideable(basket, new Vector3(0f, -1.15f, -0.55f), new Vector3(1.1f, 0f, 1.0f));
+
+            var nozzle = Find(basket, "Nozzle");
+            var dir = Find(basket, "NozzleDir");
+            if (nozzle == null || dir == null) return;
+            var sprayGo = new GameObject("Spray");
+            sprayGo.transform.SetParent(nozzle, false);
+            sprayGo.transform.rotation = Quaternion.LookRotation((dir.position - nozzle.position).normalized, Vector3.up);
+            var ps = sprayGo.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.playOnAwake = false;
+            main.loop = true;
+            main.startSpeed = 14f;
+            main.startLifetime = 1.3f;
+            main.startSize = 0.07f;
+            main.gravityModifier = 1f;
+            main.maxParticles = 1200;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.startColor = new Color(1f, 0.55f, 0.1f, 0.7f);   // Type I fluid is dyed orange
+            var emission = ps.emission;
+            emission.rateOverTime = 350f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Cone;
+            shape.angle = 5f;
+            shape.radius = 0.01f;
+            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader != null) sprayGo.GetComponent<ParticleSystemRenderer>().sharedMaterial = new Material(shader) { color = new Color(1f, 0.55f, 0.1f, 0.7f) };
+            ps.Stop();
+            var nozzleComp = sprayGo.AddComponent<SprayNozzle>();
+            Phase1SandboxBuilder.Props(nozzleComp, ("spray", ps), ("toggleButton", Button(go, "Btn_Spray", "SPRAY", null)),
+                ("vehicle", go.GetComponent<VehicleController>()), ("litres", spec.fluidLitres), ("litresPerSecond", spec.sprayLitresPerSecond));
         }
     }
 }

@@ -1,0 +1,75 @@
+{
+ "id": "GroundPowerUnit",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 4696,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    0.55,
+    0.2,
+    0.7
+   ],
+   "radius": 0.2,
+   "width": 0.12,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -0.55,
+    0.2,
+    0.7
+   ],
+   "radius": 0.2,
+   "width": 0.12,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.55,
+    0.2,
+    -0.7
+   ],
+   "radius": 0.2,
+   "width": 0.12,
+   "steer": false,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.55,
+    0.2,
+    -0.7
+   ],
+   "radius": 0.2,
+   "width": 0.12,
+   "steer": false,
+   "drive": false
+  }
+ ],
+ "points": [],
+ "label": "Ground power unit",
+ "massKg": 1500,
+ "maxSpeedKmh": 25,
+ "maxSteerDeg": 70,
+ "motorTorque": 0,
+ "brakeTorque": 1200,
+ "centerOfMass": [
+  0.0,
+  0.7,
+  0.0
+ ],
+ "suspension": 0.05,
+ "engine": "diesel",
+ "gpu": {
+  "kva": 90,
+  "volts": 115,
+  "hz": 400
+ }
+}

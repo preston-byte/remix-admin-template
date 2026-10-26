@@ -1,0 +1,100 @@
+{
+ "id": "LavatoryTruck",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 7688,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    0.9,
+    0.42,
+    1.9
+   ],
+   "radius": 0.42,
+   "width": 0.26,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -0.9,
+    0.42,
+    1.9
+   ],
+   "radius": 0.42,
+   "width": 0.26,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.82,
+    0.42,
+    -1.5
+   ],
+   "radius": 0.42,
+   "width": 0.546,
+   "steer": false,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.82,
+    0.42,
+    -1.5
+   ],
+   "radius": 0.42,
+   "width": 0.546,
+   "steer": false,
+   "drive": true
+  }
+ ],
+ "points": [
+  {
+   "name": "DriverEye",
+   "position": [
+    0.5,
+    2.25,
+    2.15
+   ]
+  },
+  {
+   "name": "HoseNozzle",
+   "position": [
+    0.2,
+    2.56,
+    -2.18
+   ]
+  },
+  {
+   "name": "ExitPoint",
+   "position": [
+    1.6,
+    0.0,
+    2.15
+   ]
+  }
+ ],
+ "label": "Lavatory service truck",
+ "massKg": 9000,
+ "maxSpeedKmh": 25,
+ "maxSteerDeg": 40,
+ "motorTorque": 6500,
+ "brakeTorque": 20000,
+ "centerOfMass": [
+  0.0,
+  1.1,
+  0.0
+ ],
+ "suspension": 0.12,
+ "engine": "diesel_big",
+ "servicePlatform": {
+  "travel": 1.5,
+  "speed": 0.15
+ },
+ "capacityLitres": 1500
+}

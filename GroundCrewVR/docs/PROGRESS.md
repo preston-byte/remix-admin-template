@@ -60,7 +60,7 @@ Remaining:
 - [ ] Radio messages (text + placeholder audio) and tablet assignment/task pages
 - [ ] Results screen
 
-## Phase 4 — Vehicles  ⏳ (first pass done 🧪)
+## Phase 4 — Vehicles  ⏳ (fleet done 🧪, on-device tuning next)
 - [x] Vehicle models: baggage tractor, baggage cart, pushback tug, tow bar, fuel truck, catering truck (`Tools/VehicleGenerator`, ~2-8k tris each)
 - [x] Vehicle framework: enter/exit (`VehicleSeat`), grabbable steering wheel, triggers for throttle/brake, D/N/R, parking brake, engine, horn, lights, beacon, reverse beeper, speed governor, drive interlocks, collision events
 - [x] Synthesised engine / horn / reverse-alarm audio (no assets needed)
@@ -71,7 +71,16 @@ Remaining:
 - [x] `VehicleAssembler` editor menu parks the fleet on Stand 24
 - [ ] On-device tuning (wheel friction, suspension, steering feel, drawbar joints)
 - [ ] Driving comfort options (vignette while moving, gentler acceleration)
-- [ ] Towbarless tug, belt loader, stairs, GPU cart, water / waste trucks, de-icer, vans
+- [x] Passenger stairs: platform 2.2-4.1 m, self-levelling treads, bridge plate, walkable flight, dash and platform controls
+- [x] Belt loader: tilting belt, conveyor that carries loose bags in or out
+- [x] Door docking sensor (stairs, catering platform, belt loader): DOCK lamp + `DockingEvent` (aligned / too high / too low / offset / contact)
+- [x] Ground power unit (towed): engine and output contactor, RUN / OUTPUT lamps, `GroundPowerEvent`
+- [x] Potable-water and lavatory trucks: lifting rear service platforms that carry the player
+- [x] De-icing truck: slewing / lifting / telescoping boom, self-levelling basket that carries the player, fluid spray particle system with consumption
+- [x] Airside van (maintenance / staff)
+- [x] Generic `HydraulicAxis` (hold-to-run buttons, parking-brake interlock, drive inhibit) for equipment functions
+- [ ] Towbarless tug, container (ULD) loader + dollies for the A320, jet bridge, cargo/ULD containers
+- [ ] Hoses and cables to the aircraft (fuel, water, waste, GPU, air) — Phase 6
 - [ ] Recorded engine sounds; dash speed/gear display; AI drivers
 
 ## Phase 5 — A320-class aircraft  ⬜ (model already generated in Phase 2)

@@ -2,7 +2,7 @@
  "id": "CateringTruck",
  "units": "metres",
  "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
- "triangles": 7612,
+ "triangles": 7724,
  "wheels": [
   {
    "name": "Wheel_FL",

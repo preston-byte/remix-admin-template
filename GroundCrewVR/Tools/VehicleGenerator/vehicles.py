@@ -51,6 +51,12 @@ MATERIALS = {
     "Light_Brake": ((0.9, 0.05, 0.03), 0.0, 0.3, (1.0, 0.05, 0.02), None, False),
     "Light_Reverse": ((1.0, 1.0, 1.0), 0.0, 0.3, (1.0, 1.0, 1.0), None, False),
     "Light_Work": ((1.0, 1.0, 0.95), 0.0, 0.3, (1.0, 0.98, 0.9), None, False),
+    "Light_Dock": ((0.1, 0.9, 0.2), 0.0, 0.3, (0.1, 1.0, 0.25), None, False),
+    "Light_GpuRun": ((0.1, 0.9, 0.2), 0.0, 0.3, (0.1, 1.0, 0.25), None, False),
+    "Light_GpuOut": ((1.0, 0.6, 0.05), 0.0, 0.3, (1.0, 0.55, 0.02), None, False),
+    "LensGreen": ((0.05, 0.35, 0.10), 0.1, 0.20, None, None, False),
+    "DeiceOrange": ((0.95, 0.45, 0.08), 0.0, 0.45, None, None, False),
+    "Tread": ((0.30, 0.31, 0.33), 0.6, 0.55, None, None, False),
     "Btn_Green": ((0.10, 0.65, 0.20), 0.0, 0.4, None, None, False),
     "Btn_Red": ((0.75, 0.08, 0.06), 0.0, 0.4, None, None, False),
     "Btn_Grey": ((0.55, 0.56, 0.58), 0.0, 0.4, None, None, False),
@@ -173,7 +179,7 @@ DASH_BUTTONS = [("Start", 0.40, "Btn_Green"), ("Lights", 0.32, "Btn_Grey"), ("Re
 def driver_station(root, body, eye, wheel_fwd, wheel_drop, wheel_tilt, wheel_radius, dash, buttons=DASH_BUTTONS, seat_w=0.48):
     """Seat, steering column and wheel (horn button on the hub), dash buttons and the DriverEye empty.
     dash = (x_face, z_top): the driver-facing dash face the buttons sit on, and its top edge.
-    buttons = [(name, y offset from the driver, material)]."""
+    buttons = [(name, y offset from the driver, material[, extra drop below the top row])]."""
     ex, ey, ez = eye
     seat_z = ez - 0.80
     box(body.buf("Seat"), [ex + 0.02, ey, seat_z], (0.46, seat_w, 0.10))
@@ -189,8 +195,9 @@ def driver_station(root, body, eye, wheel_fwd, wheel_drop, wheel_tilt, wheel_rad
     wheel.children.append(horn)
     x_face, z_top = dash
     rod(body.buf("Chassis"), hub - n * 0.02, np.array([x_face + 0.05, ey, z_top - 0.08]), 0.03, 10)
-    for name, dy, mat in buttons:
-        c = np.array([x_face - 0.012, ey + dy, z_top - 0.06])
+    for b in buttons:
+        name, dy, mat = b[:3]
+        c = np.array([x_face - 0.012, ey + dy, z_top - 0.06 - (b[3] if len(b) > 3 else 0.0)])
         p = Part(f"Btn_{name}", c)
         cylinder(p.buf(mat), c, c + [-0.012, 0, 0], 0.016, 14)
         p.children.append(Part("Out", c + [-0.05, 0, 0]))
@@ -528,6 +535,7 @@ def catering_truck():
         for x in (bx1 + 0.1, bx1 + 0.85):
             rod(plat.buf("GseYellow"), [x, sgn * (W / 2 - 0.1), stow + 0.06], [x, sgn * (W / 2 - 0.1), stow + 1.1], 0.025, 6)
     plat.children.append(Part("PlatformEdge", [bx1 + 0.90, 0, stow + 0.07]))
+    lamps(plat, plat, "Dock", [[bx1 + 0.85, W / 2 - 0.1, stow + 1.2]], [1, 0, 0], 0.03, "LensGreen")
     lift.children.append(plat)
     for sgn in (1, -1):
         lamps(lift, lift, "Work", [[bx1 + 0.02, sgn * 1.0, stow + 2.30]], [1, 0, 0], 0.05, "Lens")
@@ -577,4 +585,392 @@ def catering_truck():
     return vid, root, meta
 
 
-ALL = [baggage_tractor, baggage_cart, pushback_tug, tow_bar, fuel_truck, catering_truck]
+# ====================================================================== more ground support equipment
+
+def add_drawbar(root, pivot, length, colour):
+    """Turntable drawbar with a lunette eye and a grab handle (towed carts and GPUs)."""
+    pivot = np.asarray(pivot, dtype=float)
+    bar = Part("Drawbar", pivot)
+    eye = pivot + [length, 0, 0]
+    for sgn in (1, -1):
+        rod(bar.buf(colour), pivot + [0, sgn * 0.30, 0], eye - [0.25, 0, 0], 0.025, 8)
+    rod(bar.buf(colour), eye - [0.25, 0, 0], eye - [0.04, 0, 0], 0.03, 8)
+    torus(bar.buf("Steel"), eye + [0.02, 0, 0], [0, 0, 1.0], 0.045, 0.014, 16, 6)
+    box(bar.buf("Chassis"), pivot, (0.10, 0.70, 0.06))
+    rod(bar.buf("Chassis"), eye - [0.40, 0, 0], eye - [0.40, 0, -0.08], 0.012, 6)
+    rod(bar.buf("Chassis"), eye - [0.48, 0, 0.08], eye - [0.32, 0, 0.08], 0.016, 8)
+    bar.children.append(Part("DrawbarEye", eye + [0.02, 0, 0]))
+    bar.children.append(Part("DrawbarHandle", eye - [0.40, 0, 0.08]))
+    root.children.append(bar)
+    return bar
+
+
+def control_buttons(parent, specs, centre, outward, spacing=0.06):
+    """A column of push buttons facing `outward`, top to bottom. specs = [(name, material)]."""
+    n = normalize(np.asarray(outward, dtype=float))
+    for k, (name, mat) in enumerate(specs):
+        c = np.asarray(centre, dtype=float) - [0, 0, k * spacing]
+        p = Part(f"Btn_{name}", c)
+        cylinder(p.buf(mat), c, c + n * 0.012, 0.018, 14)
+        p.children.append(Part("Out", c + n * 0.05))
+        parent.children.append(p)
+
+
+def rail_box(buf, x0, x1, y, z0, height, posts=3, r=0.022):
+    """Handrail along x at lateral position y: posts and a top rail."""
+    for x in np.linspace(x0, x1, posts):
+        rod(buf, [x, y, z0], [x, y, z0 + height], r, 6)
+    rod(buf, [x0, y, z0 + height], [x1, y, z0 + height], r, 6)
+
+
+def passenger_stairs():
+    """Self-propelled passenger stairs: cab at the front under the top platform, a stair flight
+    hinged to the platform whose foot slides on rails behind the rear axle, telescopic columns.
+    Platform floor 2.2-4.1 m (737 door 1 sill 2.65 m, A320 3.42 m); extending bridge plate."""
+    vid = "PassengerStairs"
+    root = Part(vid)
+    body = Part("Body")
+    root.children.append(body)
+    wb, track, r = 3.6, 1.9, 0.40
+    xf, xr = 1.6, -2.0
+    x_front, W = 2.85, 2.30
+    hw = 1.10
+    box(body.buf("Chassis"), [-0.25, 0, 0.62], (5.7, 1.0, 0.22))
+    x0 = x_front - 1.55
+    side(body.buf("GseWhite"), [(x0, 0.55), (x_front, 0.55), (x_front, 1.05), (x0, 1.05)], -hw, hw)
+    box(body.buf("Chassis"), [x_front + 0.06, 0, 0.62], (0.12, W, 0.22))
+    cab_glass_box(body, x0, x_front, hw, 1.05, 1.95, rake=0.05)
+    box(body.buf("Dash"), [x_front - 0.22, 0, 1.22], (0.30, 2 * hw - 0.2, 0.16))
+    stairs_buttons = DASH_BUTTONS + [("StairsUp_Dash", 0.40, "Btn_Green", 0.05), ("StairsDown_Dash", 0.32, "Btn_Grey", 0.05),
+                                     ("StairsOut_Dash", -0.24, "Btn_Grey", 0.05), ("StairsIn_Dash", -0.30, "Btn_Grey", 0.05)]
+    driver_station(root, body, eye=(x_front - 0.95, 0.5, 1.72), wheel_fwd=0.45, wheel_drop=0.45, wheel_tilt=35 * D, wheel_radius=0.2,
+                   dash=(x_front - 0.37, 1.30), buttons=stairs_buttons)
+    box(body.buf("GseWhite"), [(x0 - 2.0) / 2, 0, 0.82], (x0 + 2.0, W, 0.20))           # deck behind the cab (stops where the flight comes down)
+    for sgn in (1, -1):
+        box(body.buf("Steel"), [-3.95, sgn * 0.62, 0.40], (1.40, 0.08, 0.08))             # foot rails
+        rod(body.buf("Chassis"), [-3.3, sgn * 0.62, 0.40], [-3.0, sgn * 0.62, 0.70], 0.04, 8)
+        cylinder(body.buf("Steel"), [1.15, sgn * 0.85, 0.85], [1.15, sgn * 0.85, 2.10], 0.07, 12)   # lower columns
+        side(body.buf("GseWhite"), [(xr - 0.55, 0.92), (xr + 0.55, 0.92), (xr + 0.45, 1.08), (xr - 0.45, 1.08)], sgn * (W / 2 - 0.1), sgn * W / 2)
+    h0 = 2.20
+    # platform (rises)
+    plat = Part("StairPlatform", [1.30, 0, h0])
+    box(plat.buf("Tread"), [2.10, 0, h0 - 0.04], (1.60, 1.50, 0.08))
+    for sgn in (1, -1):
+        rail_box(plat.buf("GseYellow"), 1.32, 2.85, sgn * 0.72, h0, 1.05, posts=3)
+        rod(plat.buf("Steel"), [1.15, sgn * 0.85, h0 - 0.04], [1.15, sgn * 0.85, h0 - 1.55], 0.055, 10)   # upper columns
+        rod(plat.buf("Chassis"), [1.32, sgn * 0.72, h0 + 1.05], [1.32, sgn * 0.72, h0 + 2.10], 0.03, 6)  # canopy posts
+        rod(plat.buf("Chassis"), [2.85, sgn * 0.72, h0 + 1.05], [2.85, sgn * 0.72, h0 + 2.10], 0.03, 6)
+    box(plat.buf("GseWhite"), [2.08, 0, h0 + 2.12], (1.70, 1.60, 0.05))                 # canopy roof
+    ext = Part("PlatformExtension", [2.90, 0, h0])
+    box(ext.buf("Tread"), [2.60, 0, h0 - 0.10], (0.60, 1.30, 0.04))
+    box(ext.buf("Rubber"), [2.92, 0, h0 - 0.08], (0.06, 1.30, 0.12))
+    ext.children.append(Part("PlatformEdge", [2.95, 0, h0]))
+    plat.children.append(ext)
+    lamps(plat, plat, "Dock", [[2.85, 0.72, h0 + 1.15]], [-1, 0, 0], 0.03, "LensGreen")
+    control_buttons(plat, [("StairsUp", "Btn_Green"), ("StairsDown", "Btn_Grey"), ("StairsOut", "Btn_Grey"), ("StairsIn", "Btn_Grey")],
+                    [2.86, -0.72 + 0.04, h0 + 1.0], [-1, 0, 0])
+    root.children.append(plat)
+    # stair flight, built at the lowest setting; hinge at the platform's rear edge
+    Lf, zb = 6.0, 0.45
+    top = np.array([1.30, 0, h0])
+    th0 = math.asin((h0 - zb) / Lf)
+    down = np.array([-math.cos(th0), 0, -math.sin(th0)])
+    bottom = top + down * Lf
+    flight = Part("StairFlight", top)
+    for sgn in (1, -1):
+        rod(flight.buf("GseYellow"), top + [0, sgn * 0.64, -0.05], bottom + [0, sgn * 0.64, -0.05], 0.05, 8)     # stringers
+        for k in range(5):
+            p0 = top + down * (Lf * (0.08 + 0.21 * k)) + [0, sgn * 0.66, 0]
+            rod(flight.buf("GseYellow"), p0, p0 + [0, 0, 0.95], 0.02, 6)
+        rod(flight.buf("GseYellow"), top + down * (Lf * 0.08) + [0, sgn * 0.66, 0.95], top + down * (Lf * 0.92) + [0, sgn * 0.66, 0.95], 0.022, 6)
+    n_treads = 18
+    for k in range(n_treads):
+        c = top + down * (Lf * (k + 0.5) / n_treads) + [0, 0, -0.02]
+        t = Part(f"Tread_{k:02d}", c)
+        box(t.buf("Tread"), c, (0.26, 1.22, 0.04))
+        flight.children.append(t)
+    flight.children.append(Part("FlightBottom", bottom))
+    cylinder(flight.buf("Chassis"), bottom + [0, -0.62, -0.02], bottom + [0, 0.62, -0.02], 0.05, 10)          # foot roller
+    root.children.append(flight)
+    for name, x, y in (("FL", xf, track / 2), ("FR", xf, -track / 2), ("RL", xr, track / 2), ("RR", xr, -track / 2)):
+        add_wheel(root, name, x, y, r, 0.24, steer=x > 0, drive=x < 0)
+    lamps(root, body, "Head", [[x_front + 0.125, 0.85, 0.70], [x_front + 0.125, -0.85, 0.70]], [1, 0, 0], 0.06, "Lens")
+    lamps(root, body, "Brake", [[-2.56, 1.05, 1.00], [-2.56, -1.05, 1.00]], [-1, 0, 0], 0.04, "LensRed")
+    lamps(root, body, "Reverse", [[-2.56, 0.92, 1.00]], [-1, 0, 0], 0.03, "Lens")
+    beacon(root, body, [x0 + 0.3, 0.8, 1.99])
+    empty(root, "ExitPoint", [x_front - 0.95, 1.55, 0.0])
+    collision_box(root, 0, [-0.35, 0, 0.75], (5.5, W, 0.6))
+    collision_box(root, 1, [x0 + 0.78, 0, 1.5], (1.55, 2 * hw, 0.9))
+    meta = dict(label="Passenger stairs", massKg=5200, maxSpeedKmh=20, maxSteerDeg=38, motorTorque=4200, brakeTorque=12000,
+                centerOfMass=[0.0, 0.0, 0.9], suspension=0.10, engine="diesel",
+                stairs={"minFloor": h0, "maxFloor": 4.10, "flightLength": Lf, "footHeight": zb, "speed": 0.10,
+                        "extensionTravel": 0.60})
+    return vid, root, meta
+
+
+def belt_loader():
+    """Self-propelled belt loader: a conveyor whose front end lifts to the hold sill (to ~3.5 m)."""
+    vid = "BeltLoader"
+    root = Part(vid)
+    body = Part("Body")
+    root.children.append(body)
+    wb, track, r = 3.4, 1.55, 0.30
+    xf, xr = 1.7, -1.7
+    W = 2.0
+    box(body.buf("Chassis"), [0.0, 0, 0.45], (5.6, 1.1, 0.24))
+    side(body.buf("GseYellow"), [(-2.9, 0.40), (2.6, 0.40), (2.8, 0.55), (2.6, 0.72), (-2.9, 0.72)], -W / 2, -0.50)
+    side(body.buf("GseYellow"), [(-2.9, 0.40), (2.6, 0.40), (2.8, 0.55), (2.6, 0.72), (-2.9, 0.72)], 0.50, W / 2)
+    for x in (xf, xr):
+        for sgn in (1, -1):
+            side(body.buf("GseYellow"), [(x - 0.40, 0.72), (x + 0.40, 0.72), (x + 0.32, 0.80), (x - 0.32, 0.80)], sgn * 0.5, sgn * W / 2)
+    # driver's place on the left of the belt
+    ey = 0.74
+    box(body.buf("GseYellow"), [-0.55, ey, 0.80], (0.70, 0.52, 0.16))
+    box(body.buf("Dash"), [-0.05, ey, 0.98], (0.16, 0.50, 0.42))
+    belt_buttons = [("Start", 0.18, "Btn_Green"), ("Lights", 0.12, "Btn_Grey"), ("Park", -0.18, "Btn_Red"),
+                    ("Drive", -0.18, "Btn_Grey", 0.05), ("Neutral", -0.12, "Btn_Grey", 0.05), ("Reverse", -0.06, "Btn_Grey", 0.05),
+                    ("BeltUp", 0.18, "Btn_Green", 0.10), ("BeltDown", 0.12, "Btn_Grey", 0.10),
+                    ("ConveyorIn", -0.06, "Btn_Green", 0.10), ("ConveyorStop", -0.12, "Btn_Red", 0.10), ("ConveyorOut", -0.18, "Btn_Grey", 0.10)]
+    driver_station(root, body, eye=(-0.62, ey, 1.62), wheel_fwd=0.38, wheel_drop=0.50, wheel_tilt=45 * D, wheel_radius=0.17,
+                   dash=(-0.13, 1.19), buttons=belt_buttons, seat_w=0.44)
+    # belt: hinged at its rear end
+    pivot = np.array([-3.30, 0, 0.62])
+    Lb = 7.6
+    belt = Part("Belt", pivot)
+    end = pivot + [Lb, 0, 0]
+    for sgn in (1, -1):
+        side(belt.buf("GseYellow"), [(pivot[0], 0.55), (end[0], 0.55), (end[0], 0.85), (pivot[0], 0.85)], sgn * 0.40, sgn * 0.47)
+        rail_box(belt.buf("GseYellow"), end[0] - 2.8, end[0] - 0.2, sgn * 0.45, 0.85, 0.32, posts=4)
+    box(belt.buf("Rubber"), [(pivot[0] + end[0]) / 2, 0, 0.80], (Lb, 0.78, 0.04))
+    for x in np.arange(pivot[0] + 0.2, end[0] - 0.1, 0.40):
+        box(belt.buf("Chassis"), [x, 0, 0.835], (0.03, 0.74, 0.03))                    # cleats
+    for x in (pivot[0], end[0]):
+        cylinder(belt.buf("Steel"), [x, 0.40, 0.72], [x, -0.40, 0.72], 0.09, 12)          # end rollers
+    box(belt.buf("Rubber"), [end[0] + 0.08, 0, 0.72], (0.10, 0.90, 0.20))               # bumper
+    rod(belt.buf("Steel"), [1.3, 0, 0.55], [1.3, 0, -0.95], 0.07, 10)                    # lift ram (hidden in the chassis when down)
+    belt.children.append(Part("BeltEnd", end + [0.13, 0, 0.82 - end[2] + 0.0]))
+    belt.children.append(Part("BeltAxis", pivot + [0, 0.2, 0]))                          # hinge axis (vehicle left)
+    lamps(belt, belt, "Dock", [[end[0] - 0.2, 0.47, 1.17]], [1, 0, 0], 0.03, "LensGreen")
+    lamps(belt, belt, "Work", [[end[0] + 0.02, 0.30, 0.95], [end[0] + 0.02, -0.30, 0.95]], [1, 0, 0], 0.04, "Lens")
+    root.children.append(belt)
+    for name, x, y in (("FL", xf, track / 2), ("FR", xf, -track / 2), ("RL", xr, track / 2), ("RR", xr, -track / 2)):
+        add_wheel(root, name, x, y, r, 0.20, steer=x > 0, drive=x < 0)
+    lamps(root, body, "Head", [[2.81, 0.75, 0.60], [2.81, -0.75, 0.60]], [1, 0, 0], 0.05, "Lens")
+    lamps(root, body, "Brake", [[-2.91, 0.80, 0.60], [-2.91, -0.80, 0.60]], [-1, 0, 0], 0.035, "LensRed")
+    lamps(root, body, "Reverse", [[-2.91, 0.65, 0.60]], [-1, 0, 0], 0.03, "Lens")
+    rod(body.buf("Chassis"), [-2.6, 0.85, 0.72], [-2.6, 0.85, 1.9], 0.025, 6)
+    beacon(root, body, [-2.6, 0.85, 1.93])
+    empty(root, "ExitPoint", [-0.6, 1.5, 0.0])
+    collision_box(root, 0, [0.0, 0, 0.58], (5.8, W, 0.36))
+    meta = dict(label="Belt loader", massKg=3800, maxSpeedKmh=20, maxSteerDeg=40, motorTorque=2600, brakeTorque=9000,
+                centerOfMass=[0.0, 0.0, 0.55], suspension=0.08, engine="diesel",
+                belt={"length": Lb, "maxAngle": 23.0, "speed": 6.0, "conveyorSpeed": 0.55})
+    return vid, root, meta
+
+
+def ground_power_unit():
+    """Towed diesel ground power unit (90 kVA class) on a turntable trailer, cable stowed on the side."""
+    vid = "GroundPowerUnit"
+    root = Part(vid)
+    body = Part("Body")
+    root.children.append(body)
+    wb, track, r = 1.40, 1.10, 0.20
+    xf, xr = wb / 2, -wb / 2
+    box(body.buf("Chassis"), [0, 0, 0.42], (2.3, 1.0, 0.12))
+    bevel_box(body.buf("GseWhite"), [-0.05, 0, 1.08], (2.20, 1.25, 1.10), 0.10)
+    box(body.buf("GseYellow"), [-0.05, 0, 1.30], (2.21, 1.26, 0.10))
+    for sgn in (1, -1):
+        for k in range(8):
+            box(body.buf("Chassis"), [-0.75 + k * 0.08, sgn * 0.627, 0.95], (0.035, 0.01, 0.40))   # louvres
+        torus(body.buf("Rubber"), [0.45, sgn * 0.66, 0.95], [0, 1.0, 0], 0.22, 0.05, 20, 6)            # cable coil
+    box(body.buf("Dash"), [-1.16, 0, 1.15], (0.04, 0.80, 0.55))                               # control panel (rear)
+    empty(root, "CablePlug", [0.45, 0.70, 0.73])
+    cp = [-1.19, 0.0, 1.30]
+    for name, kind, dy in (("GpuRun", "GpuRun", 0.20), ("GpuOut", "GpuOut", -0.20)):
+        lamps(root, body, kind, [[cp[0], dy, cp[2]]], [-1, 0, 0], 0.03, "LensGreen" if kind == "GpuRun" else "LensAmber")
+    control_buttons(root, [("GpuEngine", "Btn_Green"), ("GpuOutput", "Btn_Amber")], [cp[0] - 0.002, 0.0, cp[2] - 0.05], [-1, 0, 0], spacing=0.08)
+    add_wheel(root, "FL", xf, track / 2, r, 0.12, steer=True, drive=False)
+    add_wheel(root, "FR", xf, -track / 2, r, 0.12, steer=True, drive=False)
+    add_wheel(root, "RL", xr, track / 2, r, 0.12, steer=False, drive=False)
+    add_wheel(root, "RR", xr, -track / 2, r, 0.12, steer=False, drive=False)
+    add_drawbar(root, [xf + 0.15, 0, 0.36], 1.20, "GseYellow")
+    collision_box(root, 0, [-0.05, 0, 0.95], (2.25, 1.27, 1.25))
+    meta = dict(label="Ground power unit", massKg=1500, maxSpeedKmh=25, maxSteerDeg=70, motorTorque=0, brakeTorque=1200,
+                centerOfMass=[0.0, 0.0, 0.7], suspension=0.05, engine="diesel", gpu={"kva": 90, "volts": 115, "hz": 400})
+    return vid, root, meta
+
+
+def service_truck(vid, label, tank_mat, stripe_mat, extra=None):
+    """Small cab-over service truck with a tank and a rear lifting service platform (water, lavatory)."""
+    root = Part(vid)
+    body = Part("Body")
+    root.children.append(body)
+    wb, track, rf = 3.4, 1.80, 0.42
+    xf, xr = 1.9, -1.5
+    x_front, W = xf + 1.25, 2.2
+    box(body.buf("Chassis"), [-0.2, 0, 0.82], (6.4, 0.9, 0.22))
+    x_cab = truck_cab(root, body, x_front, W, 2.75, "GseWhite")
+    driver_station(root, body, eye=(x_front - 1.0, 0.5, 2.25), wheel_fwd=0.48, wheel_drop=0.48, wheel_tilt=30 * D, wheel_radius=0.22,
+                   dash=(x_front - 0.37, 1.92), seat_w=0.48)
+    t0, t1 = x_cab - 0.12, -2.35
+    prism(body.buf(tank_mat), ellipse(0.85, 0.70, 26), [0, 1, 0], [0, 0, 1], [1, 0, 0], [(t0 + t1) / 2, 0, 1.72], t0 - t1)
+    for sgn in (1, -1):
+        side(body.buf(stripe_mat), [(t1 + 0.1, 1.40), (t0 - 0.1, 1.40), (t0 - 0.1, 1.55), (t1 + 0.1, 1.55)], sgn * 0.855 - 0.005, sgn * 0.855 + 0.005)
+    box(body.buf("Chassis"), [(t0 + t1) / 2, 0, 1.0], (t0 - t1, 1.5, 0.12))
+    reel_c = np.array([t1 + 0.62, 0, 2.66])                                            # hose drum lying on the tank, rear end
+    reel = Part("HoseReel", reel_c)
+    for dx in (0.0, -0.40):
+        cylinder(reel.buf("Steel"), reel_c + [dx, 0, 0], reel_c + [dx - 0.03, 0, 0], 0.30, 20)
+    cylinder(reel.buf("Rubber"), reel_c + [-0.02, 0, 0], reel_c + [-0.39, 0, 0], 0.21, 20)
+    box(body.buf("Chassis"), reel_c + [-0.2, 0, -0.22], (0.5, 0.5, 0.12))
+    root.children.append(reel)
+    # rear service platform (rises so the operator reaches the aircraft panel)
+    pz = 0.95
+    plat = Part("ServicePlatform", [-2.85, 0, pz])
+    box(plat.buf("Tread"), [-2.85, 0, pz - 0.03], (0.90, 1.60, 0.06))
+    for sgn in (1, -1):
+        rail_box(plat.buf("GseYellow"), -3.28, -2.42, sgn * 0.78, pz, 1.0, posts=3)
+    rail_box(plat.buf("GseYellow"), -3.28, -3.28, 0, pz, 1.0, posts=1)
+    rod(plat.buf("GseYellow"), [-3.28, -0.78, pz + 1.0], [-3.28, 0.78, pz + 1.0], 0.022, 6)
+    rod(plat.buf("Steel"), [-2.85, 0, pz - 0.05], [-2.85, 0, pz - 1.6], 0.06, 10)     # lift post (hides in the chassis)
+    plat.children.append(Part("LiftAxis", [-2.85, 0, pz + 0.2]))
+    plat.children.append(Part("PlatformEdge", [-3.30, 0, pz]))
+    control_buttons(plat, [("PlatformUp", "Btn_Green"), ("PlatformDown", "Btn_Grey")], [-2.44, 0.78 - 0.04, pz + 0.95], [0, -1, 0])
+    root.children.append(plat)
+    empty(root, "HoseNozzle", (reel_c + [-0.45, 0.20, -0.10]).tolist())
+    for name, x, y in (("FL", xf, track / 2), ("FR", xf, -track / 2), ("RL", xr, track / 2 - 0.08), ("RR", xr, -track / 2 + 0.08)):
+        add_wheel(root, name, x, y, rf, 0.26, steer=x > 0, drive=x < 0, dual=x < 0)
+    lamps(root, body, "Head", [[x_front + 0.19, 0.85, 0.80], [x_front + 0.19, -0.85, 0.80]], [1, 0, 0], 0.07, "Lens")
+    lamps(root, body, "Brake", [[-2.41, 0.95, 1.05], [-2.41, -0.95, 1.05]], [-1, 0, 0], 0.045, "LensRed")
+    lamps(root, body, "Reverse", [[-2.41, 0.80, 1.05]], [-1, 0, 0], 0.035, "Lens")
+    beacon(root, body, [x_cab + 0.35, 0, 2.83])
+    empty(root, "ExitPoint", [x_front - 1.0, 1.6, 0.0])
+    collision_box(root, 0, [x_front - 0.88, 0, 1.85], (1.80, W, 1.9))
+    collision_box(root, 1, [(t0 + t1) / 2, 0, 1.6], (t0 - t1, 1.7, 1.5))
+    collision_box(root, 2, [-0.2, 0, 0.82], (6.4, W - 0.2, 0.4))
+    meta = dict(label=label, massKg=9000, maxSpeedKmh=25, maxSteerDeg=40, motorTorque=6500, brakeTorque=20000,
+                centerOfMass=[0.0, 0.0, 1.1], suspension=0.12, engine="diesel_big",
+                servicePlatform={"travel": 1.5, "speed": 0.15})
+    if extra:
+        meta.update(extra)
+    return vid, root, meta
+
+
+def water_truck():
+    return service_truck("WaterTruck", "Potable water truck", "GseWhite", "GseBlue", {"capacityLitres": 2500})
+
+
+def lavatory_truck():
+    return service_truck("LavatoryTruck", "Lavatory service truck", "Steel", "Chassis", {"capacityLitres": 1500})
+
+
+def deicing_truck():
+    """De-icing truck: fluid tanks, a slewing turret with a lifting, telescoping boom and a
+    self-levelling open basket for the operator (reaches the top of a narrowbody's fin)."""
+    vid = "DeicingTruck"
+    root = Part(vid)
+    body = Part("Body")
+    root.children.append(body)
+    wb, track, rf = 4.4, 2.0, 0.50
+    xf, xr = 2.4, -2.0
+    x_front, W = xf + 1.40, 2.5
+    box(body.buf("Chassis"), [-0.3, 0, 0.92], (7.6, 0.95, 0.25))
+    x_cab = truck_cab(root, body, x_front, W, 2.95, "GseWhite")
+    driver_station(root, body, eye=(x_front - 1.05, 0.55, 2.40), wheel_fwd=0.50, wheel_drop=0.50, wheel_tilt=30 * D, wheel_radius=0.23,
+                   dash=(x_front - 0.37, 1.92), seat_w=0.5)
+    side(body.buf("DeiceOrange"), [(-3.3, 1.08), (x_cab - 0.85, 1.08), (x_cab - 0.85, 2.55), (-3.3, 2.55)], -W / 2 + 0.05, W / 2 - 0.05)
+    box(body.buf("GseWhite"), [(-3.3 + x_cab - 0.85) / 2, 0, 2.58], (x_cab - 0.85 + 3.3, W - 0.1, 0.06))
+    for sgn in (1, -1):
+        side(body.buf("Chassis"), [(-3.2, 1.65), (x_cab - 0.95, 1.65), (x_cab - 0.95, 1.75), (-3.2, 1.75)], sgn * (W / 2 - 0.05) - 0.005, sgn * (W / 2 - 0.05) + 0.005)
+    # turret, boom, extension, basket
+    tp = np.array([x_cab - 0.45, 0, 2.61])
+    turret = Part("BoomTurret", tp)
+    cylinder(turret.buf("GseWhite"), tp, tp + [0, 0, 0.35], 0.45, 20)
+    box(turret.buf("GseWhite"), tp + [0, 0, 0.65], (0.5, 0.6, 0.6))
+    turret.children.append(Part("TurretAxis", tp + [0, 0, 0.2]))
+    bp = tp + [0, 0, 0.75]
+    boom = Part("Boom", bp)
+    Lb = 5.2
+    box(boom.buf("GseWhite"), bp + [-Lb / 2, 0, 0], (Lb, 0.36, 0.36))
+    boom.children.append(Part("BoomAxis", bp + [0, -0.2, 0]))           # vehicle right: positive lifts the (rearward) tip
+    ext = Part("BoomExt", bp + [-Lb, 0, 0])
+    box(ext.buf("Steel"), bp + [-Lb + 1.6, 0, 0], (3.6, 0.28, 0.28))
+    ext.children.append(Part("ExtAxis", bp + [-Lb - 0.2, 0, 0]))
+    tip = bp + [-Lb - 0.15, 0, 0]
+    basket = Part("Basket", tip)
+    bc = tip + [-0.55, 0, -0.85]
+    box(basket.buf("Tread"), bc + [0, 0, -0.30], (1.0, 1.1, 0.06))
+    for sgn in (1, -1):
+        rail_box(basket.buf("DeiceOrange"), bc[0] - 0.5, bc[0] + 0.5, sgn * 0.55, bc[2] - 0.27, 1.05, posts=3)
+    for x in (bc[0] - 0.5, bc[0] + 0.5):
+        rod(basket.buf("DeiceOrange"), [x, -0.55, bc[2] + 0.78], [x, 0.55, bc[2] + 0.78], 0.022, 6)
+    side(basket.buf("DeiceOrange"), [(bc[0] - 0.5, bc[2] - 0.27), (bc[0] + 0.5, bc[2] - 0.27), (bc[0] + 0.5, bc[2] + 0.15), (bc[0] - 0.5, bc[2] + 0.15)], -0.55, 0.55)
+    rod(basket.buf("Steel"), tip, bc + [0.3, 0, 0.15], 0.06, 8)                       # hanger
+    nozzle = bc + [-0.55, -0.35, 0.80]
+    cylinder(basket.buf("Chassis"), nozzle + [0.25, 0, 0], nozzle, 0.035, 10)
+    basket.children.append(Part("Nozzle", nozzle))
+    basket.children.append(Part("NozzleDir", nozzle + [-0.2, 0, -0.05]))
+    control_buttons(basket, [("BoomUp", "Btn_Green"), ("BoomDown", "Btn_Grey"), ("SwingPlus", "Btn_Grey"), ("SwingMinus", "Btn_Grey"),
+                             ("BoomOut", "Btn_Grey"), ("BoomIn", "Btn_Grey"), ("Spray", "Btn_Amber")],
+                    [bc[0] + 0.48, 0.30, bc[2] + 0.70], [-1, 0, 0], spacing=0.055)
+    ext.children.append(basket)
+    boom.children.append(ext)
+    turret.children.append(boom)
+    root.children.append(turret)
+    add_wheel(root, "FL", xf, track / 2, rf, 0.30, steer=True, drive=False)
+    add_wheel(root, "FR", xf, -track / 2, rf, 0.30, steer=True, drive=False)
+    add_wheel(root, "RL", xr, track / 2 - 0.08, rf, 0.28, steer=False, drive=True, dual=True)
+    add_wheel(root, "RR", xr, -track / 2 + 0.08, rf, 0.28, steer=False, drive=True, dual=True)
+    lamps(root, body, "Head", [[x_front + 0.19, 0.95, 0.80], [x_front + 0.19, -0.95, 0.80]], [1, 0, 0], 0.08, "Lens")
+    lamps(root, body, "Brake", [[-3.31, 1.05, 1.15], [-3.31, -1.05, 1.15]], [-1, 0, 0], 0.05, "LensRed")
+    lamps(root, body, "Reverse", [[-3.31, 0.85, 1.15]], [-1, 0, 0], 0.04, "Lens")
+    beacon(root, body, [x_cab + 0.35, -0.7, 3.03])
+    empty(root, "ExitPoint", [x_front - 1.05, 1.75, 0.0])
+    collision_box(root, 0, [x_front - 0.88, 0, 1.95], (1.80, W, 2.0))
+    collision_box(root, 1, [(-3.3 + x_cab - 0.85) / 2, 0, 1.75], (x_cab - 0.85 + 3.3, W - 0.1, 1.6))
+    collision_box(root, 2, [-0.3, 0, 0.92], (7.6, W - 0.2, 0.4))
+    meta = dict(label="De-icing truck", massKg=18000, maxSpeedKmh=25, maxSteerDeg=40, motorTorque=12000, brakeTorque=36000,
+                centerOfMass=[0.0, 0.0, 1.3], suspension=0.12, engine="diesel_big",
+                boom={"swingDeg": 150, "minPitch": -18, "maxPitch": 70, "extension": 4.0, "fluidLitres": 6000, "sprayLitresPerSecond": 2.5})
+    return vid, root, meta
+
+
+def airside_van():
+    """Airside van (maintenance / crew transport), with a roof beacon."""
+    vid = "AirsideVan"
+    root = Part(vid)
+    body = Part("Body")
+    root.children.append(body)
+    wb, track, r = 3.25, 1.70, 0.34
+    xf, xr = 1.55, -1.70
+    W = 2.0
+    hw = W / 2
+    side(body.buf("GseWhite"), [(-2.65, 0.38), (2.55, 0.38), (2.70, 0.55), (2.70, 0.85), (2.30, 1.12), (-2.65, 1.12)], -hw, hw)
+    box(body.buf("GseWhite"), [-1.20, 0, 1.70], (2.90, W, 1.18))                       # load area
+    cab_glass_box(body, 0.25, 1.65, hw - 0.02, 1.12, 2.20, rake=0.75)
+    box(body.buf("GseWhite"), [0.25 - 0.01, 0, 1.66], (0.03, W - 0.04, 1.08))           # bulkhead behind the seats
+    box(body.buf("Chassis"), [2.66, 0, 0.47], (0.12, W, 0.18))
+    box(body.buf("Chassis"), [-2.68, 0, 0.47], (0.10, W, 0.18))
+    box(body.buf("GseRed"), [-1.2, 0, 1.30], (2.92, W + 0.01, 0.12))                     # side stripe (both sides)
+    for sgn in (1, -1):
+        side(body.buf("Chassis"), [(-1.05, 1.15), (-0.15, 1.15), (-0.15, 2.18), (-1.05, 2.18)], sgn * hw - 0.003, sgn * hw + 0.003)  # sliding door line
+    box(body.buf("Dash"), [1.43, 0, 1.18], (0.32, W - 0.15, 0.18))
+    driver_station(root, body, eye=(0.62, 0.45, 1.75), wheel_fwd=0.48, wheel_drop=0.45, wheel_tilt=28 * D, wheel_radius=0.19,
+                   dash=(1.27, 1.27), seat_w=0.48)
+    box(body.buf("Seat"), [0.64, -0.45, 0.95], (0.46, 0.48, 0.10))
+    for name, x, y in (("FL", xf, track / 2), ("FR", xf, -track / 2), ("RL", xr, track / 2), ("RR", xr, -track / 2)):
+        add_wheel(root, name, x, y, r, 0.21, steer=x > 0, drive=x > 0)
+    lamps(root, body, "Head", [[2.71, 0.72, 0.78], [2.71, -0.72, 0.78]], [1, 0, 0], 0.06, "Lens")
+    lamps(root, body, "Brake", [[-2.66, 0.88, 1.0], [-2.66, -0.88, 1.0]], [-1, 0, 0], 0.04, "LensRed")
+    lamps(root, body, "Reverse", [[-2.66, 0.72, 1.0]], [-1, 0, 0], 0.03, "Lens")
+    beacon(root, body, [0.0, 0, 2.30])
+    empty(root, "ExitPoint", [0.62, 1.45, 0.0])
+    collision_box(root, 0, [0.0, 0, 0.76], (5.4, W, 0.76))
+    collision_box(root, 1, [-0.75, 0, 1.68], (3.8, W, 1.12))
+    meta = dict(label="Airside van", massKg=2800, maxSpeedKmh=30, maxSteerDeg=36, motorTorque=1500, brakeTorque=6000,
+                centerOfMass=[0.0, 0.0, 0.7], suspension=0.12, engine="diesel")
+    return vid, root, meta
+
+
+ALL = [baggage_tractor, baggage_cart, pushback_tug, tow_bar, fuel_truck, catering_truck,
+       passenger_stairs, belt_loader, ground_power_unit, water_truck, lavatory_truck, deicing_truck, airside_van]

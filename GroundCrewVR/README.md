@@ -40,11 +40,13 @@ GroundCrewVR/
       Aircraft/            AircraftRig (doors, flaps, steering, wheels, fans, beacon, LODs)
       Vehicles/            VehicleController, VehicleSeat, VehicleDriverInput, SteeringWheelInput,
                            VehicleLights, VehicleAudio, TowHitch, TowCoupler, TrailerSteering,
-                           TowBar, AircraftTowable, CateringLift, RideablePlatform, VehicleEvents
+                           TowBar, AircraftTowable, CateringLift, StairsMechanism, HydraulicAxis,
+                           ConveyorBelt, DoorDockingSensor, GroundPowerUnit, BasketLeveller,
+                           SprayNozzle, RideablePlatform, VehicleEvents
     Scripts/Editor/        ← editor tools (assembly GroundCrew.Editor)
       Phase1SandboxBuilder.cs   menu: Ground Crew > Build Phase 1 Sandbox Scene
       AircraftPlacer.cs         menu: Ground Crew > Place Aircraft on Stand 24
-      VehicleAssembler.cs       menu: Ground Crew > Vehicles > Add Phase 4 Vehicles to Sandbox
+      VehicleAssembler.cs       menu: Ground Crew > Vehicles > Add Vehicles to Sandbox
       ProceduralMeshes.cs       cone + wheel-chock meshes for the sandbox
     Art/Aircraft/          ← generated .glb aircraft + JSON sidecars
     Art/Vehicles/          ← generated .glb ground vehicles + JSON sidecars
@@ -215,17 +217,31 @@ Phase 2 builds the real interactions on top of these: door handles you grab, hol
 
 ---
 
-## 7. Ground vehicles (Phase 4, first pass)
+## 7. Ground vehicles (Phase 4)
 
-Generated models are in `Assets/GroundCrew/Art/Vehicles/` (from `Tools/VehicleGenerator/`): baggage tractor, baggage cart, pushback tug, tow bar, fuel truck (refueller) and catering truck (high-loader).
+Generated models are in `Assets/GroundCrew/Art/Vehicles/` (from `Tools/VehicleGenerator/`):
+
+| Vehicle | What you can do |
+|---|---|
+| Baggage tractor + 3 carts | Drive; couple / uncouple carts by hand |
+| Pushback tug + tow bar | Latch the bar to the nose gear; push back or tow the aircraft |
+| Passenger stairs | Drive to a door; raise the platform 2.2-4.1 m; slide the bridge plate out; walk up and down |
+| Belt loader | Drive to a hold door; tilt the belt up to the sill (to ~3.5 m); run the conveyor in or out with bags on it |
+| Ground power unit | Tow it with the tractor; start the diesel, switch the 115 V 400 Hz output on |
+| Fuel truck (refueller) | Drive (refuelling itself is Phase 6) |
+| Catering truck (high-loader) | Raise the box to the door (to 5.6 m) riding on the platform; slide the platform out |
+| Potable water / lavatory trucks | Drive; raise the rear service platform with you on it (hoses are Phase 6) |
+| De-icing truck | Ride the basket: slew, lift and extend the boom (reaches the top of the fin), spray orange fluid |
+| Airside van | Drive (maintenance / staff transport) |
 
 **To use them in Unity** (glTFast must be installed, see §6):
 
 1. Build the sandbox scene and place an aircraft (§6).
-2. **Ground Crew → Vehicles → Add Phase 4 Vehicles to Sandbox.** This parks, around Stand 24:
+2. **Ground Crew → Vehicles → Add Vehicles to Sandbox.** This parks the whole fleet around Stand 24, including:
    - a baggage tractor towing three coupled baggage carts (left of the stand)
    - the pushback tug with its tow bar on the front pin (right of the stand)
-   - the fuel truck and the catering truck (beside the aircraft's tail)
+   - the passenger stairs (facing the aircraft's left side, door 1L) and the belt loader (facing the right side, forward hold)
+   - the ground power unit, fuel, catering, water and lavatory trucks, the de-icer and the van further out
 3. Save the scene, then **Build And Run**.
 
 **Driving** (also printed on `VehicleDriverInput`):
@@ -258,6 +274,36 @@ Vehicles start parked with the engine off. Shifting between D and R needs a near
 
 Pushing a castoring nose gear is unstable, as in real life: keep correcting with small steering inputs. Pulling forward is stable.
 
+**Docking at a door:**
+- The stairs, the catering platform and the belt loader each have a green **DOCK** lamp.
+- It lights when the platform edge or belt end is lined up with a door sill: just below it (a passenger door swings out over the platform), no more than 25 cm out from the fuselage, and centred on the door.
+- Touching the fuselage reports **Contact**.
+- Every change is published as a `DockingEvent`, which the turnaround rules will score in Phase 3.
+
+**Passenger stairs:**
+1. Drive up square to the door, and stop with the platform just short of it.
+2. Set the parking brake.
+3. Hold **STAIRS UP / STAIRS DN** on the dash, or **UP / DOWN** on the platform column, until the **DOCK** lamp lights.
+4. Slide **PLATE OUT** to bridge the gap.
+
+Raising the platform steepens the flight; its foot rolls on rails and the treads stay level. The truck won't drive with the plate out.
+
+**Belt loader:**
+1. Nose the belt end up to a hold door.
+2. Set the parking brake and hold **BELT UP / BELT DN** until the **DOCK** lamp lights.
+3. With the engine running, press **BELT IN** to carry bags up into the hold, **BELT OUT** to bring them down, **STOP** to stop.
+
+Bags you're holding are left alone.
+
+**Water / lavatory trucks:** park, step onto the rear platform and hold **UP / DOWN** to reach the service panel.
+
+**De-icer:**
+1. Lower the boom (**BOOM DN**) until the basket is near the ground, and step in.
+2. Use **SWING + / −**, **BOOM UP / DN** and **OUT / IN**; the basket stays level and carries you.
+3. **SPRAY** toggles the fluid while the engine runs (6000 l).
+
+The truck can't be driven unless the boom is stowed.
+
 **Catering truck:** park (parking brake on), climb onto the front platform, then hold **LIFT UP** / **LIFT DOWN** with a fingertip. The box rises to a 5.6 m floor height and the platform carries you with it. **PLATFORM OUT / IN** slides the bridge plate towards the door. The truck can't be driven while the box is up or the platform is out.
 
 **On the Quest, check that:**
@@ -269,6 +315,10 @@ Pushing a castoring nose gear is unstable, as in real life: keep correcting with
 - [ ] The tow bar latches to the nose gear; pushing moves the aircraft back, and steering swings the tail.
 - [ ] Over-steering the nose gear breaks the shear pin.
 - [ ] The catering box rises and lowers with you on the platform.
+- [ ] Stairs: the platform rises and falls and the treads stay level; you can walk up to the platform; the **DOCK** lamp lights at door 1L (737 sill 2.65 m, A320 3.42 m).
+- [ ] Belt loader: the belt tilts; bags dropped on it ride up into the forward hold; the **DOCK** lamp lights at the hold sill.
+- [ ] GPU: towable behind the tractor; **ENGINE** then **OUTPUT** light the green and amber lamps.
+- [ ] De-icer: the basket stays level through the whole boom range; the spray is visible.
 - [ ] Driving feels comfortable. If it doesn't, say so: comfort options for driving (vignette, reduced acceleration) come next.
 - [ ] Frame rate stays at ~72 fps with all vehicles and the aircraft in view.
 

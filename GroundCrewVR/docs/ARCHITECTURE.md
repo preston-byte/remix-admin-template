@@ -134,7 +134,15 @@ Prefab contract: the model prefab contains empty transforms named `SP_<ServicePo
   - That gives true pushback behaviour (pushing is unstable and needs correction; pulling is stable) with no jitter.
   - The towing steering limit acts as a shear pin.
   - The tug only "feels" the load through a lower torque and speed limit.
-- **Events:** `VehicleSeatEvent`, `VehicleCollisionEvent` (`HitAircraft`), `CouplingEvent`, `AircraftTowEvent`, `TowShearPinEvent`.
+- **Equipment functions:**
+  - Platform lifts, belt tilt and boom joints use one component, `HydraulicAxis`: hold-to-run buttons, a parking-brake interlock and a drive inhibit until stowed. Its axis comes from a generator helper node.
+  - Linkages that need geometry have their own small components: the stairs flight and treads, the catering scissor, the de-icer basket leveller.
+- **Docking:** `DoorDockingSensor` measures an edge point against the nearest `SP_Sill_*` node (height error, gap from the fuselage, lateral offset). It drives a DOCK lamp and publishes `DockingEvent`. The jet bridge will use the same sensor.
+- **Riding:** `RideablePlatform` parents the XR Origin to a moving platform or basket while the player's head is inside its volume.
+- **Events:**
+  - `VehicleSeatEvent`, `VehicleCollisionEvent` (`HitAircraft`)
+  - `CouplingEvent`, `AircraftTowEvent`, `TowShearPinEvent`
+  - `DockingEvent`, `GroundPowerEvent`, `SprayEvent`
 
 ---
 

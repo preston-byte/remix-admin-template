@@ -1,0 +1,93 @@
+{
+ "id": "BeltLoader",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 6406,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    0.775,
+    0.3,
+    1.7
+   ],
+   "radius": 0.3,
+   "width": 0.2,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -0.775,
+    0.3,
+    1.7
+   ],
+   "radius": 0.3,
+   "width": 0.2,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.775,
+    0.3,
+    -1.7
+   ],
+   "radius": 0.3,
+   "width": 0.2,
+   "steer": false,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.775,
+    0.3,
+    -1.7
+   ],
+   "radius": 0.3,
+   "width": 0.2,
+   "steer": false,
+   "drive": true
+  }
+ ],
+ "points": [
+  {
+   "name": "DriverEye",
+   "position": [
+    0.74,
+    1.62,
+    -0.62
+   ]
+  },
+  {
+   "name": "ExitPoint",
+   "position": [
+    1.5,
+    0.0,
+    -0.6
+   ]
+  }
+ ],
+ "label": "Belt loader",
+ "massKg": 3800,
+ "maxSpeedKmh": 20,
+ "maxSteerDeg": 40,
+ "motorTorque": 2600,
+ "brakeTorque": 9000,
+ "centerOfMass": [
+  0.0,
+  0.55,
+  0.0
+ ],
+ "suspension": 0.08,
+ "engine": "diesel",
+ "belt": {
+  "length": 7.6,
+  "maxAngle": 23.0,
+  "speed": 6.0,
+  "conveyorSpeed": 0.55
+ }
+}

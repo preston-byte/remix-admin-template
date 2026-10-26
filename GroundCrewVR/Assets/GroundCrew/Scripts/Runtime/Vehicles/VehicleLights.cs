@@ -48,7 +48,8 @@ namespace GroundCrew.Vehicles
         }
 
         public void ToggleHeadlights() => SetHeadlights(!Headlights);
-        public void SetHeadlights(bool on) { Headlights = on; Set(m_Head, on); }
+        /// <summary>Head lamps; work lamps (belt end, catering box) follow the same switch.</summary>
+        public void SetHeadlights(bool on) { Headlights = on; Set(m_Head, on); SetWorkLights(on); }
         public void SetWorkLights(bool on) { WorkLights = on; Set(m_Work, on); }
 
         void Update()

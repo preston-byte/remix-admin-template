@@ -1,0 +1,95 @@
+{
+ "id": "DeicingTruck",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 7792,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    1.0,
+    0.5,
+    2.4
+   ],
+   "radius": 0.5,
+   "width": 0.3,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -1.0,
+    0.5,
+    2.4
+   ],
+   "radius": 0.5,
+   "width": 0.3,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.92,
+    0.5,
+    -2.0
+   ],
+   "radius": 0.5,
+   "width": 0.588,
+   "steer": false,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.92,
+    0.5,
+    -2.0
+   ],
+   "radius": 0.5,
+   "width": 0.588,
+   "steer": false,
+   "drive": true
+  }
+ ],
+ "points": [
+  {
+   "name": "DriverEye",
+   "position": [
+    0.55,
+    2.4,
+    2.75
+   ]
+  },
+  {
+   "name": "ExitPoint",
+   "position": [
+    1.75,
+    0.0,
+    2.75
+   ]
+  }
+ ],
+ "label": "De-icing truck",
+ "massKg": 18000,
+ "maxSpeedKmh": 25,
+ "maxSteerDeg": 40,
+ "motorTorque": 12000,
+ "brakeTorque": 36000,
+ "centerOfMass": [
+  0.0,
+  1.3,
+  0.0
+ ],
+ "suspension": 0.12,
+ "engine": "diesel_big",
+ "boom": {
+  "swingDeg": 150,
+  "minPitch": -18,
+  "maxPitch": 70,
+  "extension": 4.0,
+  "fluidLitres": 6000,
+  "sprayLitresPerSecond": 2.5
+ }
+}

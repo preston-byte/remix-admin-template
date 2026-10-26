@@ -1,0 +1,95 @@
+{
+ "id": "PassengerStairs",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 6946,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    0.95,
+    0.4,
+    1.6
+   ],
+   "radius": 0.4,
+   "width": 0.24,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -0.95,
+    0.4,
+    1.6
+   ],
+   "radius": 0.4,
+   "width": 0.24,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.95,
+    0.4,
+    -2.0
+   ],
+   "radius": 0.4,
+   "width": 0.24,
+   "steer": false,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.95,
+    0.4,
+    -2.0
+   ],
+   "radius": 0.4,
+   "width": 0.24,
+   "steer": false,
+   "drive": true
+  }
+ ],
+ "points": [
+  {
+   "name": "DriverEye",
+   "position": [
+    0.5,
+    1.72,
+    1.9
+   ]
+  },
+  {
+   "name": "ExitPoint",
+   "position": [
+    1.55,
+    0.0,
+    1.9
+   ]
+  }
+ ],
+ "label": "Passenger stairs",
+ "massKg": 5200,
+ "maxSpeedKmh": 20,
+ "maxSteerDeg": 38,
+ "motorTorque": 4200,
+ "brakeTorque": 12000,
+ "centerOfMass": [
+  0.0,
+  0.9,
+  0.0
+ ],
+ "suspension": 0.1,
+ "engine": "diesel",
+ "stairs": {
+  "minFloor": 2.2,
+  "maxFloor": 4.1,
+  "flightLength": 6.0,
+  "footHeight": 0.45,
+  "speed": 0.1,
+  "extensionTravel": 0.6
+ }
+}
