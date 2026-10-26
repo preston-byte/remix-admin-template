@@ -50,7 +50,7 @@ namespace GroundCrew.Interaction
 
         public Rigidbody Body => m_Body;
         public XRGrabInteractable Grab => m_Grab;
-        public string Id => EntityId.Of(this);
+        public string Id => StableId.Of(this);
 
         void Awake()
         {

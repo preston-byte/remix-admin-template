@@ -12,7 +12,7 @@ namespace GroundCrew.Core
     /// such as "sandbox.bag.heavy"). Runtime-spawned objects fall back to a GUID.
     /// </summary>
     [DisallowMultipleComponent]
-    public class EntityId : MonoBehaviour
+    public class StableId : MonoBehaviour
     {
         [SerializeField] string value;
 
@@ -29,7 +29,7 @@ namespace GroundCrew.Core
         public static string Of(Component component)
         {
             if (component == null) return string.Empty;
-            return component.TryGetComponent(out EntityId id) ? id.Value : component.name;
+            return component.TryGetComponent(out StableId id) ? id.Value : component.name;
         }
     }
 }

@@ -69,7 +69,7 @@ namespace GroundCrew.Vehicles
         public void Enter()
         {
             if (Current != null) Current.Exit();
-            m_Origin = FindFirstObjectByType<XROrigin>();
+            m_Origin = FindAnyObjectByType<XROrigin>();
             if (m_Origin == null || eyePoint == null)
             {
                 Debug.LogWarning("[Vehicle] No XR Origin in the scene (or no eye point) - cannot sit down.", this);

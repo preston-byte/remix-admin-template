@@ -29,7 +29,7 @@ GroundCrewVR/
   .gitignore               ← Unity ignore rules (for when this becomes its own repo)
   Assets/GroundCrew/       ← copy this folder into your Unity project's Assets/
     Scripts/Runtime/       ← game code (assembly GroundCrew.Runtime)
-      Core/                EventBus, Services, EntityId
+      Core/                EventBus, Services, StableId
       Interaction/         GrabbableItem, ItemDefinition, NearOnlyInteraction, PlacementZone,
                            RotaryHandle, PressButton, FingertipPresser, ConnectorPlug,
                            TypedSocketInteractor, PanelInterlock, CableRenderer,

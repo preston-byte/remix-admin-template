@@ -47,7 +47,7 @@ namespace GroundCrew.Interaction
         public bool IsConnected => ConnectedSocket != null;
         public Transform CableEnd => cableEnd;
         public float MaxCableLength => maxCableLength;
-        public string Id => EntityId.Of(this);
+        public string Id => StableId.Of(this);
 
         void Awake()
         {

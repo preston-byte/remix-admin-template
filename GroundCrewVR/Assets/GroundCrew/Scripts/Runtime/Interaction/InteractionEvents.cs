@@ -4,7 +4,7 @@ namespace GroundCrew.Interaction
 {
     // Facts published by the interaction layer. Gameplay systems (turnaround rules, scoring,
     // radio, wrist tablet) listen to these; interaction components never call gameplay code.
-    // Each event carries the component reference (for local use) plus EntityIds (for save
+    // Each event carries the component reference (for local use) plus StableIds (for save
     // data / networking later).
 
     public readonly struct ItemGrabbedEvent : IGameEvent

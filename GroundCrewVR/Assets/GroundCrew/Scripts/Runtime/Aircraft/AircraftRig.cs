@@ -61,6 +61,17 @@ namespace GroundCrew.Aircraft
         /// <summary>Fan speed in revolutions per minute (visual only).</summary>
         public float FanRpm { get; set; }
 
+        static readonly List<AircraftRig> s_All = new List<AircraftRig>();
+
+        /// <summary>Every enabled aircraft in the scene (for docking sensors, AI, the tablet...).</summary>
+        public static IReadOnlyList<AircraftRig> All => s_All;
+
+        void OnEnable() => s_All.Add(this);
+        void OnDisable() => s_All.Remove(this);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => s_All.Clear();
+
         void Awake()
         {
             Discover();

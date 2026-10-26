@@ -319,8 +319,8 @@ namespace GroundCrew.EditorTools
             // Max 80 degrees keeps the handle reachable (~2.1 m) when open; gas struts finish the swing.
             Props(door, ("handleName", "Cargo door"), ("pivot", pivot), ("localAxis", Vector3.right), ("minAngle", 0f), ("maxAngle", 80f),
                 ("startAngle", 0f), ("maxSpeed", 110f), ("returnSpeed", 45f), ("assistOpenAbove", 45f), ("detentStep", 15f), ("breakDistance", 0.5f));
-            handle.AddComponent<EntityId>();
-            Props(handle.GetComponent<EntityId>(), ("value", "sandbox.door.cargo"));
+            handle.AddComponent<StableId>();
+            Props(handle.GetComponent<StableId>(), ("value", "sandbox.door.cargo"));
         }
 
         // ------------------------------------------------------------------ E: ground power
@@ -343,8 +343,8 @@ namespace GroundCrew.EditorTools
             var socket = socketGo.AddComponent<TypedSocketInteractor>();
             socket.attachTransform = socketAttach;
             Props(socket, ("acceptedType", ConnectorType.GroundPower400Hz), ("socketName", "EXT PWR receptacle"));
-            socketGo.AddComponent<EntityId>();
-            Props(socketGo.GetComponent<EntityId>(), ("value", "sandbox.socket.extpower"));
+            socketGo.AddComponent<StableId>();
+            Props(socketGo.GetComponent<StableId>(), ("value", "sandbox.socket.extpower"));
 
             // Access panel hinged on its left edge, opens outward.
             var panelPivot = new GameObject("Panel hinge").transform;
@@ -397,8 +397,8 @@ namespace GroundCrew.EditorTools
             plugGo.GetComponent<XRGrabInteractable>().attachTransform = plugAttach;
             Props(plug, ("connectorType", ConnectorType.GroundPower400Hz), ("displayName", "GPU cable"),
                 ("tetherOrigin", anchor), ("cableEnd", cableEnd), ("maxCableLength", 4f));
-            plugGo.AddComponent<EntityId>();
-            Props(plugGo.GetComponent<EntityId>(), ("value", "sandbox.plug.gpu"));
+            plugGo.AddComponent<StableId>();
+            Props(plugGo.GetComponent<StableId>(), ("value", "sandbox.plug.gpu"));
 
             var line = anchor.gameObject.AddComponent<LineRenderer>();
             line.sharedMaterial = s_Mat.Cable;
@@ -554,7 +554,7 @@ namespace GroundCrew.EditorTools
             var body = root.GetComponent<Rigidbody>();
             body.mass = def.massKg;
             body.interpolation = RigidbodyInterpolation.Interpolate;
-            var entity = root.AddComponent<EntityId>();
+            var entity = root.AddComponent<StableId>();
             Props(entity, ("value", id));
         }
 

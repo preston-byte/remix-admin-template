@@ -25,7 +25,7 @@ namespace GroundCrew.Vehicles
             if (volume == null) return;
             if (m_Origin == null)
             {
-                m_Origin = FindFirstObjectByType<XROrigin>();
+                m_Origin = FindAnyObjectByType<XROrigin>();
                 if (m_Origin == null) return;
             }
             if (VehicleSeat.Current != null) { StopRiding(); return; }   // seated players ride their vehicle

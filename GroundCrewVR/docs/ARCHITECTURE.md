@@ -51,7 +51,7 @@ This document is the design reference; `PROGRESS.md` tracks what exists, and `..
 │   XRI Starter rig · Comfort settings · Fingertips · Quest perf      │
 │   Wrist tablet UI                                                   │
 ├────────────────────────────────────────────────────────────────────┤
-│ CORE        EventBus · Services · EntityId                ◄ Phase 1 │
+│ CORE        EventBus · Services · StableId                ◄ Phase 1 │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -66,7 +66,7 @@ Rules:
 |---|---|
 | `EventBus` | Typed struct events, isolated handlers. Every interaction fact flows through here, which gives one choke point for scoring, radio, tablet and networking. Not for per-frame data. |
 | `Services` | Tiny registry for genuinely global systems (turnaround manager, radio, audio, save). |
-| `EntityId` | Stable id on every simulation-relevant object. Events carry ids, so they can be serialized and sent over the network. |
+| `StableId` | Stable id on every simulation-relevant object. Events carry ids, so they can be serialized and sent over the network. |
 
 ---
 
@@ -188,7 +188,7 @@ Rules (validators) subscribe to `EventBus` facts and to sim state. For example, 
 
 - **Authority:** the simulation layer (`TurnaroundSession`, `AircraftState`) runs on one authority. That is the local player in single-player and the host later.
 - **Intents, not mutations:** interactions publish facts, and rules apply state changes. Later, a client sends the intent ("connect plug X to socket Y") and the authority validates and broadcasts the result.
-- **Stable ids:** `EntityId` on every relevant object, with deterministic ids for scene objects.
+- **Stable ids:** `StableId` on every relevant object, with deterministic ids for scene objects.
 - **Physics ownership:** grabbing an item transfers ownership to the grabbing player (the usual NGO/Fusion pattern). Items at rest are owned by the host.
 - **No static gameplay state** outside `Services`/`EventBus`. Both are reset on play-mode start and can be scoped per session later.
 - **Roles:** baggage, fuel, catering, pushback and supervisor map naturally onto task ownership in the task graph.
@@ -210,7 +210,7 @@ Project folder layout (inside a Unity project):
 ```
 Assets/GroundCrew/
   Scripts/Runtime/  GroundCrew.Runtime.asmdef
-    Core/           EventBus, Services, EntityId
+    Core/           EventBus, Services, StableId
     Interaction/    grab, zones, handles, buttons, connectors, cables
     Player/         comfort, fingertips, performance
     UI/             wrist tablet

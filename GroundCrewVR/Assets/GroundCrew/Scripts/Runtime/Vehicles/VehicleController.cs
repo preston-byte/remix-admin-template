@@ -78,7 +78,7 @@ namespace GroundCrew.Vehicles
         public bool Occupied { get; set; }
         public Rigidbody Body => m_Body;
         public IReadOnlyList<WheelBinding> Wheels => wheels;
-        public string Id => EntityId.Of(this);
+        public string Id => StableId.Of(this);
 
         /// <summary>Signed speed along the vehicle's forward axis, km/h.</summary>
         public float SpeedKmh => m_Body != null ? Vector3.Dot(m_Body.linearVelocity, transform.forward) * 3.6f : 0f;

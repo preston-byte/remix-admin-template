@@ -52,7 +52,7 @@ namespace GroundCrew.Vehicles
         {
             s_Sills.Clear();
             s_Rigs.Clear();
-            foreach (var rig in FindObjectsByType<AircraftRig>(FindObjectsSortMode.None))
+            foreach (var rig in AircraftRig.All)
             {
                 s_Rigs.Add(rig);
                 foreach (var t in rig.GetComponentsInChildren<Transform>(true))

@@ -34,7 +34,7 @@ namespace GroundCrew.Interaction
         public ConnectorPlug ConnectedPlug { get; private set; }
         public bool IsConnected => ConnectedPlug != null;
         public bool Locked { get; set; }
-        public string Id => EntityId.Of(this);
+        public string Id => StableId.Of(this);
 
         protected override void Awake()
         {

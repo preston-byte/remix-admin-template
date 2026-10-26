@@ -73,7 +73,7 @@ namespace GroundCrew.Interaction
         public bool IsHeld => m_Interactor != null;
         public bool IsFullyOpen => m_AtMax;
         public bool IsFullyClosed => m_AtMin;
-        public string Id => EntityId.Of(this);
+        public string Id => StableId.Of(this);
 
         /// <summary>Locked handles cannot be moved by hand (e.g. panel with a cable plugged in).</summary>
         public bool Locked { get; set; }

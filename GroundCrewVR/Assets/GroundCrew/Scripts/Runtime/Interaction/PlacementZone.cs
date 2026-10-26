@@ -52,7 +52,7 @@ namespace GroundCrew.Interaction
         public int RejectedCount { get; private set; }
         public bool OverCapacity { get; private set; }
         public IReadOnlyCollection<GrabbableItem> PlacedItems => m_Placed;
-        public string Id => EntityId.Of(this);
+        public string Id => StableId.Of(this);
 
         void Reset()
         {
