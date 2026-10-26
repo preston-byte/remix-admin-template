@@ -1,0 +1,112 @@
+{
+ "id": "FuelTruck",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 8164,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    1.0,
+    0.53,
+    2.6
+   ],
+   "radius": 0.53,
+   "width": 0.3,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -1.0,
+    0.53,
+    2.6
+   ],
+   "radius": 0.53,
+   "width": 0.3,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.92,
+    0.53,
+    -2.0
+   ],
+   "radius": 0.53,
+   "width": 0.588,
+   "steer": false,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.92,
+    0.53,
+    -2.0
+   ],
+   "radius": 0.53,
+   "width": 0.588,
+   "steer": false,
+   "drive": true
+  }
+ ],
+ "points": [
+  {
+   "name": "DriverEye",
+   "position": [
+    0.55,
+    2.42,
+    3.0
+   ]
+  },
+  {
+   "name": "HoseNozzle",
+   "position": [
+    0.6,
+    0.85,
+    -4.12
+   ]
+  },
+  {
+   "name": "BondingReel",
+   "position": [
+    -0.9,
+    1.0,
+    -4.0
+   ]
+  },
+  {
+   "name": "Hitch_Rear",
+   "position": [
+    0.0,
+    0.75,
+    -4.15
+   ]
+  },
+  {
+   "name": "ExitPoint",
+   "position": [
+    1.75,
+    0.0,
+    3.0
+   ]
+  }
+ ],
+ "label": "Fuel truck (refueller)",
+ "massKg": 26000,
+ "maxSpeedKmh": 25,
+ "maxSteerDeg": 40,
+ "motorTorque": 16000,
+ "brakeTorque": 40000,
+ "centerOfMass": [
+  0.0,
+  1.4,
+  0.0
+ ],
+ "suspension": 0.12,
+ "engine": "diesel_big",
+ "capacityLitres": 20000
+}

@@ -1,0 +1,95 @@
+{
+ "id": "BaggageTractor",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 5330,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    0.53,
+    0.28,
+    0.825
+   ],
+   "radius": 0.28,
+   "width": 0.17,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -0.53,
+    0.28,
+    0.825
+   ],
+   "radius": 0.28,
+   "width": 0.17,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.53,
+    0.28,
+    -0.825
+   ],
+   "radius": 0.28,
+   "width": 0.17,
+   "steer": false,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.53,
+    0.28,
+    -0.825
+   ],
+   "radius": 0.28,
+   "width": 0.17,
+   "steer": false,
+   "drive": true
+  }
+ ],
+ "points": [
+  {
+   "name": "DriverEye",
+   "position": [
+    0.0,
+    1.62,
+    -0.42
+   ]
+  },
+  {
+   "name": "Hitch_Rear",
+   "position": [
+    0.0,
+    0.4,
+    -1.47
+   ]
+  },
+  {
+   "name": "ExitPoint",
+   "position": [
+    1.15,
+    0.0,
+    -0.4
+   ]
+  }
+ ],
+ "label": "Baggage tractor",
+ "massKg": 2400,
+ "maxSpeedKmh": 25,
+ "maxSteerDeg": 38,
+ "motorTorque": 900,
+ "brakeTorque": 2200,
+ "centerOfMass": [
+  0.0,
+  0.45,
+  0.0
+ ],
+ "suspension": 0.1,
+ "engine": "diesel"
+}

@@ -1,5 +1,6 @@
 using GroundCrew.Aircraft;
 using GroundCrew.Interaction;
+using GroundCrew.Vehicles;
 using UnityEditor;
 using UnityEditor.Events;
 using UnityEditor.SceneManagement;
@@ -12,8 +13,8 @@ namespace GroundCrew.EditorTools
     ///
     /// Parks a generated aircraft (Assets/GroundCrew/Art/Aircraft/*.glb, imported with glTFast)
     /// on the sandbox stand: nose gear on the stop bar, nose towards the training stations.
-    /// Adds an <see cref="AircraftRig"/>, static mesh colliders on the airframe (not on moving
-    /// parts) and a small control pedestal with DOORS / BEACON / FLAPS push buttons so the model
+    /// Adds an <see cref="AircraftRig"/>, an <see cref="AircraftTowable"/> (for pushback), mesh
+    /// colliders on the airframe (not on moving parts) and a small control pedestal with DOORS / BEACON / FLAPS push buttons so the model
     /// can be tried on the Quest before the Phase 2/3 gameplay exists.
     /// </summary>
     public static class AircraftPlacer
@@ -57,6 +58,10 @@ namespace GroundCrew.EditorTools
             var rig = aircraft.AddComponent<AircraftRig>();
             var json = AssetDatabase.LoadAssetAtPath<TextAsset>($"{k_ArtDir}/{id}.json");
             if (json != null) Phase1SandboxBuilder.Props(rig, ("definition", json));
+            // Kinematic body so the pushback tug can move it (see AircraftTowable).
+            aircraft.AddComponent<Rigidbody>().isKinematic = true;
+            var towable = aircraft.AddComponent<AircraftTowable>();
+            if (json != null) Phase1SandboxBuilder.Props(towable, ("definition", json));
 
             var colliders = AddStaticColliders(aircraft.transform);
             BuildControlPedestal(root.transform, rig);

@@ -10,6 +10,10 @@
   "wingspan": 35.76,
   "floorHeight": 2.85
  },
+ "gear": {
+  "wheelbase": 15.6,
+  "towSteerLimitDeg": 78.0
+ },
  "triangles": {
   "LOD0": 84357,
   "LOD1": 21601,

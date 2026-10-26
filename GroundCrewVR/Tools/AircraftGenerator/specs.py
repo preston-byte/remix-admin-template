@@ -109,7 +109,8 @@ NARROWBODY_737 = {
     "engine": {"type": "short", "y": 4.83, "front_s": 13.36, "center_z": 1.43, "radius": 1.00, "flatten": 0.84,
                "pylon": {"bottom_le_s": 14.0, "bottom_chord": 2.9, "top_le_s": 16.9, "top_chord": 3.0}},
     "belly_fairing": {"s": (13.2, 23.4), "center_z": 1.95, "half_height": 0.70, "extra_width": 0.10},
-    "nose_gear": {"s": 4.09, "tyre_d": 0.69, "tyre_w": 0.20, "spacing": 0.48},              # 27x7.75R15
+    "nose_gear": {"s": 4.09, "tyre_d": 0.69, "tyre_w": 0.20, "spacing": 0.48,              # 27x7.75R15
+                  "tow_steer_limit": 78.0},   # towing limit with the steering bypass pin (typical published figure)
     "main_gear": {"s": 19.69, "y": 2.86, "tyre_d": 1.13, "tyre_w": 0.42, "spacing": 0.86},  # H44.5x16.5-21, track 5.72
     # Boeing fig. 5.4.5 locations (level frame; heights APPROX)
     "service_points": {
@@ -217,7 +218,7 @@ NARROWBODY_320 = {
                "pylon": {"bottom_le_s": 12.0, "bottom_chord": 3.6, "top_le_s": 14.3, "top_chord": 3.4}},
     # Large wing-to-body fairing (Airbus 2-3-0: belly fairing 1.60-1.72 m above the ground)
     "belly_fairing": {"s": (10.4, 23.6), "center_z": 2.62, "half_height": 1.0, "extra_width": 0.34},
-    "nose_gear": {"s": 5.07, "tyre_d": 0.76, "tyre_w": 0.22, "spacing": 0.52},               # 30x8.8R15, wheelbase 12.64
+    "nose_gear": {"s": 5.07, "tyre_d": 0.76, "tyre_w": 0.22, "spacing": 0.52, "tow_steer_limit": 95.0},               # 30x8.8R15, wheelbase 12.64
     "main_gear": {"s": 17.71, "y": 3.795, "tyre_d": 1.17, "tyre_w": 0.43, "spacing": 0.93},  # 46x17R20, track 7.59
     # Airbus 5-4-1 layout (level frame; heights APPROX)
     "service_points": {

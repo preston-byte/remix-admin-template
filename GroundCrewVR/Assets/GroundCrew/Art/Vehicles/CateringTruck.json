@@ -1,0 +1,100 @@
+{
+ "id": "CateringTruck",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 7612,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    1.0,
+    0.5,
+    2.5
+   ],
+   "radius": 0.5,
+   "width": 0.3,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -1.0,
+    0.5,
+    2.5
+   ],
+   "radius": 0.5,
+   "width": 0.3,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.92,
+    0.5,
+    -1.8
+   ],
+   "radius": 0.5,
+   "width": 0.588,
+   "steer": false,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.92,
+    0.5,
+    -1.8
+   ],
+   "radius": 0.5,
+   "width": 0.588,
+   "steer": false,
+   "drive": true
+  }
+ ],
+ "points": [
+  {
+   "name": "DriverEye",
+   "position": [
+    0.55,
+    2.4,
+    2.85
+   ]
+  },
+  {
+   "name": "ExitPoint",
+   "position": [
+    1.75,
+    0.0,
+    2.85
+   ]
+  }
+ ],
+ "label": "Catering truck (high-loader)",
+ "massKg": 14000,
+ "maxSpeedKmh": 25,
+ "maxSteerDeg": 40,
+ "motorTorque": 10000,
+ "brakeTorque": 30000,
+ "centerOfMass": [
+  0.0,
+  1.3,
+  0.0
+ ],
+ "suspension": 0.12,
+ "engine": "diesel_big",
+ "lift": {
+  "armLength": 4.6,
+  "pivot": [
+   0.0,
+   1.24,
+   0.25
+  ],
+  "stowedFloor": 1.38,
+  "maxFloor": 5.6,
+  "speed": 0.12,
+  "platformTravel": 0.9,
+  "maxSpeedKmhRaised": 0
+ }
+}

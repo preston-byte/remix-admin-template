@@ -60,9 +60,19 @@ Remaining:
 - [ ] Radio messages (text + placeholder audio) and tablet assignment/task pages
 - [ ] Results screen
 
-## Phase 4 — Vehicles  ⬜
-- [ ] Vehicle framework: enter/exit, steering wheel, gear lever, throttle/brake, parking brake, horn, lights, reverse beeper
-- [ ] Baggage tractor + carts (coupling), pushback tug (tow bar / towbarless), fuel truck, catering truck
+## Phase 4 — Vehicles  ⏳ (first pass done 🧪)
+- [x] Vehicle models: baggage tractor, baggage cart, pushback tug, tow bar, fuel truck, catering truck (`Tools/VehicleGenerator`, ~2-8k tris each)
+- [x] Vehicle framework: enter/exit (`VehicleSeat`), grabbable steering wheel, triggers for throttle/brake, D/N/R, parking brake, engine, horn, lights, beacon, reverse beeper, speed governor, drive interlocks, collision events
+- [x] Synthesised engine / horn / reverse-alarm audio (no assets needed)
+- [x] Baggage tractor + 3 carts: drawbar bodies, turntable steering, couple / uncouple by hand, automatic cart brake
+- [x] Pushback tug + tow bar: latch to the nose-gear tow fitting, kinematic aircraft towing around the main gear, nose-gear steering + wheel roll on the aircraft, shear pin at the towing limit (737 78°, A320 95°)
+- [x] Catering truck: scissor lift and platform on hold-to-run buttons, rides the player up, drive interlock
+- [x] Fuel truck: drivable; hose reel and bonding reel modelled (refuelling itself is Phase 6)
+- [x] `VehicleAssembler` editor menu parks the fleet on Stand 24
+- [ ] On-device tuning (wheel friction, suspension, steering feel, drawbar joints)
+- [ ] Driving comfort options (vignette while moving, gentler acceleration)
+- [ ] Towbarless tug, belt loader, stairs, GPU cart, water / waste trucks, de-icer, vans
+- [ ] Recorded engine sounds; dash speed/gear display; AI drivers
 
 ## Phase 5 — A320-class aircraft  ⬜ (model already generated in Phase 2)
 - [ ] A320 workflow differences: hydraulic cargo door operation (hand pump / selector), containerised (ULD) loading, different sill heights for GSE

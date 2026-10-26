@@ -1,0 +1,108 @@
+{
+ "id": "PushbackTug",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 5554,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    0.9,
+    0.43,
+    1.2
+   ],
+   "radius": 0.43,
+   "width": 0.3,
+   "steer": true,
+   "drive": true
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -0.9,
+    0.43,
+    1.2
+   ],
+   "radius": 0.43,
+   "width": 0.3,
+   "steer": true,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.9,
+    0.43,
+    -1.2
+   ],
+   "radius": 0.43,
+   "width": 0.3,
+   "steer": false,
+   "drive": true
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.9,
+    0.43,
+    -1.2
+   ],
+   "radius": 0.43,
+   "width": 0.3,
+   "steer": false,
+   "drive": true
+  }
+ ],
+ "points": [
+  {
+   "name": "DriverEye",
+   "position": [
+    0.0,
+    1.95,
+    -0.15
+   ]
+  },
+  {
+   "name": "Hitch_Front",
+   "position": [
+    0.0,
+    0.5,
+    2.67
+   ]
+  },
+  {
+   "name": "Hitch_Rear",
+   "position": [
+    0.0,
+    0.5,
+    -2.67
+   ]
+  },
+  {
+   "name": "ExitPoint",
+   "position": [
+    1.55,
+    0.0,
+    -0.1
+   ]
+  }
+ ],
+ "label": "Pushback tug",
+ "massKg": 12000,
+ "maxSpeedKmh": 25,
+ "maxSteerDeg": 35,
+ "motorTorque": 9000,
+ "brakeTorque": 20000,
+ "centerOfMass": [
+  0.0,
+  0.55,
+  0.0
+ ],
+ "suspension": 0.06,
+ "engine": "diesel",
+ "tow": {
+  "maxSpeedKmh": 10,
+  "pushbackSpeedKmh": 5,
+  "torqueScale": 0.6
+ }
+}

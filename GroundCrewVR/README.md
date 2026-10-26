@@ -1,4 +1,4 @@
-# Ground Crew VR — Phase 1: VR Foundation
+# Ground Crew VR
 
 A first-person airport ground-operations simulator for **standalone Meta Quest 2**, built in Unity 6 + OpenXR + XR Interaction Toolkit 3.
 
@@ -38,12 +38,18 @@ GroundCrewVR/
                            QuestPerformanceSettings
       UI/                  WristTablet
       Aircraft/            AircraftRig (doors, flaps, steering, wheels, fans, beacon, LODs)
+      Vehicles/            VehicleController, VehicleSeat, VehicleDriverInput, SteeringWheelInput,
+                           VehicleLights, VehicleAudio, TowHitch, TowCoupler, TrailerSteering,
+                           TowBar, AircraftTowable, CateringLift, RideablePlatform, VehicleEvents
     Scripts/Editor/        ← editor tools (assembly GroundCrew.Editor)
       Phase1SandboxBuilder.cs   menu: Ground Crew > Build Phase 1 Sandbox Scene
       AircraftPlacer.cs         menu: Ground Crew > Place Aircraft on Stand 24
+      VehicleAssembler.cs       menu: Ground Crew > Vehicles > Add Phase 4 Vehicles to Sandbox
       ProceduralMeshes.cs       cone + wheel-chock meshes for the sandbox
     Art/Aircraft/          ← generated .glb aircraft + JSON sidecars
+    Art/Vehicles/          ← generated .glb ground vehicles + JSON sidecars
   Tools/AircraftGenerator/ ← Python generator for the aircraft models
+  Tools/VehicleGenerator/  ← Python generator for the vehicles (reuses the aircraft tools)
 ```
 
 Unity generates the `.meta` files, `Data/`, `Generated/` and `Scenes/` folders when you run the builder.
@@ -209,7 +215,66 @@ Phase 2 builds the real interactions on top of these: door handles you grab, hol
 
 ---
 
-## 7. Troubleshooting
+## 7. Ground vehicles (Phase 4, first pass)
+
+Generated models are in `Assets/GroundCrew/Art/Vehicles/` (from `Tools/VehicleGenerator/`): baggage tractor, baggage cart, pushback tug, tow bar, fuel truck (refueller) and catering truck (high-loader).
+
+**To use them in Unity** (glTFast must be installed, see §6):
+
+1. Build the sandbox scene and place an aircraft (§6).
+2. **Ground Crew → Vehicles → Add Phase 4 Vehicles to Sandbox.** This parks, around Stand 24:
+   - a baggage tractor towing three coupled baggage carts (left of the stand)
+   - the pushback tug with its tow bar on the front pin (right of the stand)
+   - the fuel truck and the catering truck (beside the aircraft's tail)
+3. Save the scene, then **Build And Run**.
+
+**Driving** (also printed on `VehicleDriverInput`):
+
+| Action | Controller | Keyboard (editor testing) |
+|---|---|---|
+| Get in | Grab (grip) the yellow **GRAB TO DRIVE** handle by the driver's side | |
+| Get out | **Y** | F |
+| Engine start / stop | **X**, or the green **ENGINE** button on the dash | E |
+| Drive / Reverse | Right stick up / down, or the **D** / **R** buttons | T / R |
+| Neutral | Right stick click, or **N** | N |
+| Accelerate / brake | Right trigger / left trigger | W / S |
+| Steer | Grab the steering wheel (one or both hands) and turn it; or the left stick | A / D |
+| Parking brake | **B**, or the red **PARK** button | P |
+| Horn | **A** (hold), or the centre of the steering wheel | H |
+| Lights | **LIGHTS** button on the dash | |
+| Re-centre your view in the seat | Left stick click | C |
+
+Vehicles start parked with the engine off. Shifting between D and R needs a near standstill. Airside speed is governed to 25 km/h, 10 km/h for a tug with an aircraft on the bar. A reverse alarm beeps whenever reverse is selected, and the amber beacon flashes while the engine runs. The engine, horn and reverse alarm are synthesised, so no sound files are needed yet.
+
+**Baggage carts:** each cart's front wheels steer with its drawbar. To uncouple a cart, hold its drawbar handle (grip) and pull the trigger. To couple one, carry the drawbar eye over a free hitch (tractor or the cart in front) and let go. An uncoupled cart brakes itself.
+
+**Pushback:**
+1. Drive the tug in front of the aircraft's nose, square to it, with the tow bar pointing at the nose gear.
+2. Park, get out, and grab the **TOW BAR HEAD** handle (grip).
+3. Carry the head to the nose-gear tow fitting and let go: it latches.
+4. Get back in, select **D** (the tug faces the aircraft, so driving forward pushes it back) and push gently, steering the tug to swing the tail.
+5. Turn past the towing limit (737 78°, A320 95°) and the shear pin breaks: the bar lets go.
+6. To unlatch the bar, hold the head handle and pull the trigger.
+
+Pushing a castoring nose gear is unstable, as in real life: keep correcting with small steering inputs. Pulling forward is stable.
+
+**Catering truck:** park (parking brake on), climb onto the front platform, then hold **LIFT UP** / **LIFT DOWN** with a fingertip. The box rises to a 5.6 m floor height and the platform carries you with it. **PLATFORM OUT / IN** slides the bridge plate towards the door. The truck can't be driven while the box is up or the platform is out.
+
+**On the Quest, check that:**
+- [ ] Grabbing **GRAB TO DRIVE** seats you at the wheel facing forward; **Y** puts you down beside the door.
+- [ ] Each vehicle starts, drives, brakes, reverses (with the beeper) and parks; the parking brake holds it.
+- [ ] Turning the steering wheel with one or two hands steers; the left stick also works.
+- [ ] The tractor pulls all three carts round a corner without them jack-knifing or jittering.
+- [ ] A cart uncouples and recouples.
+- [ ] The tow bar latches to the nose gear; pushing moves the aircraft back, and steering swings the tail.
+- [ ] Over-steering the nose gear breaks the shear pin.
+- [ ] The catering box rises and lowers with you on the platform.
+- [ ] Driving feels comfortable. If it doesn't, say so: comfort options for driving (vignette, reduced acceleration) come next.
+- [ ] Frame rate stays at ~72 fps with all vehicles and the aircraft in view.
+
+---
+
+## 8. Troubleshooting
 
 | Symptom | Fix |
 |---|---|

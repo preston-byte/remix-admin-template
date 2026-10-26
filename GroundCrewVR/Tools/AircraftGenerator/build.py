@@ -142,6 +142,8 @@ def export(sp, out_dir):
         "dimensions": {"length": sp["length"], "fuselageWidth": sp["width"], "fuselageHeight": sp["height"],
                        "wingspan": round(2 * (aircraft.wing_tip_y(sp["wing"]) + (0.73 if sp["wing"]["tip"]["type"] == "blended" else 0.03)), 2),
                        "floorHeight": sp["floor_z"]},
+        "gear": {"wheelbase": round(sp["main_gear"]["s"] - sp["nose_gear"]["s"], 3),
+                 "towSteerLimitDeg": sp["nose_gear"].get("tow_steer_limit", 75.0)},
         "triangles": stats,
         "lodGroups": ["LOD0", "LOD1", "LOD2"],
         "movingParts": moving_parts,

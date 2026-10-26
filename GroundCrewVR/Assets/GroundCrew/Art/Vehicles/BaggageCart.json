@@ -1,0 +1,97 @@
+{
+ "id": "BaggageCart",
+ "units": "metres",
+ "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
+ "triangles": 4296,
+ "wheels": [
+  {
+   "name": "Wheel_FL",
+   "position": [
+    0.6,
+    0.2,
+    0.875
+   ],
+   "radius": 0.2,
+   "width": 0.12,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_FR",
+   "position": [
+    -0.6,
+    0.2,
+    0.875
+   ],
+   "radius": 0.2,
+   "width": 0.12,
+   "steer": true,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RL",
+   "position": [
+    0.6,
+    0.2,
+    -0.875
+   ],
+   "radius": 0.2,
+   "width": 0.12,
+   "steer": false,
+   "drive": false
+  },
+  {
+   "name": "Wheel_RR",
+   "position": [
+    -0.6,
+    0.2,
+    -0.875
+   ],
+   "radius": 0.2,
+   "width": 0.12,
+   "steer": false,
+   "drive": false
+  }
+ ],
+ "points": [
+  {
+   "name": "Hitch_Rear",
+   "position": [
+    0.0,
+    0.36,
+    -1.49
+   ]
+  }
+ ],
+ "label": "Baggage cart",
+ "massKg": 450,
+ "maxSpeedKmh": 25,
+ "maxSteerDeg": 70,
+ "motorTorque": 0,
+ "brakeTorque": 600,
+ "centerOfMass": [
+  0.0,
+  0.5,
+  0.0
+ ],
+ "suspension": 0.05,
+ "engine": "none",
+ "cargo": {
+  "center": [
+   0.0,
+   1.25,
+   0.0
+  ],
+  "size": [
+   1.46,
+   1.3599999999999999,
+   2.58
+  ],
+  "maxMassKg": 1500
+ },
+ "drawbar": {
+  "length": 1.32,
+  "yawLimit": 80,
+  "pitchUp": 75
+ }
+}

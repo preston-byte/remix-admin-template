@@ -116,6 +116,26 @@ AircraftDefinition (ScriptableObject)
 
 Prefab contract: the model prefab contains empty transforms named `SP_<ServicePointId>` (for example `SP_GPU`, `SP_RefuelPanel`, `SP_Door1L`, `SP_FwdCargo`, `SP_NoseGearTow`, `SP_Chock_MLG_L_Fwd`). An `AircraftView` binder finds them by name, then spawns sockets, zones and handles from the definition.
 
+### Vehicles (Phase 4)
+
+- **Models** come from `Tools/VehicleGenerator` with a node contract like the aircraft:
+  - `Wheel_*`, `SteeringWheel` + `SteerAxis`, `DriverEye`, `ExitPoint`
+  - `Btn_*` + `Out`, `Light_*`, `Hitch_*`, `Collision_*`
+  - moving parts (`Drawbar`, `LiftBox`, `Scissor*`, `Platform`, `HoseReel`)
+  - a JSON sidecar with mass, torque, speeds and wheels
+- **`VehicleAssembler`** turns a model into a vehicle: Rigidbody, convex hulls, WheelColliders, controller, seat, wheel, buttons.
+- **Driving:** `VehicleController` runs on WheelColliders: automatic D/N/R, parking brake, governor, interlocks (`AddDriveInhibit`).
+- **Intents:** inputs arrive as a `VehicleInput` struct, so AI drivers and remote players use the same path as the seated player.
+- **Seating:** `VehicleSeat` parents the XR Origin to the vehicle and turns locomotion off. The controls are triggers for the pedals, a grabbable wheel (or the stick), and dash buttons that mirror the controller buttons.
+- **Trailers:** baggage carts are separate Rigidbodies. The drawbar is its own body, jointed at the turntable, and the cart's front wheels steer to the drawbar's angle. Couplings are ConfigurableJoints created by `TowCoupler`.
+- **Aircraft towing is kinematic, not a 70 t rigid body:**
+  - The tow bar is rigid, pinned at both ends; the main gear never slips sideways; the nose castors.
+  - `AircraftTowable` re-solves the aircraft around the main gear every physics step from the tug pin's position.
+  - That gives true pushback behaviour (pushing is unstable and needs correction; pulling is stable) with no jitter.
+  - The towing steering limit acts as a shear pin.
+  - The tug only "feels" the load through a lower torque and speed limit.
+- **Events:** `VehicleSeatEvent`, `VehicleCollisionEvent` (`HitAircraft`), `CouplingEvent`, `AircraftTowEvent`, `TowShearPinEvent`.
+
 ---
 
 ## 5. Turnaround system (Phase 3 — the heart of the game)
@@ -186,7 +206,9 @@ Assets/GroundCrew/
     Interaction/    grab, zones, handles, buttons, connectors, cables
     Player/         comfort, fingertips, performance
     UI/             wrist tablet
-    (Simulation/, Aircraft/, Vehicles/, NPC/, Audio/, Career/ — later phases)
+    Aircraft/       AircraftRig
+    Vehicles/       driving, seats, steering wheel, coupling, pushback, catering lift
+    (Simulation/, NPC/, Audio/, Career/ — later phases)
   Scripts/Editor/   GroundCrew.Editor.asmdef, scene builders, validators
   Data/             ScriptableObjects (items, aircraft, templates)
   Generated/        builder-generated materials/meshes (safe to delete)
