@@ -7,6 +7,7 @@ import math
 
 import numpy as np
 
+import flightdeck
 from meshlib import (Part, box, clip_polygon, cylinder, fan, grid, grid_normals, lathe, normalize,
                      polygon, profile_normals, rounded_rect)
 
@@ -41,7 +42,7 @@ MATERIALS = {
     "Galley": ((0.62, 0.64, 0.66), 0.8, 0.35, None),
     "CabinLight": ((1.0, 0.97, 0.9), 0.0, 0.5, (1.0, 0.95, 0.85)),
     "Cockpit": ((0.17, 0.18, 0.20), 0.1, 0.6, None),
-    "Display": ((0.05, 0.10, 0.18), 0.0, 0.2, (0.10, 0.22, 0.40)),
+    "CockpitGlass": ((0.10, 0.13, 0.16), 0.0, 0.05, None),   # alpha-blended, see build.py
     "HoldLining": ((0.36, 0.37, 0.38), 0.0, 0.9, None),
     # Exterior lights: separate materials so the game can switch emission per light type.
     "Light_Beacon": ((0.9, 0.05, 0.03), 0.0, 0.3, (1.0, 0.05, 0.02)),
@@ -206,6 +207,11 @@ def build_fuselage(fus, sp, lod, airframe, parts, interior):
         mask[i0:i1, j0:j1] = True
         holes.append((d, i0, i1, j0, j1))
 
+    # LOD0: the flight-deck rows are rebuilt as a finer patch with real windscreen openings
+    fd_rows = flight_deck_rows(sp, S) if lod["interior"] else None
+    if fd_rows is not None:
+        mask[fd_rows[0]:fd_rows[1], :] = True
+
     uv = np.stack(np.meshgrid(S / L, np.arange(nv) / nv, indexing="ij"), axis=-1)
     grid(airframe.buf("Paint"), rings, N, closed=True, mask=mask, uv=uv)
     fan(airframe.buf("Paint"), rings[0], [0.0, 0.0, fus.tip_z], [-1.0, 0.0, 0.0])
@@ -222,6 +228,8 @@ def build_fuselage(fus, sp, lod, airframe, parts, interior):
     grid(airframe.buf("Lining"), inner[il0:il1 + 1], -N[il0:il1 + 1], closed=True, mask=mask[il0:il1])
     polygon(airframe.buf("Lining"), inner[il0], [1.0, 0.0, 0.0])
     polygon(airframe.buf("Lining"), inner[il1], [-1.0, 0.0, 0.0])
+    if fd_rows is not None:
+        build_flight_deck_shell(fus, sp, S, T, rings, inner, fd_rows, airframe)
 
     # --- door jambs: close the gap between skin and lining around each opening
     jamb = airframe.buf("Seal")
@@ -241,6 +249,154 @@ def build_fuselage(fus, sp, lod, airframe, parts, interior):
     for d in doors:
         parts.append(build_door(fus, sp, d, lod))
     return {"S": S, "T": T, "rings": rings, "N": N, "inner": inner}
+
+
+def pane_corners(fus, sp, side):
+    """Windscreen panes as (s, theta) quads, theta in (-pi, pi] (right side negative)."""
+    out = []
+    for pane in sp["windshield"]:
+        q = []
+        for c in pane:
+            s, t = resolve_pane_corner(fus, c, "L")
+            q.append((s, t if side == "L" else -t))
+        out.append(np.array(q))
+    return out
+
+
+def inside_quad(q, s, t):
+    """Point-in-convex-quad test in (s, theta) parameter space (vectorised over s, t)."""
+    pos = neg = True
+    for k in range(4):
+        (s0, t0), (s1, t1) = q[k], q[(k + 1) % 4]
+        c = (s1 - s0) * (t - t0) - (t1 - t0) * (s - s0)
+        pos, neg = pos & (c >= 0), neg & (c <= 0)
+    return pos | neg
+
+
+def subtract_convex(poly, q):
+    """Convex pieces of polygon `poly` (rows (s, theta, 0)) lying outside the convex quad q."""
+    centre = q.mean(axis=0)
+    pieces, rest = [], poly
+    for k in range(4):
+        a, b = q[k], q[(k + 1) % 4]
+        n = np.array([-(b[1] - a[1]), b[0] - a[0], 0.0])
+        if np.dot(n[:2], centre - a) < 0:
+            n = -n
+        off = float(np.dot(n[:2], a))
+        outside = clip_polygon(rest, -n, -off)
+        if len(outside) >= 3:
+            pieces.append(outside)
+        rest = clip_polygon(rest, n, off)
+        if len(rest) < 3:
+            break
+    return pieces
+
+
+def flight_deck_rows(sp, S):
+    """Indices (i0, i1) of the main fuselage rows replaced by the flight-deck patch."""
+    ss = [c[1] for pane in sp["windshield"] for c in pane if c[0] == "p"]
+    lo, hi = min(min(ss), sp["lining_start"]) - 0.12, max(ss) + 0.12
+    i0 = int(np.searchsorted(S, lo, side="right")) - 1
+    i1 = int(np.searchsorted(S, hi, side="left"))
+    return max(i0, 1), min(i1, len(S) - 1)
+
+
+def build_flight_deck_shell(fus, sp, S, T, rings, inner, fd_rows, airframe):
+    """Skin and lining over the flight deck with exact openings for see-through windscreens, plus
+    the window reveals, outer seals and inner frames."""
+    i0, i1 = fd_rows
+    wall = fus.wall
+    panes = pane_corners(fus, sp, "L") + pane_corners(fus, sp, "R")
+    tmax = max(float(np.max(np.abs(q[:, 1]))) for q in panes) + 5 * D
+
+    # rows: the main rows plus a fine step; columns: main T plus a fine step over the window band
+    fine_s = np.arange(S[i0], S[i1], 0.075)
+    Sp = np.unique(np.concatenate([S[i0:i1 + 1], [x for x in fine_s if np.min(np.abs(S[i0:i1 + 1] - x)) > 0.025]]))
+    band = np.arange(-tmax, tmax + 1e-9, 3.2 * D) % (2 * math.pi)
+    Tp = np.unique(np.concatenate([T, [x for x in band if np.min(np.abs(np.angle(np.exp(1j * (T - x))))) > 1.0 * D]]))
+    nu, nv = len(Sp), len(Tp)
+
+    def ring_interp(ring, theta):
+        """Point on the main grid's polygonal ring (keeps the patch edge crack-free)."""
+        j = int(np.searchsorted(T, theta, side="right")) - 1
+        j2 = (j + 1) % len(T)
+        t0, t1 = T[j], T[j2] if j2 else 2 * math.pi
+        w = (theta - t0) / (t1 - t0)
+        return ring[j] * (1 - w) + ring[j2] * w
+
+    P = np.zeros((nu, nv, 3))
+    Nn = np.zeros((nu, nv, 3))
+    I = np.zeros((nu, nv, 3))
+    for i, s in enumerate(Sp):
+        edge = {S[i0]: i0, S[i1]: i1}.get(s)
+        for j, t in enumerate(Tp):
+            n = fus.normal(s, t)
+            Nn[i, j] = n
+            if edge is not None:
+                P[i, j] = ring_interp(rings[edge], t)
+                I[i, j] = ring_interp(inner[edge], t)
+            else:
+                P[i, j] = fus.point(s, t)
+                I[i, j] = P[i, j] - n * wall
+
+    # Cells touching a pane are cut exactly along its outline; the rest stay a plain grid.
+    lo = np.array([[q[:, 0].min(), q[:, 1].min()] for q in panes]) - 0.12
+    hi = np.array([[q[:, 0].max(), q[:, 1].max()] for q in panes]) + 0.12
+    Tw = np.append(Tp, Tp[0] + 2 * math.pi)
+    cut = np.zeros((nu - 1, nv), dtype=bool)
+    pieces = []
+    for i in range(nu - 1):
+        for j in range(nv):
+            t0 = float(np.angle(np.exp(1j * Tw[j])))
+            t1 = t0 + (Tw[j + 1] - Tw[j])
+            near = [q for q, a, b in zip(panes, lo, hi) if Sp[i] < b[0] and Sp[i + 1] > a[0] and t0 < b[1] and t1 > a[1]]
+            if not near:
+                continue
+            cut[i, j] = True
+            cell = [np.array([[Sp[i], t0, 0], [Sp[i + 1], t0, 0], [Sp[i + 1], t1, 0], [Sp[i], t1, 0]])]
+            for q in near:
+                cell = [piece for c in cell for piece in subtract_convex(c, q)]
+            pieces += [c for c in cell if len(c) >= 3]
+    grid(airframe.buf("Paint"), P, Nn, closed=True, mask=cut)
+    k0 = int(np.searchsorted(Sp, sp["lining_start"] - 1e-6))
+    grid(airframe.buf("Lining"), I[k0:], -Nn[k0:], closed=True, mask=cut[k0:])
+    for c in pieces:
+        pts = np.array([fus.point(s, t) for s, t, _ in c])
+        nrm = np.array([fus.normal(s, t) for s, t, _ in c])
+        polygon(airframe.buf("Paint"), pts, nrm.mean(axis=0))
+        if c[:, 0].min() >= sp["lining_start"] - 1e-6:
+            polygon(airframe.buf("Lining"), pts - nrm * wall, -nrm.mean(axis=0))
+
+    # reveal (skin to lining at the exact pane outline), outer seal and inner frame bands
+    for q in panes:
+        centre = q.mean(axis=0)
+        for k in range(4):
+            a, b = q[k], q[(k + 1) % 4]
+            n_pts = max(4, int(np.hypot(b[0] - a[0], (b[1] - a[1]) * 1.3) / 0.06) + 1)
+            ts = np.linspace(0, 1, n_pts)
+            edge = a[None, :] + (b - a)[None, :] * ts[:, None]
+            mid = 0.5 * (a + b)
+            r_eff = np.linalg.norm(fus.point(mid[0], mid[1] + 0.01) - fus.point(mid[0], mid[1] - 0.01)) / 0.02
+            d = np.array([b[0] - a[0], (b[1] - a[1]) * r_eff])
+            out = np.array([d[1], -d[0]]) / np.linalg.norm(d)
+            if np.dot(out, [mid[0] - centre[0], (mid[1] - centre[1]) * r_eff]) < 0:
+                out = -out
+            skin, lin, seal_o, seal_i, frame_o, frame_i = ([] for _ in range(6))
+            for s, t in edge:
+                n = fus.normal(s, t)
+                p = fus.point(s, t)
+                skin.append(p)
+                lin.append(p - n * wall)
+                for width, dst_i, dst_o, off in ((0.04, seal_i, seal_o, 0.003), (0.05, frame_i, frame_o, -wall - 0.008)):
+                    dst_i.append(p + n * off)
+                    s3, t3 = s + out[0] * width, t + out[1] * width / r_eff
+                    dst_o.append(fus.point(s3, t3) + fus.normal(s3, t3) * off)
+            skin, lin = np.array(skin), np.array(lin)
+            inward = normalize(np.array([fus.point(centre[0], centre[1]) - p for p in skin]))
+            grid(airframe.buf("Cockpit"), np.stack([skin, lin], axis=1), np.stack([inward, inward], axis=1), closed=False)
+            nrm = np.array([fus.normal(s, t) for s, t in edge])
+            grid(airframe.buf("Seal"), np.stack([np.array(seal_i), np.array(seal_o)], axis=1), np.stack([nrm, nrm], axis=1), closed=False)
+            grid(airframe.buf("Cockpit"), np.stack([np.array(frame_i), np.array(frame_o)], axis=1), -np.stack([nrm, nrm], axis=1), closed=False)
 
 
 def surface_patch(fus, s0, s1, t0, t1, ns, nt, offset=0.0):
@@ -384,8 +540,8 @@ def build_windows(fus, sp, lod, airframe):
                     n = fus.normal(s, t)
                     P[i, j] = fus.point(s, t) + n * 0.010
                     N[i, j] = n
-            grid(airframe.buf("Window"), P, N, closed=False)
-            if lod["openings"]:
+            grid(airframe.buf("CockpitGlass" if lod["interior"] else "Window"), P, N, closed=False)
+            if lod["openings"] and not lod["interior"]:
                 inner_pane = P - N * (fus.wall + 0.016)
                 grid(airframe.buf("WindowInner"), inner_pane, -N, closed=False)
     return centres
@@ -1004,22 +1160,7 @@ def build_interior(fus, sp, holds_out, seats_out):
     box(fdd.buf("Cockpit"), [sfd - 0.02, 0.0, zf + door_h / 2], (0.04, 2 * half_door - 0.02, door_h - 0.02))
     interior.children.append(fdd)
 
-    # Main panel top ~0.9 m above the floor, below the windshield sill; pilots' eye ~1.1 m.
-    s_panel = sp["windshield"][0][3][1] + 0.45   # behind the front windscreen's lower edge
-    pw = min(1.0, fus.inner_halfwidth(s_panel, zf + 0.7) - 0.08)
-    tilt_p = [[math.cos(-15 * D), 0, -math.sin(-15 * D)], [0, 1, 0], [math.sin(-15 * D), 0, math.cos(-15 * D)]]
-    box(interior.buf("Cockpit"), [s_panel, 0, zf + 0.62], (0.08, 2 * pw, 0.5), axes=tilt_p)
-    box(interior.buf("Cockpit"), [s_panel + 0.02, 0, zf + 0.9], (0.3, 2 * pw * 0.9, 0.07))
-    for k in range(6):
-        y = (k - 2.5) * (2 * pw / 6.4)
-        box(interior.buf("Display"), [s_panel - 0.05, y, zf + 0.64], (0.012, 0.25, 0.22), axes=tilt_p)
-    box(interior.buf("Cockpit"), [s_panel + 0.65, 0, zf + 0.34], (0.85, 0.34, 0.6))
-    ztop = fus.section(s_panel + 0.6)[0] + fus.section(s_panel + 0.6)[2] - fus.wall - 0.12
-    box(interior.buf("Cockpit"), [s_panel + 0.75, 0, ztop], (0.9, 0.7, 0.08))
-    for side in (1, -1):
-        y = side * min(0.52, fus.inner_halfwidth(sfd - 1.1, zf + 0.45) - 0.35)
-        box(interior.buf("Seat"), [sfd - 1.1, y, zf + 0.48], (0.5, 0.5, 0.12))
-        box(interior.buf("Seat"), [sfd - 0.83, y, zf + 0.9], (0.1, 0.5, 0.75), axes=back_axes)
+    flightdeck.build(fus, sp, interior)
     return interior
 
 

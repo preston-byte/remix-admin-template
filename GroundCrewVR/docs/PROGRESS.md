@@ -38,10 +38,11 @@ Known limitations in Phase 1:
 Done (models type-checked and rendered outside Unity; 🧪 in Unity/Quest):
 - [x] Procedural generator for both aircraft: `Tools/AircraftGenerator` (737-class **and** A320-class, so Phase 5's model work is done early)
 - [x] Shapes traced from Boeing D6-58325-7 and Airbus A320 AC drawings (fuselage outlines, wing/tailplane planforms, fins); door sills, cargo doors and clearances checked against the manufacturer tables
-- [x] Exterior with 3 LODs (~60k / 22k / 5.5k tris); engines (737 flat short-duct vs A320 round long-duct), gear, wheels, winglets / sharklets, flap-track fairings, antennas
+- [x] Exterior with 3 LODs (~85k incl. flight deck / 22k / 5.5k tris); engines (737 flat short-duct vs A320 round long-duct), gear, wheels, winglets / sharklets, flap-track fairings, antennas
 - [x] Moving parts: all passenger doors, overwing exits, cargo doors (737 inward plug, A320 outward + bulk door), flaps, ailerons, elevators, rudder, fans, nose-gear steering, wheels
 - [x] Exterior lights as nodes (beacons, nav, strobes)
 - [x] Interior: cabin lining, floor, 168 / 162 seats with seat map, bins, galleys, lavatories with doors, cabin lights, flight deck with door; cargo holds with volumes and limits
+- [x] Flight decks placed from the documented pilot eye points, behind see-through windscreens with exact openings: 737 yokes, tall control stand with striped trim wheels and CDUs behind it; A320 sidesticks, tables, MCDUs at the front of the pedestal and a gated thrust-lever housing; glowing displays, glareshield, overhead and pedestal panels painted into one texture atlas per type; dome light (glTF point light) switchable from `AircraftRig`
 - [x] Service-point contract (`SP_*` nodes + JSON sidecar), origin at the nose-gear contact point
 - [x] `AircraftRig` runtime API + LODGroup setup; `AircraftPlacer` editor menu with a door/beacon/flaps test pedestal
 

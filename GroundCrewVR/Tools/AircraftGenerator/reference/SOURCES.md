@@ -7,8 +7,8 @@ documents.
 
 | Aircraft | Document | Figures used |
 |---|---|---|
-| 737-800 class | Boeing D6-58325-7 *737 NG Airplane Characteristics for Airport Planning*, Rev C (Oct 2025), boeing.com/commercial/airports/plan-manuals | 2.2.6 General Dimensions 737-800W (side / plan / front views), 2.3.3 Ground Clearances 737-800W, 2.6.1 Lower Cargo Compartments, 2.7.1 Door Clearances (Door 1), 5.4.5 Ground Service Connections |
-| A320-200 class | Airbus *A320 Aircraft Characteristics - Airport and Maintenance Planning*, Rev 44 (Jun 2024), aircraft.airbus.com | 2-2-0 General Aircraft Dimensions (wing-tip fence, sheets 1-2), 2-3-0 Ground Clearances (wing-tip fence table), 2-6-0 Cargo Compartments, 2-7-0 Door Location, 5-4-1 Ground Service Connections Layout |
+| 737-800 class | Boeing D6-58325-7 *737 NG Airplane Characteristics for Airport Planning*, Rev C (Oct 2025), boeing.com/commercial/airports/plan-manuals | 2.2.6 General Dimensions 737-800W (side / plan / front views), 2.3.3 Ground Clearances 737-800W, 2.6.1 Lower Cargo Compartments, 2.7.1 Door Clearances (Door 1), 4.4 Visibility from Cockpit (pilot eye position), 5.4.5 Ground Service Connections |
+| A320-200 class | Airbus *A320 Aircraft Characteristics - Airport and Maintenance Planning*, Rev 44 (Jun 2024), aircraft.airbus.com | 2-2-0 General Aircraft Dimensions (wing-tip fence, sheets 1-2), 2-3-0 Ground Clearances (wing-tip fence table), 2-6-0 Cargo Compartments, 2-7-0 Door Location, 4-4-0 Visibility from Cockpit (pilot eye position), 5-4-1 Ground Service Connections Layout |
 
 **How the tracing works** (`trace_drawings.py`):
 1. Render each drawing page at 300 dpi.
@@ -23,3 +23,9 @@ Points where wings, engines, gear, text or dimension lines overlap the outline w
 - Both aircraft are modelled level, then pitched nose-down by the measured door-sill difference:
   - 737: Door 2 sill is about 0.36 m higher than Door 1, giving about 0.76°.
   - A320: about 0.12 m difference, giving about 0.28°.
+
+**Flight decks.** Only the pilot eye point comes from the documents:
+- 737: 2.49 m aft of the nose, 0.51 m off the centreline, 3.74 m above the ground (parked); downward view over the nose 15°.
+- A320: 2.41 m aft of the nose, 0.53 m off the centreline, 4.56 m above the ground (parked); downward view over the nose 20°.
+
+Everything in the flight deck is placed relative to that point using typical flight-deck ergonomics (display distance and height, glareshield kept below the documented over-nose view, seat, yoke / sidestick and pedal reach). The panel artwork is generic and painted in code. It is APPROX, good for VR, not for training.

@@ -182,7 +182,7 @@ Generated 737-class and A320-class aircraft are in `Assets/GroundCrew/Art/Aircra
    - parks the aircraft on the stop bar
    - adds `AircraftRig`
    - adds static colliders to the airframe
-   - adds a pedestal by the nose with **DOORS**, **BEACON** and **FLAPS** buttons
+   - adds a pedestal by the nose with **DOORS**, **BEACON**, **FLAPS** and **CKPT LT** (flight-deck light) buttons
 4. Save the scene, then **Build And Run**.
 
 **On the Quest, check that:**
@@ -192,6 +192,8 @@ Generated 737-class and A320-class aircraft are in `Assets/GroundCrew/Art/Aircra
 - [ ] Through an open door you see the cabin (seats, bins) or the hold.
 - [ ] **BEACON** flashes the red anti-collision lights on the top and belly.
 - [ ] **FLAPS** lowers the flaps to 15°.
+- [ ] From the ramp you can see into the flight deck through the windscreen (the glass is transparent on the close-up LOD only). **CKPT LT** switches the dome light (it starts off); if nothing changes, glTFast didn't import the light (check its import settings for *Lights*).
+- [ ] Through the forward door (**DOORS**, then the flight-deck door): the 737 has yokes and big striped trim wheels; the A320 has sidesticks, tables and no yokes. The screens glow.
 - [ ] Frame rate stays at ~72 fps (wrist tablet) while you look at the whole aircraft.
 
 `AircraftRig` gives gameplay code these methods:
@@ -201,6 +203,7 @@ Generated 737-class and A320-class aircraft are in `Assets/GroundCrew/Art/Aircra
 - `RollWheels(metres)`
 - `FanRpm`
 - `SetBeacon(bool)`
+- `SetFlightDeckLight(bool)`
 
 Phase 2 builds the real interactions on top of these: door handles you grab, holds as placement zones, service points as sockets.
 

@@ -72,8 +72,11 @@ NARROWBODY_737 = {
         {"name": "CargoDoor_Aft", "side": "R", "kind": "cargo", "s": (27.40, 28.62), "z": (1.60, 2.44), "opens": "in", "max": 95},
     ],
     # --- interior
+    # Pilot's eye: D6-58325-7 fig. 4.4 gives 2.49 m aft of the nose, 0.51 m off the centreline and
+    # 3.74 m above the ground when parked (= 3.97 m in this level frame).
+    "flight_deck": {"style": "boeing", "eye": (2.49, 0.51, 3.97)},
     "flight_deck_bulkhead": 4.35,
-    "lining_start": 1.6,
+    "lining_start": 0.90,   # just ahead of the windscreen, so the glass looks onto the flight deck
     "aft_bulkhead": 34.0,
     "seat_rows": {"first": 6.95, "pitch": 0.787, "count": 28, "exit_rows_extra": [(16.3, 0.30), (17.3, 0.35)],
                   "seat_width": 0.43, "aisle": 0.50, "abreast": 3},
@@ -178,8 +181,11 @@ NARROWBODY_320 = {
         {"name": "CargoDoor_Aft", "side": "R", "kind": "cargo", "s": (22.69, 24.51), "z": (1.89, 3.13), "opens": "out", "max": 120},
         {"name": "CargoDoor_Bulk", "side": "R", "kind": "cargo", "s": (26.29, 27.24), "z": (2.11, 3.06), "opens": "in", "max": 95},
     ],
+    # Pilot's eye: Airbus AC 4-4-0 gives 2.41 m aft of the nose, 0.53 m off the centreline and
+    # 4.56 m above the ground when parked (= 4.635 m in this level frame).
+    "flight_deck": {"style": "airbus", "eye": (2.41, 0.53, 4.635)},
     "flight_deck_bulkhead": 4.62,
-    "lining_start": 1.45,
+    "lining_start": 1.20,   # just ahead of the windscreen
     "aft_bulkhead": 31.8,
     "seat_rows": {"first": 7.55, "pitch": 0.787, "count": 26, "exit_rows_extra": [(14.2, 0.30), (15.05, 0.35)],
                   "seat_width": 0.46, "aisle": 0.48, "abreast": 3},

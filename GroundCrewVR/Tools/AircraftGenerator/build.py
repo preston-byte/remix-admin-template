@@ -6,8 +6,9 @@ Default output: GroundCrewVR/Assets/GroundCrew/Art/Aircraft/
 
 Each .glb contains:
     <AircraftId>
-      LOD0   full detail: openable doors with cabin/hold interior, moving control surfaces,
-             spinning fans, steerable nose gear, rolling wheels
+      LOD0   full detail: openable doors with cabin/hold interior, a flight deck behind
+             see-through windscreens, moving control surfaces, spinning fans, steerable nose
+             gear, rolling wheels
       LOD1   same parts, lower resolution, no cabin furniture
       LOD2   single merged static mesh for distance
       ServicePoints   empty nodes (SP_*) where ground equipment connects / is placed
@@ -26,6 +27,7 @@ import sys
 import numpy as np
 
 import aircraft
+import flightdeck
 import specs
 from gltf_writer import GltfBuilder
 
@@ -39,6 +41,7 @@ def make_converter(s_origin, pitch_k, s_pivot):
 
 
 PITCH_K = 0.0
+ALPHA = {"CockpitGlass": 0.22}   # blended materials and their opacity
 
 
 def vec_convert(v):
@@ -52,7 +55,14 @@ def export(sp, out_dir):
     PITCH_K = math.tan(math.radians(sp.get("pitch_deg", 0.0)))
     convert = make_converter(s_origin, PITCH_K, sp["main_gear"]["s"])
     b = GltfBuilder()
-    mats = {name: b.material(name, rgb, metallic, rough, emissive) for name, (rgb, metallic, rough, emissive) in aircraft.MATERIALS.items()}
+    mats = {name: b.material(name, rgb, metallic, rough, emissive, alpha=ALPHA.get(name))
+            for name, (rgb, metallic, rough, emissive) in aircraft.MATERIALS.items()}
+    image, _, _, _ = flightdeck.atlas(aircraft.Fuselage(sp), sp)
+    atlas = b.texture(sp["id"] + "_FlightDeck", image)
+    for name, m in flightdeck.materials(sp["flight_deck"]["style"]).items():
+        mats[name] = b.material(name, m["rgb"], m["metallic"], m["roughness"], m.get("emissive"),
+                                base_texture=atlas if m.get("texture") else None,
+                                emissive_texture=atlas if m.get("emissive_texture") else None)
     moving_parts = []
     stats = {}
 
@@ -86,12 +96,16 @@ def export(sp, out_dir):
             extras.update({"hingeAxis": [round(float(x), 5) for x in axis], "minAngle": hinge["min"], "maxAngle": hinge["max"]})
             moving_parts.append({"path": f"{path}/{part.name}", **extras})
         elif part.extras:
-            extras = {k: (v.tolist() if isinstance(v, np.ndarray) else v) for k, v in part.extras.items()}
+            extras = {k: (v.tolist() if isinstance(v, np.ndarray) else v) for k, v in part.extras.items() if k != "light"}
+        light = None
+        if "light" in part.extras:
+            lt = part.extras["light"]
+            light = b.point_light(part.name, lt["color"], lt["intensity"], lt["range"])
         for c in part.children:
             children.append(emit(c, part.pivot, f"{path}/{part.name}"))
         # Top-level groups are placed relative to the glTF origin (the nose-gear contact point).
         translation = convert(part.pivot)[0] - (convert(parent_pivot)[0] if parent_pivot is not None else 0.0)
-        return b.node(part.name, mesh, translation, children, extras)
+        return b.node(part.name, mesh, translation, children, extras or None, light=light)
 
     lod_nodes, info = [], None
     for lod in (0, 1, 2):

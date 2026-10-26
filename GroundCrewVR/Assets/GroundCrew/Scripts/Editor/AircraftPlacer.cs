@@ -110,9 +110,10 @@ namespace GroundCrew.EditorTools
             Phase1SandboxBuilder.Box("Pedestal", panel, new Vector3(0f, 0.5f, 0f), new Vector3(0.9f, 1f, 0.4f), mats.DarkMetal, true, true);
             Phase1SandboxBuilder.Text3D(panel, new Vector3(0f, 1.45f, 0.15f), "<b>AIRCRAFT TEST</b>\n<size=60%>touch a button</size>", 0.9f, new Vector2(1.2f, 0.4f), Color.white);
 
-            Button(panel, "DOORS", new Vector3(-0.28f, 1f, -0.02f), mats.Green, rig.ToggleAllDoors);
-            Button(panel, "BEACON", new Vector3(0f, 1f, -0.02f), mats.Red, rig.ToggleBeacon);
-            Button(panel, "FLAPS", new Vector3(0.28f, 1f, -0.02f), mats.TabletButton, rig.ToggleFlaps);
+            Button(panel, "DOORS", new Vector3(-0.33f, 1f, -0.02f), mats.Green, rig.ToggleAllDoors);
+            Button(panel, "BEACON", new Vector3(-0.11f, 1f, -0.02f), mats.Red, rig.ToggleBeacon);
+            Button(panel, "FLAPS", new Vector3(0.11f, 1f, -0.02f), mats.TabletButton, rig.ToggleFlaps);
+            Button(panel, "CKPT LT", new Vector3(0.33f, 1f, -0.02f), mats.TabletButton, rig.ToggleFlightDeckLight);
         }
 
         static void Button(Transform parent, string label, Vector3 position, Material material, UnityEngine.Events.UnityAction action)

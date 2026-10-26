@@ -51,6 +51,7 @@ namespace GroundCrew.Aircraft
         readonly Dictionary<string, List<MovingPart>> m_Parts = new Dictionary<string, List<MovingPart>>();
         readonly List<GameObject> m_Beacons = new List<GameObject>();
         readonly List<GameObject> m_NavLights = new List<GameObject>();
+        readonly List<Light> m_FlightDeckLights = new List<Light>();
         bool m_BeaconOn;
         bool m_Discovered;
 
@@ -65,6 +66,7 @@ namespace GroundCrew.Aircraft
             Discover();
             if (setupLods) SetupLods();
             SetBeacon(false);
+            SetFlightDeckLight(false);   // Quest budget: one real-time light; switch on when needed
         }
 
         // ------------------------------------------------------------------ discovery
@@ -78,6 +80,7 @@ namespace GroundCrew.Aircraft
             {
                 if (t.name.StartsWith("Beacon_", StringComparison.Ordinal)) m_Beacons.Add(t.gameObject);
                 else if (t.name.StartsWith("NavLight_", StringComparison.Ordinal) || t.name.StartsWith("Strobe_", StringComparison.Ordinal)) m_NavLights.Add(t.gameObject);
+                else if (t.name.StartsWith("FlightDeckLight", StringComparison.Ordinal)) m_FlightDeckLights.AddRange(t.GetComponentsInChildren<Light>(true));
 
                 if (!t.name.StartsWith("HingeEnd", StringComparison.Ordinal)) continue;
                 var part = t.parent;
@@ -303,6 +306,16 @@ namespace GroundCrew.Aircraft
         {
             foreach (var n in m_NavLights) if (n != null) n.SetActive(on);
         }
+
+        /// <summary>The flight-deck dome light (a point light imported from the .glb, if glTFast created one). Off at start.</summary>
+        public bool FlightDeckLightOn => m_FlightDeckLights.Count > 0 && m_FlightDeckLights[0] != null && m_FlightDeckLights[0].enabled;
+
+        public void SetFlightDeckLight(bool on)
+        {
+            foreach (var l in m_FlightDeckLights) if (l != null) l.enabled = on;
+        }
+
+        public void ToggleFlightDeckLight() => SetFlightDeckLight(!FlightDeckLightOn);
 
         // ------------------------------------------------------------------ update
 

@@ -8,8 +8,10 @@ The distinguishing features of each type are modelled:
 
 | File | Aircraft | LOD0 / LOD1 / LOD2 triangles |
 |---|---|---|
-| `Narrowbody737Class.glb` | 737-800 class | ~59k / ~22k / ~5.6k |
-| `Narrowbody320Class.glb` | A320-200 class | ~57k / ~21k / ~5.6k |
+| `Narrowbody737Class.glb` | 737-800 class | ~84k / ~22k / ~5.6k |
+| `Narrowbody320Class.glb` | A320-200 class | ~85k / ~21k / ~5.6k |
+
+About 25k of the LOD0 triangles are the flight deck and the finer nose skin around the windscreens.
 
 Output goes to `GroundCrewVR/Assets/GroundCrew/Art/Aircraft/`, together with a `<id>.json` sidecar for each model.
 
@@ -28,7 +30,12 @@ python3 build.py some/folder  # alternative output folder
   - Flaps, ailerons, elevators and rudder.
   - Fans that can spin, nose gear that can steer, wheels that can roll.
   - Exterior lights as separate nodes: anti-collision beacons, nav lights, strobes.
-  - Cabin: seats with seat numbers, overhead bins, galleys, lavatories with doors, cabin light strips, and a flight deck with its door, seats and panels.
+  - Cabin: seats with seat numbers, overhead bins, galleys, lavatories with doors, cabin light strips.
+  - Flight deck behind see-through windscreens (`flightdeck.py`), laid out from the pilot eye point in each manufacturer's document:
+    - 737: control columns with yokes, a tall control stand under the centre displays with thrust levers, speed brake, flap lever and big striped trim wheels, the two CDUs behind it, a tiller on the captain's side.
+    - A320: sidesticks on side consoles, pull-out tables, no yokes, the two MCDUs at the front of the pedestal, short thrust levers in a gated housing, tillers on both sides.
+    - Both: six displays, glareshield autopilot panel, overhead panel, radios, pilot and observer seats, a flight-deck door and a dome light (`FlightDeckLight`, a KHR_lights_punctual point light).
+    - Screens and panels are painted in code (`paint.py`, numpy only, built-in pixel font) into one 2048 x 1024 texture per aircraft: Boeing-style grey panels with toggle switches and magenta routes, Airbus-style blue-grey panels with square pushbuttons, green routes and the DOOR page on the lower ECAM. Screens use an emissive material so they glow. No brand names are painted.
 - **LOD1:** the same moving parts at lower resolution, without cabin furniture.
 - **LOD2:** one merged static mesh for distance.
 - **ServicePoints:** empty `SP_*` nodes for:
@@ -52,7 +59,8 @@ The origin is the nose-gear ground contact, with the nose pointing to +Z. That m
 
 - **Dimensions, outlines, doors, interior layout, service points:** edit `specs.py`. Values marked `APPROX` aren't given in the manufacturer documents and are estimates.
 - **Geometry:** edit `aircraft.py`.
+- **Flight deck layout and panel painting:** `flightdeck.py` (painter primitives and font in `paint.py`).
 - **Mesh helpers:** `meshlib.py`.
-- **glTF writer:** `gltf_writer.py`.
+- **glTF writer:** `gltf_writer.py` (also writes the PNG texture, the alpha-blended windscreen material and the point light).
 
 The models are procedural and dimensionally faithful, with a plain white livery and no trademarks. They are good enough to build every gameplay system against. Later they can be swapped for artist-made models that keep the same node names; see `docs/ARCHITECTURE.md` §4 and §9.

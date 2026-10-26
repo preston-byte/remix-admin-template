@@ -204,10 +204,10 @@ Quest 2 has a Snapdragon XR2 (Adreno 650 GPU) and renders 1832×1920 per eye. Th
 |---|---|
 | Batches / draw calls per frame (multiview) | ≤ 150 typical, ≤ 200 worst case |
 | Triangles in view | ≤ 750 k |
-| Aircraft exterior LOD0 | 60–90 k tris; interior is a separate streamed asset |
+| Aircraft LOD0 | 60–90 k tris (generated models: ~85 k including cabin and flight deck; split the interior into a streamed asset if a scene needs the headroom) |
 | Vehicles | 8–15 k tris LOD0, 3 LODs |
 | Textures | ASTC 6×6 (4×4 for UI/text), 2 k atlases max, mipmaps on |
-| Real-time lights | 1 directional main light; everything else baked or emissive |
+| Real-time lights | 1 directional main light; everything else baked or emissive (the aircraft's flight-deck dome light starts off) |
 | Shadows | 1 cascade, hard, ≤ 25 m distance; baked shadows for static airport |
 | Post-processing | Off (no bloom, no tonemapping cost) |
 | MSAA | 4× (cheap on tiled GPU; much better than FXAA in VR) |

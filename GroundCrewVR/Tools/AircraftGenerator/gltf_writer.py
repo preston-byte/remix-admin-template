@@ -2,10 +2,12 @@
 
 Supports what the aircraft generator needs: a node hierarchy with translations and
 extras, meshes with several primitives (one per material), PBR metallic-roughness
-materials with emission, positions/normals/UVs and 16- or 32-bit indices.
+materials with emission, alpha blending and embedded PNG textures, point lights
+(KHR_lights_punctual), positions/normals/UVs and 16- or 32-bit indices.
 """
 import json
 import struct
+import zlib
 
 import numpy as np
 
@@ -26,12 +28,28 @@ class GltfBuilder:
         self.buffer_views = []
         self.bin = bytearray()
         self._material_index = {}
+        self.images = []
+        self.textures = []
+        self.samplers = []
+        self.lights = []
 
     # ------------------------------------------------------------------ materials
-    def material(self, name, color, metallic=0.0, roughness=0.5, emissive=None, double_sided=False):
+    def texture(self, name, rgb):
+        """Embed an RGB uint8 image [h, w, 3] as PNG; returns the texture index."""
+        view = self._view(encode_png(rgb), None)
+        self.images.append({"name": name, "bufferView": view, "mimeType": "image/png"})
+        if not self.samplers:
+            # linear + mipmaps, clamp: atlases must not bleed across their edges
+            self.samplers.append({"magFilter": 9729, "minFilter": 9987, "wrapS": 33071, "wrapT": 33071})
+        self.textures.append({"name": name, "sampler": 0, "source": len(self.images) - 1})
+        return len(self.textures) - 1
+
+    def material(self, name, color, metallic=0.0, roughness=0.5, emissive=None, double_sided=False,
+                 base_texture=None, emissive_texture=None, alpha=None):
+        """alpha: None = opaque, otherwise blended with this opacity."""
         if name in self._material_index:
             return self._material_index[name]
-        rgba = list(color) + [1.0] if len(color) == 3 else list(color)
+        rgba = list(color) + [1.0 if alpha is None else alpha] if len(color) == 3 else list(color)
         mat = {
             "name": name,
             "pbrMetallicRoughness": {
@@ -40,8 +58,14 @@ class GltfBuilder:
                 "roughnessFactor": float(roughness),
             },
         }
+        if base_texture is not None:
+            mat["pbrMetallicRoughness"]["baseColorTexture"] = {"index": base_texture}
         if emissive is not None:
             mat["emissiveFactor"] = [float(c) for c in emissive]
+        if emissive_texture is not None:
+            mat["emissiveTexture"] = {"index": emissive_texture}
+        if alpha is not None:
+            mat["alphaMode"] = "BLEND"
         if double_sided:
             mat["doubleSided"] = True
         self.materials.append(mat)
@@ -99,10 +123,18 @@ class GltfBuilder:
         self.meshes.append({"name": name, "primitives": prims})
         return len(self.meshes) - 1
 
-    def node(self, name, mesh=None, translation=None, children=None, extras=None):
+    def point_light(self, name, color, intensity, range_m):
+        """KHR_lights_punctual point light (intensity in candela); attach with node(light=...)."""
+        self.lights.append({"name": name, "type": "point", "color": [float(c) for c in color],
+                            "intensity": float(intensity), "range": float(range_m)})
+        return len(self.lights) - 1
+
+    def node(self, name, mesh=None, translation=None, children=None, extras=None, light=None):
         node = {"name": name}
         if mesh is not None:
             node["mesh"] = mesh
+        if light is not None:
+            node["extensions"] = {"KHR_lights_punctual": {"light": light}}
         if translation is not None and any(abs(float(t)) > 1e-9 for t in translation):
             node["translation"] = [float(t) for t in translation]
         if children:
@@ -130,6 +162,11 @@ class GltfBuilder:
             "bufferViews": self.buffer_views,
             "buffers": [{"byteLength": len(self.bin)}],
         }
+        if self.textures:
+            doc.update(images=self.images, textures=self.textures, samplers=self.samplers)
+        if self.lights:
+            doc["extensionsUsed"] = ["KHR_lights_punctual"]
+            doc["extensions"] = {"KHR_lights_punctual": {"lights": self.lights}}
         json_bytes = json.dumps(doc, separators=(",", ":")).encode("utf-8")
         while len(json_bytes) % 4:
             json_bytes += b" "
@@ -141,3 +178,19 @@ class GltfBuilder:
             f.write(struct.pack("<II", len(self.bin), 0x004E4942))
             f.write(self.bin)
         return total
+
+
+def encode_png(rgb):
+    """Minimal PNG encoder (8-bit RGB, filter 'up' on every row) using only zlib."""
+    rgb = np.ascontiguousarray(rgb, dtype=np.uint8)
+    h, w, _ = rgb.shape
+    up = rgb.astype(np.int16)
+    up[1:] -= rgb[:-1].astype(np.int16)
+    rows = np.concatenate([np.full((h, 1), 2, dtype=np.uint8), (up % 256).astype(np.uint8).reshape(h, w * 3)], axis=1)
+    rows[0, 0] = 0
+    rows[0, 1:] = rgb[0].reshape(-1)
+
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) +
+            chunk(b"IDAT", zlib.compress(rows.tobytes(), 9)) + chunk(b"IEND", b""))
