@@ -29,7 +29,7 @@ Legend: ✅ done (code complete) · 🧪 needs on-device verification · ⏳ nex
 
 Known limitations in Phase 1:
 - Props are simple generated geometry (by design; real models arrive with the aircraft in Phase 2).
-- Controllers only; hand tracking isn't configured or tested.
+- Controllers only; hand tracking isn't configured or tested. Controller-driven gloved hands were added later (see Player below).
 - `LocomotionComfortApplier` drives the Starter Assets `ControllerInputActionManager` by property name. If XRI renames those properties, comfort switching logs a warning and the defaults stay.
 - Wrist tablet offset is a best guess; it may need a per-player tweak.
 
@@ -70,6 +70,9 @@ Remaining:
 - [x] Fuel truck: drivable; hose reel and bonding reel modelled (refuelling itself is Phase 6)
 - [x] `VehicleAssembler` editor menu parks the fleet on Stand 24
 - [ ] On-device tuning (wheel friction, suspension, steering feel, drawbar joints)
+- [x] Fix from on-device test: stairs couldn't reach the door (cab hit the fuselage first). The platform now overhangs the cab, rails are set back, the bridge plate is 0.8 m 🧪
+- [x] Fix from on-device test: vehicles sometimes wouldn't move. The Rigidbody is woken on input, with more solver iterations and wheel substeps; driving assists (default on) handle engine / gear / parking brake; the dash display says why a vehicle won't move 🧪
+- [x] Every vehicle is a prefab + `VehicleCatalog`; wrist tablet **VEHICLES** page spawns, fixes and clears vehicles; ASSIST toggle 🧪
 - [ ] Driving comfort options (vignette while moving, gentler acceleration)
 - [x] Passenger stairs: platform 2.2-4.1 m, self-levelling treads, bridge plate, walkable flight, dash and platform controls
 - [x] Belt loader: tilting belt, conveyor that carries loose bags in or out
@@ -81,7 +84,22 @@ Remaining:
 - [x] Generic `HydraulicAxis` (hold-to-run buttons, parking-brake interlock, drive inhibit) for equipment functions
 - [ ] Towbarless tug, container (ULD) loader + dollies for the A320, jet bridge, cargo/ULD containers
 - [ ] Hoses and cables to the aircraft (fuel, water, waste, GPU, air) — Phase 6
-- [ ] Recorded engine sounds; dash speed/gear display; AI drivers
+- [ ] Recorded engine sounds; AI drivers
+- [x] Dash speed / gear / status display
+
+## Player — gloved hands  ✅ 🧪
+- [x] Generated low-poly work glove (`Tools/HandGenerator`, ~4.7k tris): hi-vis back, knuckle guards, cuff with reflective band; jointed fingers and thumb with bend-axis helpers
+- [x] `ControllerHands`: grip / trigger / thumb-touch posing, pointing pose, hides the controller model, poke point on the index fingertip
+- [x] `HandsSetup` editor menu; run automatically by the sandbox builder
+- [ ] On-device check of the mounting offset; optional Quest hand tracking (XR Hands)
+
+## Airport  ✅ 🧪 (first version)
+- [x] `Tools/AirportGenerator`: remote apron (Stands 21-26, training stand = 24), terminal with 6 contact gates and jet bridges, GSE road, car park, taxiway with exits and runway connectors, runway 09/27 with ICAO-style markings and lights, signs, tower, hangar, cargo shed, fuel farm, fire station, floodlight masts, windsocks (~38k tris)
+- [x] Tiling concrete (with slab joints) / asphalt / grass textures, generated
+- [x] `AirportPlacer` editor menu: Simple Lit materials, colliders, teleport areas, static batching, fog, far clip, parked aircraft
+- [ ] Jet bridges that move and dock (they're static for now)
+- [ ] Apron life: AI vehicles, taxiing aircraft, people; night lighting
+- [ ] Baked lighting / lightmaps for the static airport
 
 ## Phase 5 — A320-class aircraft  ⬜ (model already generated in Phase 2)
 - [ ] A320 workflow differences: hydraulic cargo door operation (hand pump / selector), containerised (ULD) loading, different sill heights for GSE

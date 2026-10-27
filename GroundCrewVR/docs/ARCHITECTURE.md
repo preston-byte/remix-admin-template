@@ -146,6 +146,19 @@ Prefab contract: the model prefab contains empty transforms named `SP_<ServicePo
 
 ---
 
+### Vehicle prefabs and spawning
+`VehicleAssembler` builds each vehicle (or set: cart + drawbar, tug + tow bar, GPU + drawbar) at the origin and saves it as a prefab in `Generated/Vehicles/`, listed in a `VehicleCatalog` asset. The scene fleet is made of prefab instances; the only per-instance override is a cart's `startCoupledTo` hitch. The wrist tablet's `VehicleSpawnMenu` instantiates catalog entries in front of the player, after a `Physics.CheckBox` clearance test.
+
+Assists live in `ComfortSettings.DrivingAssists` (PlayerPrefs). `VehicleController.StatusLine` is the single source of "why won't it move" text: drive inhibits carry a reason string from the equipment that set them.
+
+### Gloved hands
+`ControllerHands` sits on each controller. The glove model is a right hand; the left is the same model with a −1 X scale, so all posing happens in local space. Each joint's curl axis is the local position of its `Bend` helper node. The generator places it so that Unity's `AngleAxis(+angle, axis)` curls towards the palm. Input comes from Input System actions created in code (`<XRController>{Hand}/grip`, `trigger`, `triggerTouched`, `thumbstickTouched`...), so no action asset is needed. In `Awake` the XRI poke attach point is re-parented to the index fingertip, before `FingertipSetup` adds its presser.
+
+### Airport
+The airport is one generated `.glb` in Unity world coordinates. The training stand is the origin; the generator's `convert()` pre-mirrors X for glTFast. Nodes are grouped by purpose: `Ground_*`, `Markings_*`, `Lights_*`, `Building_*`, `JetBridge_n`, `Signs`, `Floodlight_Masts`, and `Stand_nn` / `Gate_n` spawn empties.
+
+`AirportPlacer` reads `Airport.json` for the material list (sRGB colours, textures, smoothness, emission) and swaps glTFast's PBR materials for URP Simple Lit. It also adds colliders, teleport areas and static flags. Paint sits 1.2 cm (apron), 2 cm (taxiways) or 3 cm (runway) above its surface, so it doesn't z-fight at distance.
+
 ## 5. Turnaround system (Phase 3 — the heart of the game)
 
 A turnaround is a **task graph**: a DAG of tasks with preconditions, built from a `TurnaroundTemplate` and adjusted by dynamic events.

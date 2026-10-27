@@ -34,14 +34,18 @@ class GltfBuilder:
         self.lights = []
 
     # ------------------------------------------------------------------ materials
-    def texture(self, name, rgb):
-        """Embed an RGB uint8 image [h, w, 3] as PNG; returns the texture index."""
+    def texture(self, name, rgb, repeat=False):
+        """Embed an RGB uint8 image [h, w, 3] as PNG; returns the texture index.
+        repeat=False clamps (atlases must not bleed across their edges); True tiles."""
         view = self._view(encode_png(rgb), None)
         self.images.append({"name": name, "bufferView": view, "mimeType": "image/png"})
-        if not self.samplers:
-            # linear + mipmaps, clamp: atlases must not bleed across their edges
-            self.samplers.append({"magFilter": 9729, "minFilter": 9987, "wrapS": 33071, "wrapT": 33071})
-        self.textures.append({"name": name, "sampler": 0, "source": len(self.images) - 1})
+        wrap = 10497 if repeat else 33071
+        sampler = next((i for i, smp in enumerate(self.samplers) if smp["wrapS"] == wrap), None)
+        if sampler is None:
+            # linear + mipmaps
+            self.samplers.append({"magFilter": 9729, "minFilter": 9987, "wrapS": wrap, "wrapT": wrap})
+            sampler = len(self.samplers) - 1
+        self.textures.append({"name": name, "sampler": sampler, "source": len(self.images) - 1})
         return len(self.textures) - 1
 
     def material(self, name, color, metallic=0.0, roughness=0.5, emissive=None, double_sided=False,

@@ -72,7 +72,7 @@ namespace GroundCrew.EditorTools
         }
 
         /// <summary>Mesh colliders on the LOD0 airframe, wings, tail and gear - never on moving parts.</summary>
-        static int AddStaticColliders(Transform aircraft)
+        internal static int AddStaticColliders(Transform aircraft)
         {
             Transform lod0 = null;
             foreach (Transform child in aircraft)

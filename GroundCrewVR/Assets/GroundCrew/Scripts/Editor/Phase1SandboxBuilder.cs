@@ -631,7 +631,7 @@ namespace GroundCrew.EditorTools
             return go;
         }
 
-        static void MarkStatic(GameObject go)
+        internal static void MarkStatic(GameObject go)
         {
             GameObjectUtility.SetStaticEditorFlags(go,
                 StaticEditorFlags.BatchingStatic | StaticEditorFlags.ContributeGI |

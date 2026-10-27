@@ -13,7 +13,7 @@ Phase 1 gives you a playable VR training sandbox with these systems:
 - placement zones with weight limits
 - a wrist tablet that shows what's happening
 
-There is no aircraft yet; that's Phase 2.
+Later phases add the aircraft (§6), ground vehicles (§7), gloved hands (§8) and the airport (§9).
 
 > **Status:** the code was written and type-checked outside Unity (no Unity editor was available while writing it). The first open in Unity is the real compile test. If the console shows errors, copy them back and they'll be fixed. The most likely cause is a small API difference in your exact XR Interaction Toolkit version.
 
@@ -35,23 +35,30 @@ GroundCrewVR/
                            TypedSocketInteractor, PanelInterlock, CableRenderer,
                            IndicatorLight, ValueReadout, Haptics, InteractionEvents
       Player/              ComfortSettings, LocomotionComfortApplier, FingertipSetup,
-                           QuestPerformanceSettings
-      UI/                  WristTablet
+                           QuestPerformanceSettings, ControllerHands (gloved hands)
+      UI/                  WristTablet, VehicleSpawnMenu (the tablet's VEHICLES page)
       Aircraft/            AircraftRig (doors, flaps, steering, wheels, fans, beacon, LODs)
       Vehicles/            VehicleController, VehicleSeat, VehicleDriverInput, SteeringWheelInput,
                            VehicleLights, VehicleAudio, TowHitch, TowCoupler, TrailerSteering,
                            TowBar, AircraftTowable, CateringLift, StairsMechanism, HydraulicAxis,
                            ConveyorBelt, DoorDockingSensor, GroundPowerUnit, BasketLeveller,
-                           SprayNozzle, RideablePlatform, VehicleEvents
+                           SprayNozzle, RideablePlatform, VehicleEvents, VehicleCatalog,
+                           VehicleDashDisplay
     Scripts/Editor/        ← editor tools (assembly GroundCrew.Editor)
       Phase1SandboxBuilder.cs   menu: Ground Crew > Build Phase 1 Sandbox Scene
       AircraftPlacer.cs         menu: Ground Crew > Place Aircraft on Stand 24
       VehicleAssembler.cs       menu: Ground Crew > Vehicles > Add Vehicles to Sandbox
+      HandsSetup.cs             menu: Ground Crew > Player > Add Gloved Hands to Rig
+      AirportPlacer.cs          menu: Ground Crew > Airport > Build Airport Around Sandbox
       ProceduralMeshes.cs       cone + wheel-chock meshes for the sandbox
     Art/Aircraft/          ← generated .glb aircraft + JSON sidecars
     Art/Vehicles/          ← generated .glb ground vehicles + JSON sidecars
+    Art/Hands/             ← generated glove model
+    Art/Airport/           ← generated airport + ground textures
   Tools/AircraftGenerator/ ← Python generator for the aircraft models
   Tools/VehicleGenerator/  ← Python generator for the vehicles (reuses the aircraft tools)
+  Tools/HandGenerator/     ← Python generator for the glove
+  Tools/AirportGenerator/  ← Python generator for the airport
 ```
 
 Unity generates the `.meta` files, `Data/`, `Generated/` and `Scenes/` folders when you run the builder.
@@ -120,10 +127,11 @@ This creates `Assets/GroundCrew/Scenes/Phase1_Sandbox.unity` and adds it as the 
 | Turn | Right thumbstick left/right (snap 30/45/90° or smooth) |
 | Grab / hold | Grip button (hand must be close; no long-range grabbing) |
 | Heavy bag | Grip with **both** hands |
-| Press a button | Touch it with the tip of your controller (index finger) |
+| Point / press a button | Squeeze **grip** without touching the trigger: your index finger points. Press buttons with its tip |
 | Open a door/panel/lever | Grip the handle and move your hand the way it should swing |
 | Wrist tablet | Turn your left wrist to look at it like a watch |
 | Change comfort options | Poke **MOVE** / **TURN** on the tablet with your right fingertip |
+| Spawn / reset vehicles | Poke **VEHICLES** on the tablet (see §7) |
 
 Comfort settings are saved between sessions. **Teleport only** mode turns off smooth walking for anyone who gets motion sick.
 
@@ -244,6 +252,23 @@ Generated models are in `Assets/GroundCrew/Art/Vehicles/` (from `Tools/VehicleGe
    - the ground power unit, fuel, catering, water and lavatory trucks, the de-icer and the van further out
 3. Save the scene, then **Build And Run**.
 
+**Spawning vehicles from your wrist.** Look at the wrist tablet and poke **VEHICLES**. The page lists every vehicle:
+
+| Button | Does |
+|---|---|
+| **PREV / NEXT** | Pick a vehicle |
+| **SPAWN** | Put it on the ground in front of you, side-on, with the driver's door towards you. If something is in the way it tries further out; if there's no room it says so |
+| **FIX** | Puts the nearest vehicle (within 15 m) back on its wheels, stopped, parking brake on. Use it if one tips over or gets wedged |
+| **CLEAR** | Removes the vehicles you spawned (the parked fleet stays) |
+| **ASSIST** | Driving assists on / off (see below) |
+| **BACK** | Back to the normal tablet page |
+
+Each vehicle is also a prefab in `Assets/GroundCrew/Generated/Vehicles/`, so you can drag extra ones into the scene in the editor.
+
+**Driving assists** (on by default, saved between sessions). With assists on, pressing the throttle starts the engine, selects **D** from neutral and releases the parking brake; getting out sets the parking brake; using a lift or platform sets the parking brake for you. Turn them off on the VEHICLES page to do every step yourself.
+
+**Dash display.** A small green display above the steering wheel shows the gear and speed, or exactly why the vehicle won't move: *ENGINE OFF*, *PARKING BRAKE ON*, *N - right stick up = D*, or the equipment that's still deployed (*Bridge plate out*, *Box raised*, *Belt lift not stowed*...).
+
 **Driving** (also printed on `VehicleDriverInput`):
 
 | Action | Controller | Keyboard (editor testing) |
@@ -281,10 +306,10 @@ Pushing a castoring nose gear is unstable, as in real life: keep correcting with
 - Every change is published as a `DockingEvent`, which the turnaround rules will score in Phase 3.
 
 **Passenger stairs:**
-1. Drive up square to the door, and stop with the platform just short of it.
-2. Set the parking brake.
+1. Drive up square to the door, slowly, until the front of the platform is about half a metre from the fuselage. The platform overhangs the cab, so it reaches the door before the cab touches the aircraft.
+2. Set the parking brake (with assists on, the controls set it for you).
 3. Hold **STAIRS UP / STAIRS DN** on the dash, or **UP / DOWN** on the platform column, until the **DOCK** lamp lights.
-4. Slide **PLATE OUT** to bridge the gap.
+4. Slide **PLATE OUT** (up to 0.8 m) to bridge the gap.
 
 Raising the platform steepens the flight; its foot rolls on rails and the treads stay level. The truck won't drive with the plate out.
 
@@ -321,10 +346,80 @@ The truck can't be driven unless the boom is stowed.
 - [ ] De-icer: the basket stays level through the whole boom range; the spray is visible.
 - [ ] Driving feels comfortable. If it doesn't, say so: comfort options for driving (vignette, reduced acceleration) come next.
 - [ ] Frame rate stays at ~72 fps with all vehicles and the aircraft in view.
+- [ ] Every vehicle moves when you press the throttle (assists on), and the dash display explains it when it doesn't (assists off).
+- [ ] VEHICLES → SPAWN puts each vehicle in front of you; FIX rights a tipped one; CLEAR removes spawned ones.
+- [ ] The stairs' bridge plate reaches door 1L of both aircraft with the **DOCK** lamp lit.
 
 ---
 
-## 8. Troubleshooting
+## 8. Gloved hands
+
+The controller models are replaced by work gloves (generated in `Tools/HandGenerator/`). The fingers follow what yours are doing on the Touch controller:
+
+| On the controller | The glove |
+|---|---|
+| Grip | Middle, ring and little fingers close |
+| Trigger | Index finger curls; resting on the trigger half-curls it |
+| Grip, finger off the trigger | Pointing: use the index fingertip to press buttons |
+| Thumb on the stick or A/B (X/Y) | Thumb rests; lift it for a thumbs-up |
+
+Buttons are pressed by the tip of the glove's index finger (the XRI poke point is moved there).
+
+**Setting up:** the sandbox builder adds the gloves automatically. For a scene you already have, use **Ground Crew → Player → Add Gloved Hands to Rig** and save the scene. If a glove sits wrong on your hand, move the `Glove Hand` child of *Left Controller* / *Right Controller*.
+
+This is controller-driven hand posing. Quest hand tracking (no controllers) needs the XR Hands package and isn't set up; driving and the physical buttons are designed around controllers.
+
+- [ ] Both gloves appear where the controllers were, and the controller models are hidden.
+- [ ] Grip makes a fist; grip without the trigger points; the trigger curls the index finger.
+- [ ] Physical buttons (stations, dash, tablet) press with the index fingertip.
+
+---
+
+## 9. The airport
+
+`Tools/AirportGenerator/` builds a whole regional airport around the training stand (about 38k triangles):
+
+- **Remote apron:** Stands 21-26. The training area is **Stand 24**. Lead-in lines, stop bars, stand numbers, equipment restraint lines, GSE parking boxes, stand ID boards and floodlight masts.
+- **Terminal:** 390 m long, glass curtain wall, baggage-hall openings, gate numbers, six contact gates with jet bridges (rotunda, telescopic tunnel, drive column, cab at door 1L height), landside canopy, road and car park.
+- **Airside service road** between the terminal apron and the remote apron, with aircraft-crossing stop lines and a zebra crossing.
+- **Airfield:** taxiway A with exits B1-B3, runway connectors A1-A4 with holding-position markings, stop-bar lights and mandatory / location / direction signs. Runway 09/27 is 2400 x 45 m with threshold, designator, touchdown-zone, aiming-point and centre-line markings, edge, threshold and end lights, blast pads, approach lights and windsocks.
+- **Buildings:** control tower, maintenance hangar, cargo shed, fuel farm, fire station.
+
+**To use it in Unity** (glTFast must be installed, see §6):
+1. Build the sandbox scene (§2.5). Place an aircraft (§6) and add the vehicles (§7) before or after; the order doesn't matter.
+2. **Ground Crew → Airport → Build Airport Around Sandbox.** This:
+   - places the airport
+   - converts its materials to URP Simple Lit (cheaper on Quest), with tiling concrete, asphalt and grass textures
+   - adds colliders and teleport areas
+   - hides the sandbox's own 100 m apron and stand markings
+   - sets the camera's far clip to 3 km with light fog
+   - parks aircraft at gates 2, 4 and 5 and at Stand 22
+3. Save the scene, then **Build And Run**.
+
+If the frame rate drops, **Ground Crew → Airport → Remove Parked Aircraft (faster)** removes the four extra aircraft. **Park Aircraft at Gates** puts them back.
+
+- [ ] You start at Stand 24 on the remote apron. The terminal is behind you (south) and the runway is beyond the taxiway (north).
+- [ ] You can walk and teleport on all paved areas and the grass, and drive vehicles anywhere on them.
+- [ ] Jet bridges reach the door height of the parked aircraft. Signs and markings are readable and don't flicker.
+- [ ] The frame rate stays at ~72 fps looking towards the terminal with the parked aircraft in view.
+
+---
+
+## 10. Updating to a new version
+
+1. In Unity, close the scene (or quit Unity).
+2. In Finder, replace `Assets/GroundCrew` in your project with the new one from the zip. Copy it in Finder (**Reveal in Finder**), not by dragging into the Unity window.
+3. Open Unity and wait for it to import and compile.
+4. Run the menus again, in this order:
+   1. **Build Phase 1 Sandbox Scene**
+   2. **Place Aircraft on Stand 24**
+   3. **Vehicles → Add Vehicles to Sandbox**
+   4. **Airport → Build Airport Around Sandbox**
+5. Save the scene, then **Build And Run**.
+
+---
+
+## 11. Troubleshooting
 
 | Symptom | Fix |
 |---|---|
@@ -338,3 +433,8 @@ The truck can't be driven unless the boom is stowed.
 | Aircraft menu says "model not imported" | Install glTFast (see §6) and reimport `Assets/GroundCrew/Art/Aircraft`. |
 | Aircraft looks too shiny / costs too much on Quest | glTFast imports glTF PBR materials. For Quest, switch them to URP *Simple Lit*, keeping colour and emission. |
 | Compile errors mentioning XRI members | Copy the exact errors and your XRI version from Package Manager; they'll be adapted. |
+| A vehicle won't move | Read the dash display: it says why (engine, parking brake, gear, or equipment still deployed). With assists on, the throttle handles the first three. If it's stuck on something, use **FIX** on the tablet's VEHICLES page. |
+| VEHICLES page says "No vehicle catalog" | Run **Ground Crew → Vehicles → Add Vehicles to Sandbox** once; it builds the prefabs and the catalog. |
+| Controllers still visible / no gloves | Run **Ground Crew → Player → Add Gloved Hands to Rig** (glTFast must have imported `Art/Hands/Hand_R.glb`). |
+| Airport menu says "model not imported" | Install glTFast (§6) and reimport `Assets/GroundCrew/Art/Airport`. |
+| Ground shimmers in the distance | Expected on Quest at grazing angles; anisotropic filtering is set on the ground textures. Raise MSAA to 4x if it's lower. |
