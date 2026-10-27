@@ -100,6 +100,8 @@ namespace GroundCrew.EditorTools
             BuildCargoDoorStation(Station("D_CargoDoor", new Vector3(-3.4f, 0f, -0.3f), "D  CARGO DOOR", "Lift the handle - struts take it from halfway. Load bags inside.", 3.05f, 0.6f, false));
             BuildGpuStation(Station("E_GPU", new Vector3(3.4f, 0f, -0.3f), "E  GROUND POWER", "Open the panel, plug in the GPU cable. 4 m cable.", 2.85f, 0.6f, false));
 
+            VehicleAssembler.InstallSpawnMenu();   // no-op until Add Vehicles has built the catalog
+
             EditorSceneManager.SaveScene(scene, k_ScenePath);
             AddSceneToBuildSettings(k_ScenePath);
             AssetDatabase.SaveAssets();
@@ -439,25 +441,29 @@ namespace GroundCrew.EditorTools
 
             var buttons = new GameObject("Buttons").transform;
             buttons.SetParent(root, false);
-            var move = TabletButton(buttons, "MOVE", new Vector3(-0.045f, -0.072f, 0f));
-            var turn = TabletButton(buttons, "TURN", new Vector3(0.045f, -0.072f, 0f));
+            // Home row; other pages (Ground Crew > Vehicles adds VEHICLES) swap their own row in.
+            var home = new GameObject("Home Row").transform;
+            home.SetParent(buttons, false);
+            var move = TabletButton(home, "MOVE", new Vector3(-0.045f, -0.072f, 0f));
+            var turn = TabletButton(home, "TURN", new Vector3(0.045f, -0.072f, 0f));
 
             var tablet = root.gameObject.AddComponent<WristTablet>();
             Props(tablet, ("group", group), ("headerText", header), ("bodyText", body), ("footerText", footer),
                 ("moveButton", move), ("turnButton", turn), ("buttonsRoot", buttons.gameObject));
         }
 
-        static PressButton TabletButton(Transform parent, string label, Vector3 position)
+        internal static PressButton TabletButton(Transform parent, string label, Vector3 position, float width = 0.032f)
         {
+            s_Mat = s_Mat ?? new Palette();
             var go = new GameObject(label + " Button");
             go.transform.SetParent(parent, false);
             go.transform.localPosition = position;
             var trigger = go.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.center = new Vector3(0f, 0f, -0.01f); // sticks out toward the viewer (-Z)
-            trigger.size = new Vector3(0.034f, 0.026f, 0.025f);
-            var cap = Box("Cap", go.transform, new Vector3(0f, 0f, -0.004f), new Vector3(0.032f, 0.024f, 0.008f), s_Mat.TabletButton, false, false);
-            Text3D(go.transform, new Vector3(0f, 0f, -0.0085f), label, 0.09f, new Vector2(0.032f, 0.024f), Color.white);
+            trigger.size = new Vector3(width + 0.002f, 0.026f, 0.025f);
+            var cap = Box("Cap", go.transform, new Vector3(0f, 0f, -0.004f), new Vector3(width, 0.024f, 0.008f), s_Mat.TabletButton, false, false);
+            Text3D(go.transform, new Vector3(0f, 0f, -0.0085f), label, 0.09f, new Vector2(width, 0.024f), Color.white);
             var button = go.AddComponent<PressButton>();
             Props(button, ("label", label), ("movingCap", cap.transform), ("pressDirection", Vector3.forward), ("pressDepth", 0.004f));
             return button;

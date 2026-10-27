@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GroundCrew.Aircraft;
 using GroundCrew.Core;
+using GroundCrew.Player;
 using UnityEngine;
 
 namespace GroundCrew.Vehicles
@@ -67,8 +68,10 @@ namespace GroundCrew.Vehicles
         public VehicleInput Input;
 
         Rigidbody m_Body;
-        readonly HashSet<object> m_DriveInhibits = new HashSet<object>();
+        readonly Dictionary<object, string> m_DriveInhibits = new Dictionary<object, string>();
         float m_LastImpact = -10f;
+        string m_Notice = "";
+        float m_NoticeUntil;
 
         public string DisplayName => displayName;
         public bool HasEngine => hasEngine;
@@ -110,7 +113,13 @@ namespace GroundCrew.Vehicles
             m_Body = GetComponent<Rigidbody>();
             m_Body.centerOfMass = centerOfMass;
             m_Body.interpolation = RigidbodyInterpolation.Interpolate;
+            // Stiffer solving keeps drawbar chains and heavy trucks from jittering.
+            m_Body.solverIterations = 12;
+            m_Body.solverVelocityIterations = 4;
+            m_Body.sleepThreshold = 0.001f;
             ParkingBrake = startParked || !hasEngine;
+            if (wheels.Count > 0 && wheels[0].collider != null)
+                wheels[0].collider.ConfigureVehicleSubsteps(5f, 12, 15);
             foreach (var w in wheels)
             {
                 if (w.collider == null || w.visual == null) continue;
@@ -142,8 +151,33 @@ namespace GroundCrew.Vehicles
         /// <summary>Editor set-up (VehicleAssembler): the wheel colliders and their visuals.</summary>
         public void SetWheels(List<WheelBinding> bindings) => wheels = bindings ?? new List<WheelBinding>();
 
-        public void AddDriveInhibit(object source) { if (source != null) m_DriveInhibits.Add(source); }
+        /// <summary>Stop the vehicle driving while <paramref name="source"/> says so (reason shown on the dash).</summary>
+        public void AddDriveInhibit(object source, string reason = null) { if (source != null) m_DriveInhibits[source] = reason ?? "Equipment deployed"; }
         public void RemoveDriveInhibit(object source) { if (source != null) m_DriveInhibits.Remove(source); }
+
+        /// <summary>Short message for the dash display (assist actions, why nothing happens...).</summary>
+        public void Notify(string message, float seconds = 2.5f)
+        {
+            m_Notice = message;
+            m_NoticeUntil = Time.time + seconds;
+        }
+
+        /// <summary>One line for the dash display: what the vehicle is doing, or why it won't move.</summary>
+        public string StatusLine
+        {
+            get
+            {
+                if (Time.time < m_NoticeUntil) return m_Notice;
+                if (hasEngine && !EngineRunning) return "ENGINE OFF - press X (or ENGINE)";
+                foreach (var reason in m_DriveInhibits.Values) return reason.ToUpperInvariant() + " - can't drive";
+                if (ParkingBrake) return "PARKING BRAKE ON - press B (or PARK)";
+                var speed = Mathf.Abs(SpeedKmh);
+                var gear = Gear == Gear.Drive ? "D" : Gear == Gear.Reverse ? "R" : "N";
+                var limit = TowLoad ? $"  tow limit {SpeedLimitKmh:0}" : "";
+                if (Gear == Gear.Neutral) return $"N  {speed:0} km/h - right stick up = D, down = R";
+                return $"{gear}  {speed:0} km/h{limit}";
+            }
+        }
 
         void Changed() => StateChanged?.Invoke(this);
 
@@ -151,6 +185,10 @@ namespace GroundCrew.Vehicles
 
         void FixedUpdate()
         {
+            if (Occupied && ComfortSettings.DrivingAssists) ApplyAssists();
+            // A sleeping Rigidbody ignores WheelCollider torque: wake it whenever someone drives.
+            if (Input.Throttle > 0.01f || Input.Brake > 0.01f || Occupied) m_Body.WakeUp();
+
             var speed = SpeedKmh;
             var limit = SpeedLimitKmh;
             var steerScale = Mathf.Lerp(1f, steerAtSpeed, Mathf.InverseLerp(0f, Mathf.Max(1f, maxSpeedKmh), Mathf.Abs(speed)));
@@ -190,6 +228,14 @@ namespace GroundCrew.Vehicles
                 w.collider.motorTorque = w.drive ? perWheelDrive : 0f;
                 w.collider.brakeTorque = appliedBrake;
             }
+        }
+
+        void ApplyAssists()
+        {
+            if (Input.Throttle < 0.15f || !hasEngine) return;
+            if (!EngineRunning) { StartEngine(); Notify("Engine started"); }
+            if (Gear == Gear.Neutral) { SetGear(Gear.Drive); Notify("Drive selected"); }
+            if (ParkingBrake && !DriveInhibited) { SetParkingBrake(false); Notify("Parking brake released"); }
         }
 
         /// <summary>For trailers: steer the steering wheels to an angle directly (degrees).</summary>

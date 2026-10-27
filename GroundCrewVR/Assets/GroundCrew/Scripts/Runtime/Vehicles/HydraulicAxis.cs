@@ -1,5 +1,6 @@
 using System;
 using GroundCrew.Interaction;
+using GroundCrew.Player;
 using UnityEngine;
 
 namespace GroundCrew.Vehicles
@@ -65,6 +66,11 @@ namespace GroundCrew.Vehicles
             m_Command = 0f;
             if (plusButton != null && plusButton.IsHeld) dir += 1f;
             if (minusButton != null && minusButton.IsHeld) dir -= 1f;
+            if (dir != 0f && requireParkingBrake && vehicle != null && !vehicle.ParkingBrake)
+            {
+                if (ComfortSettings.DrivingAssists && Mathf.Abs(vehicle.SpeedKmh) < 1f) vehicle.SetParkingBrake(true);
+                else vehicle.Notify("Set the parking brake to use " + functionName.ToLowerInvariant());
+            }
             var allowed = !requireParkingBrake || vehicle == null || vehicle.ParkingBrake;
             if (dir != 0f && allowed)
             {
@@ -79,7 +85,7 @@ namespace GroundCrew.Vehicles
             if (vehicle != null && inhibitDriveWhenDeployed)
             {
                 if (IsStowed) vehicle.RemoveDriveInhibit(this);
-                else vehicle.AddDriveInhibit(this);
+                else vehicle.AddDriveInhibit(this, functionName + " not stowed");
             }
         }
 

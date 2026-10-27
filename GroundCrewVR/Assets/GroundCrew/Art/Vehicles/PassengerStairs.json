@@ -2,7 +2,7 @@
  "id": "PassengerStairs",
  "units": "metres",
  "coordinateSystem": "glTF: +Y up, +Z forward, +X = vehicle left; origin on the ground under the middle of the wheelbase",
- "triangles": 6946,
+ "triangles": 6958,
  "wheels": [
   {
    "name": "Wheel_FL",
@@ -90,6 +90,6 @@
   "flightLength": 6.0,
   "footHeight": 0.45,
   "speed": 0.1,
-  "extensionTravel": 0.6
+  "extensionTravel": 0.8
  }
 }

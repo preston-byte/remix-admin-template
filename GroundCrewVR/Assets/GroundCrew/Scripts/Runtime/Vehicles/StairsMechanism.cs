@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GroundCrew.Interaction;
+using GroundCrew.Player;
 using UnityEngine;
 
 namespace GroundCrew.Vehicles
@@ -71,6 +72,12 @@ namespace GroundCrew.Vehicles
 
         void Update()
         {
+            var wants = AnyHeld(upButtons) || AnyHeld(downButtons) || AnyHeld(outButtons) || AnyHeld(inButtons);
+            if (wants && vehicle != null && !vehicle.ParkingBrake)
+            {
+                if (ComfortSettings.DrivingAssists && Mathf.Abs(vehicle.SpeedKmh) < 1f) vehicle.SetParkingBrake(true);
+                else vehicle.Notify("Set the parking brake to move the stairs");
+            }
             var parked = vehicle == null || vehicle.ParkingBrake;
             if (parked)
             {
@@ -81,7 +88,7 @@ namespace GroundCrew.Vehicles
             }
             if (vehicle != null)
             {
-                if (Extension > 0.02f) vehicle.AddDriveInhibit(this);
+                if (Extension > 0.02f) vehicle.AddDriveInhibit(this, "Bridge plate out");
                 else vehicle.RemoveDriveInhibit(this);
             }
             Apply();

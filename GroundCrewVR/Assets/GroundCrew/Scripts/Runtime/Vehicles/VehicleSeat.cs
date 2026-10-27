@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GroundCrew.Core;
 using GroundCrew.Interaction;
+using GroundCrew.Player;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -110,6 +111,7 @@ namespace GroundCrew.Vehicles
             Current = null;
             if (driverInput != null) driverInput.enabled = false;
             vehicle.Occupied = false;
+            if (ComfortSettings.DrivingAssists) vehicle.SetParkingBrake(true);
 
             var origin = m_Origin.transform;
             origin.SetParent(m_PreviousParent, true);

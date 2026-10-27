@@ -1,4 +1,5 @@
 using GroundCrew.Interaction;
+using GroundCrew.Player;
 using UnityEngine;
 
 namespace GroundCrew.Vehicles
@@ -74,6 +75,12 @@ namespace GroundCrew.Vehicles
 
         void Update()
         {
+            var wants = (upButton != null && upButton.IsHeld) || (downButton != null && downButton.IsHeld);
+            if (wants && vehicle != null && !vehicle.ParkingBrake)
+            {
+                if (ComfortSettings.DrivingAssists && Mathf.Abs(vehicle.SpeedKmh) < 1f) vehicle.SetParkingBrake(true);
+                else vehicle.Notify("Set the parking brake to use the lift");
+            }
             var parked = vehicle == null || (vehicle.ParkingBrake && Mathf.Abs(vehicle.SpeedKmh) < 0.5f);
             var dir = 0f;
             if (parked && upButton != null && upButton.IsHeld) dir += 1f;
@@ -88,7 +95,7 @@ namespace GroundCrew.Vehicles
 
             if (vehicle != null)
             {
-                if (Rise > 0.02f || Extension > 0.02f) vehicle.AddDriveInhibit(this);
+                if (Rise > 0.02f || Extension > 0.02f) vehicle.AddDriveInhibit(this, Rise > 0.02f ? "Box raised" : "Platform out");
                 else vehicle.RemoveDriveInhibit(this);
             }
             Apply();

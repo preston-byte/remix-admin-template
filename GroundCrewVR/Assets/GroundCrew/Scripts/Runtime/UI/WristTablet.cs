@@ -142,7 +142,9 @@ namespace GroundCrew.UI
             if (headerText != null)
                 headerText.text = $"<b>{callsign}</b>   {DateTime.Now:HH:mm}";
 
-            if (bodyText != null)
+            if (bodyText != null && m_PageText != null)
+                bodyText.text = m_PageText;
+            else if (bodyText != null)
             {
                 m_Builder.Clear();
                 m_Builder.Append("<b>").Append(m_Holding).Append("</b>\n");
@@ -158,6 +160,15 @@ namespace GroundCrew.UI
         }
 
         void MarkDirty() => m_Dirty = true;
+
+        string m_PageText;
+
+        /// <summary>Text that replaces the feed while a page (e.g. the vehicle menu) is open; null = normal page.</summary>
+        public string PageText
+        {
+            get => m_PageText;
+            set { m_PageText = value; m_Dirty = true; }
+        }
 
         /// <summary>Add a line to the feed. Later the radio system will also push here.</summary>
         public void Push(string message)

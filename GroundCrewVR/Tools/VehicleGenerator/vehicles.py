@@ -624,9 +624,10 @@ def rail_box(buf, x0, x1, y, z0, height, posts=3, r=0.022):
 
 
 def passenger_stairs():
-    """Self-propelled passenger stairs: cab at the front under the top platform, a stair flight
-    hinged to the platform whose foot slides on rails behind the rear axle, telescopic columns.
-    Platform floor 2.2-4.1 m (737 door 1 sill 2.65 m, A320 3.42 m); extending bridge plate."""
+    """Self-propelled passenger stairs: cab at the front under the top platform (which overhangs
+    it by half a metre, so the cab never touches the fuselage first), a stair flight hinged to
+    the platform whose foot slides on rails behind the rear axle, telescopic columns.
+    Platform floor 2.2-4.1 m (737 door 1 sill 2.65 m, A320 3.42 m); 0.8 m bridge plate."""
     vid = "PassengerStairs"
     root = Part(vid)
     body = Part("Body")
@@ -646,33 +647,38 @@ def passenger_stairs():
     driver_station(root, body, eye=(x_front - 0.95, 0.5, 1.72), wheel_fwd=0.45, wheel_drop=0.45, wheel_tilt=35 * D, wheel_radius=0.2,
                    dash=(x_front - 0.37, 1.30), buttons=stairs_buttons)
     box(body.buf("GseWhite"), [(x0 - 2.0) / 2, 0, 0.82], (x0 + 2.0, W, 0.20))           # deck behind the cab (stops where the flight comes down)
+    pf0, pf1 = 1.75, 3.35          # platform floor rear / front edge: overhangs the cab by ~0.5 m
+    col_x = 1.20                   # telescopic columns stand just behind the cab
     for sgn in (1, -1):
-        box(body.buf("Steel"), [-3.95, sgn * 0.62, 0.40], (1.40, 0.08, 0.08))             # foot rails
-        rod(body.buf("Chassis"), [-3.3, sgn * 0.62, 0.40], [-3.0, sgn * 0.62, 0.70], 0.04, 8)
-        cylinder(body.buf("Steel"), [1.15, sgn * 0.85, 0.85], [1.15, sgn * 0.85, 2.10], 0.07, 12)   # lower columns
+        box(body.buf("Steel"), [-3.55, sgn * 0.62, 0.40], (1.30, 0.08, 0.08))             # foot rails
+        rod(body.buf("Chassis"), [-2.95, sgn * 0.62, 0.40], [-2.6, sgn * 0.62, 0.70], 0.04, 8)
+        cylinder(body.buf("Steel"), [col_x, sgn * 0.85, 0.85], [col_x, sgn * 0.85, 2.10], 0.07, 12)   # lower columns
         side(body.buf("GseWhite"), [(xr - 0.55, 0.92), (xr + 0.55, 0.92), (xr + 0.45, 1.08), (xr - 0.45, 1.08)], sgn * (W / 2 - 0.1), sgn * W / 2)
     h0 = 2.20
-    # platform (rises)
-    plat = Part("StairPlatform", [1.30, 0, h0])
-    box(plat.buf("Tread"), [2.10, 0, h0 - 0.04], (1.60, 1.50, 0.08))
+    # platform (rises); handrails and canopy are set back from the front edge so they clear the
+    # fuselage, which bulges out above a door sill
+    plat = Part("StairPlatform", [pf0, 0, h0])
+    box(plat.buf("Tread"), [(pf0 + pf1) / 2, 0, h0 - 0.04], (pf1 - pf0, 1.50, 0.08))
+    box(plat.buf("Chassis"), [(col_x + pf0) / 2 + 0.1, 0, h0 - 0.12], (pf0 - col_x + 0.4, 1.80, 0.10))   # frame onto the columns
+    rail_front = pf1 - 0.35
     for sgn in (1, -1):
-        rail_box(plat.buf("GseYellow"), 1.32, 2.85, sgn * 0.72, h0, 1.05, posts=3)
-        rod(plat.buf("Steel"), [1.15, sgn * 0.85, h0 - 0.04], [1.15, sgn * 0.85, h0 - 1.55], 0.055, 10)   # upper columns
-        rod(plat.buf("Chassis"), [1.32, sgn * 0.72, h0 + 1.05], [1.32, sgn * 0.72, h0 + 2.10], 0.03, 6)  # canopy posts
-        rod(plat.buf("Chassis"), [2.85, sgn * 0.72, h0 + 1.05], [2.85, sgn * 0.72, h0 + 2.10], 0.03, 6)
-    box(plat.buf("GseWhite"), [2.08, 0, h0 + 2.12], (1.70, 1.60, 0.05))                 # canopy roof
-    ext = Part("PlatformExtension", [2.90, 0, h0])
-    box(ext.buf("Tread"), [2.60, 0, h0 - 0.10], (0.60, 1.30, 0.04))
-    box(ext.buf("Rubber"), [2.92, 0, h0 - 0.08], (0.06, 1.30, 0.12))
-    ext.children.append(Part("PlatformEdge", [2.95, 0, h0]))
+        rail_box(plat.buf("GseYellow"), pf0 + 0.02, rail_front, sgn * 0.72, h0, 1.05, posts=3)
+        rod(plat.buf("Steel"), [col_x, sgn * 0.85, h0 - 0.10], [col_x, sgn * 0.85, h0 - 1.60], 0.055, 10)   # upper columns
+        rod(plat.buf("Chassis"), [pf0 + 0.02, sgn * 0.72, h0 + 1.05], [pf0 + 0.02, sgn * 0.72, h0 + 2.10], 0.03, 6)  # canopy posts
+        rod(plat.buf("Chassis"), [rail_front, sgn * 0.72, h0 + 1.05], [rail_front, sgn * 0.72, h0 + 2.10], 0.03, 6)
+    box(plat.buf("GseWhite"), [(pf0 + rail_front) / 2 + 0.03, 0, h0 + 2.12], (rail_front - pf0 + 0.16, 1.60, 0.05))   # canopy roof
+    ext = Part("PlatformExtension", [pf1, 0, h0])
+    box(ext.buf("Tread"), [pf1 - 0.40, 0, h0 - 0.10], (0.80, 1.30, 0.04))
+    box(ext.buf("Rubber"), [pf1 + 0.02, 0, h0 - 0.08], (0.06, 1.30, 0.12))
+    ext.children.append(Part("PlatformEdge", [pf1 + 0.05, 0, h0]))
     plat.children.append(ext)
-    lamps(plat, plat, "Dock", [[2.85, 0.72, h0 + 1.15]], [-1, 0, 0], 0.03, "LensGreen")
+    lamps(plat, plat, "Dock", [[rail_front, 0.72, h0 + 1.15]], [-1, 0, 0], 0.03, "LensGreen")
     control_buttons(plat, [("StairsUp", "Btn_Green"), ("StairsDown", "Btn_Grey"), ("StairsOut", "Btn_Grey"), ("StairsIn", "Btn_Grey")],
-                    [2.86, -0.72 + 0.04, h0 + 1.0], [-1, 0, 0])
+                    [rail_front + 0.01, -0.72 + 0.04, h0 + 1.0], [-1, 0, 0])
     root.children.append(plat)
     # stair flight, built at the lowest setting; hinge at the platform's rear edge
     Lf, zb = 6.0, 0.45
-    top = np.array([1.30, 0, h0])
+    top = np.array([pf0, 0, h0])
     th0 = math.asin((h0 - zb) / Lf)
     down = np.array([-math.cos(th0), 0, -math.sin(th0)])
     bottom = top + down * Lf
@@ -704,7 +710,7 @@ def passenger_stairs():
     meta = dict(label="Passenger stairs", massKg=5200, maxSpeedKmh=20, maxSteerDeg=38, motorTorque=4200, brakeTorque=12000,
                 centerOfMass=[0.0, 0.0, 0.9], suspension=0.10, engine="diesel",
                 stairs={"minFloor": h0, "maxFloor": 4.10, "flightLength": Lf, "footHeight": zb, "speed": 0.10,
-                        "extensionTravel": 0.60})
+                        "extensionTravel": 0.80})
     return vid, root, meta
 
 
