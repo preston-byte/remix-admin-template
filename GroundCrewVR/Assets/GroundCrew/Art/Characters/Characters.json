@@ -1,0 +1,214 @@
+{
+ "characters": {
+  "Pilot": {
+   "triangles": 2368,
+   "height": 1.78
+  },
+  "CabinCrew": {
+   "triangles": 2184,
+   "height": 1.709
+  },
+  "GroundCrew": {
+   "triangles": 2832,
+   "height": 1.798
+  }
+ },
+ "materials": [
+  {
+   "name": "Skin",
+   "color": [
+    0.8,
+    0.62,
+    0.5
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.25,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Hair",
+   "color": [
+    0.16,
+    0.11,
+    0.07
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.3,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Eyes",
+   "color": [
+    0.05,
+    0.05,
+    0.06
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.7,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Shoes",
+   "color": [
+    0.05,
+    0.05,
+    0.055
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.6,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Navy",
+   "color": [
+    0.08,
+    0.1,
+    0.2
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.3,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "White",
+   "color": [
+    0.92,
+    0.93,
+    0.94
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.35,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Gold",
+   "color": [
+    0.85,
+    0.66,
+    0.2
+   ],
+   "metallic": 0.6,
+   "smoothness": 0.65,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Teal",
+   "color": [
+    0.07,
+    0.3,
+    0.36
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.35,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Scarf",
+   "color": [
+    0.8,
+    0.16,
+    0.18
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.4,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Workwear",
+   "color": [
+    0.14,
+    0.17,
+    0.24
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.15,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "HiVis",
+   "color": [
+    0.86,
+    0.93,
+    0.1
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.35,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Reflective",
+   "color": [
+    0.78,
+    0.79,
+    0.8
+   ],
+   "metallic": 0.5,
+   "smoothness": 0.75,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "EarDefender",
+   "color": [
+    0.95,
+    0.4,
+    0.05
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.45,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Glove",
+   "color": [
+    0.2,
+    0.2,
+    0.22
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.15,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  }
+ ]
+}

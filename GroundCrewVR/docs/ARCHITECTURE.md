@@ -159,6 +159,33 @@ The airport is one generated `.glb` in Unity world coordinates. The training sta
 
 `AirportPlacer` reads `Airport.json` for the material list (sRGB colours, textures, smoothness, emission) and swaps glTFast's PBR materials for URP Simple Lit. It also adds colliders, teleport areas and static flags. Paint sits 1.2 cm (apron), 2 cm (taxiways) or 3 cm (runway) above its surface, so it doesn't z-fight at distance.
 
+### Jet bridges
+Each gate has a `JetBridge`: the moving parts come from `JetBridge.glb`, a chain of nodes with identity rest rotations. The fixed link and the rotunda are static, in `Airport.glb`. `Solve(gap)` turns a target into joint values in closed form:
+- **Target:** the cab floor's front edge, `gap` m out from the door sill, facing the fuselage.
+- **Slew:** `atan2` of the horizontal offset.
+- **Pitch and telescope length:** from the vertical offset, allowing for the cab mount's height above the tunnel axis.
+- **Cab angle:** relative to the tunnel.
+
+Every joint moves towards its target at its own speed, so the bridge moves as one smooth motion.
+
+**States:** Stowed → Docking (approach 1.2 m out, then final at 20 % speed, then canopy) → Docked (keeps re-solving: auto-level; retracts if the error exceeds 0.5 m) → Retracting.
+
+### Operations
+`StandRegistry` lists the stands and gates (written by the airport placer; Stand 24 alone without it). `TurnaroundOps` keeps a `StandOps` per stand: job states, placed items, workers, crew. Every job is a coroutine made of `CrewAgent` actions (walk a route, crouch, hold, put down, sit, enter or leave a vehicle) and `AutoDriver` moves.
+
+**Routes:** explicit waypoints, no NavMesh. The apron changes all the time, and aircraft are the only fixed obstacles. Anything behind the engine line is reached along a corridor 9.5 m off the centre line.
+
+**Equipment docking:**
+1. Drive kinematically to a pose square to the sill, with the docking edge 0.9-1.0 m out.
+2. Raise to the sill height.
+3. Creep in to the final gap.
+4. Extend the plate.
+
+**Flight crew positions** come from `AircraftCrewLayout`: the pilot eye point and the bulkhead and galley stations of each type, in the aircraft's local frame.
+
+### People
+The figures are rigid segments on joint nodes (no skinning, no clips). `CrewAnimator` sets the joint rotations each frame from the pose and speed. It's cheap: about 15 transforms per person, no animator. Skin and hair vary per person through a `MaterialPropertyBlock`.
+
 ## 5. Turnaround system (Phase 3 — the heart of the game)
 
 A turnaround is a **task graph**: a DAG of tasks with preconditions, built from a `TurnaroundTemplate` and adjusted by dynamic events.

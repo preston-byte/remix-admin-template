@@ -93,6 +93,7 @@ namespace GroundCrew.EditorTools
             if (prefabs == null) return;
             PlaceFleet(prefabs);
             InstallSpawnMenu();
+            OperationsSetup.Install(false);   // refresh the Ops config's vehicle catalog
             Debug.Log($"[Vehicles] Built {prefabs.Count} vehicle prefabs in {k_PrefabDir}, parked the fleet around Stand 24 and added the " +
                       "VEHICLES page to the wrist tablet. Save the scene to keep it.");
         }
@@ -454,7 +455,7 @@ namespace GroundCrew.EditorTools
             Phase1SandboxBuilder.Props(dash, ("vehicle", vehicle), ("text", text));
         }
 
-        static PressButton Button(GameObject go, string node, string label, UnityAction action)
+        internal static PressButton Button(GameObject go, string node, string label, UnityAction action)
         {
             var t = Find(go.transform, node);
             if (t == null) return null;
@@ -470,7 +471,9 @@ namespace GroundCrew.EditorTools
             if (action != null) UnityEventTools.AddPersistentListener(button.onPressed, action);
             if (!string.IsNullOrEmpty(label))
             {
-                var up = Vector3.ProjectOnPlane(go.transform.up, outward).normalized;
+                var up = Vector3.ProjectOnPlane(go.transform.up, outward);
+                if (up.sqrMagnitude < 1e-4f) up = Vector3.ProjectOnPlane(go.transform.forward, outward);   // button facing straight up
+                up.Normalize();
                 var text = Phase1SandboxBuilder.Text3D(t, Vector3.zero, label, 0.16f, new Vector2(0.08f, 0.02f), Color.white);
                 text.transform.position = t.position + up * 0.032f + outward * 0.002f;
                 text.transform.rotation = Quaternion.LookRotation(-outward, up);

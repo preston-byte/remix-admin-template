@@ -1,6 +1,6 @@
 # Airport Generator
 
-Builds the airport around the training stand as `Assets/GroundCrew/Art/Airport/Airport.glb`, with:
+Builds the airport around the training stand as `Assets/GroundCrew/Art/Airport/Airport.glb`, plus the moving jet bridge `JetBridge.glb` (one model, placed at every gate), with:
 - `Airport.json`: material list, spawn points, node roles
 - tiling ground textures in `Textures/`: concrete with slab joints, asphalt, grass
 
@@ -34,5 +34,13 @@ A generic regional airport (APPROX). No real airport is copied. Markings and sig
 | `Lights_Airfield` | Emissive light fittings; no real lights |
 | `Building_*`, `JetBridge_n`, `Signs`, `Floodlight_Masts` | Solid: mesh colliders |
 | `Stand_21..26`, `Gate_1..6` | Empties at each stop position (nose-gear point, yaw 180 = nose to the south) |
+| `JetBridge_n_Fixed` | Static fixed link and rotunda drum of each gate's bridge (walk-through; floors are box colliders added by the placer) |
+
+**JetBridge.glb** (root at the rotunda floor centre, rest pose retracted along +z):
+- `Slew` (yaw) > `Tunnel` (pitch) > `TunnelB` > `TunnelC` (telescopic, slide along z)
+- `TunnelC` > `CabMount` (counter-pitch, keeps the cab level) > `Cab` (yaw), with `Canopy`, `CabFront` (the docking edge) and the console buttons `Btn_BridgeDock` / `Btn_BridgeRetract`
+- `TunnelC` > `ColumnMount` (vertical) > `ColumnLegs` (scaled to length) + `Bogie` (yaw) > `Wheel_L` / `Wheel_R`
+
+Positions are in `Airport.json` (`Bridge_n` spawn points) and its `jetBridge` block.
 
 **Frame:** the generator works in Unity world space. `build.py` mirrors X when writing glTF, because glTFast mirrors it back on import.

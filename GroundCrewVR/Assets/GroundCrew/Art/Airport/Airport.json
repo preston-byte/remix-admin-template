@@ -2,7 +2,7 @@
  "id": "Airport",
  "units": "metres",
  "coordinateSystem": "Unity world after glTFast import: +X east, +Y up, +Z north; origin = Stand 24 training area",
- "triangles": 38330,
+ "triangles": 34730,
  "materials": [
   {
    "name": "Grass",
@@ -16,7 +16,8 @@
    "emission": [],
    "texture": "Textures/Grass.png",
    "tileMetres": 23.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Concrete",
@@ -30,7 +31,8 @@
    "emission": [],
    "texture": "Textures/Concrete.png",
    "tileMetres": 5.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Asphalt",
@@ -44,7 +46,8 @@
    "emission": [],
    "texture": "Textures/Asphalt.png",
    "tileMetres": 4.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "TaxiwayAsphalt",
@@ -58,7 +61,8 @@
    "emission": [],
    "texture": "Textures/Asphalt.png",
    "tileMetres": 4.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "RunwayAsphalt",
@@ -72,7 +76,8 @@
    "emission": [],
    "texture": "Textures/Asphalt.png",
    "tileMetres": 4.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "PaintYellow",
@@ -86,7 +91,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": "paint"
+   "shader": "paint",
+   "doubleSided": false
   },
   {
    "name": "PaintWhite",
@@ -100,7 +106,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": "paint"
+   "shader": "paint",
+   "doubleSided": false
   },
   {
    "name": "PaintRed",
@@ -114,7 +121,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": "paint"
+   "shader": "paint",
+   "doubleSided": false
   },
   {
    "name": "Wall",
@@ -128,7 +136,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "WallDark",
@@ -142,7 +151,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Cladding",
@@ -156,7 +166,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Metal",
@@ -170,7 +181,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Glass",
@@ -184,7 +196,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": true
   },
   {
    "name": "Mullion",
@@ -198,7 +211,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Roof",
@@ -212,7 +226,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Opening",
@@ -226,7 +241,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "RollDoor",
@@ -240,7 +256,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "HangarDoor",
@@ -254,7 +271,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "TankWhite",
@@ -268,7 +286,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Steel",
@@ -282,7 +301,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "BridgeGrey",
@@ -296,7 +316,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": true
   },
   {
    "name": "Bellows",
@@ -310,7 +331,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": true
   },
   {
    "name": "Rubber",
@@ -324,7 +346,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "Fixture",
@@ -338,7 +361,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "SignBlack",
@@ -352,7 +376,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "SignYellow",
@@ -370,7 +395,8 @@
    ],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "SignRed",
@@ -388,7 +414,8 @@
    ],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "SignBlue",
@@ -402,7 +429,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "SignWhite",
@@ -420,7 +448,8 @@
    ],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "SockOrange",
@@ -434,7 +463,8 @@
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "LightWhite",
@@ -452,7 +482,8 @@
    ],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "LightGreen",
@@ -470,7 +501,8 @@
    ],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "LightRed",
@@ -488,7 +520,8 @@
    ],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   },
   {
    "name": "LightBlue",
@@ -506,7 +539,8 @@
    ],
    "texture": "",
    "tileMetres": 0.0,
-   "shader": ""
+   "shader": "",
+   "doubleSided": false
   }
  ],
  "spawnPoints": [
@@ -617,6 +651,60 @@
     -139.0
    ],
    "yaw": 180.0
+  },
+  {
+   "name": "Bridge_1",
+   "position": [
+    -134.0,
+    5.0,
+    -146.0
+   ],
+   "yaw": -48.0
+  },
+  {
+   "name": "Bridge_2",
+   "position": [
+    -74.0,
+    5.0,
+    -146.0
+   ],
+   "yaw": -48.0
+  },
+  {
+   "name": "Bridge_3",
+   "position": [
+    -14.0,
+    5.0,
+    -146.0
+   ],
+   "yaw": -48.0
+  },
+  {
+   "name": "Bridge_4",
+   "position": [
+    46.0,
+    5.0,
+    -146.0
+   ],
+   "yaw": -48.0
+  },
+  {
+   "name": "Bridge_5",
+   "position": [
+    106.0,
+    5.0,
+    -146.0
+   ],
+   "yaw": -48.0
+  },
+  {
+   "name": "Bridge_6",
+   "position": [
+    166.0,
+    5.0,
+    -146.0
+   ],
+   "yaw": -48.0
   }
  ],
  "groundNodes": [
@@ -634,12 +722,13 @@
   "Building_FuelFarm",
   "Building_FireStation",
   "Floodlight_Masts",
-  "Signs",
-  "JetBridge_1",
-  "JetBridge_2",
-  "JetBridge_3",
-  "JetBridge_4",
-  "JetBridge_5",
-  "JetBridge_6"
- ]
+  "Signs"
+ ],
+ "jetBridge": {
+  "floorHeight": 5.0,
+  "stowYaw": -48.0,
+  "cabMount": 11.1,
+  "cabLength": 2.6,
+  "columnZ": 9.1
+ }
 }

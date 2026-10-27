@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GroundCrew.Aircraft;
+using GroundCrew.Airport;
 using Unity.XR.CoreUtils;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -42,11 +43,10 @@ namespace GroundCrew.EditorTools
 #pragma warning disable 0649   // filled by JsonUtility
         [Serializable] class Sidecar
         {
-            public MaterialSpec[] materials;
+            public QuestMaterials.Spec[] materials;
             public SpawnPoint[] spawnPoints;
             public string[] groundNodes, solidNodes;
         }
-        [Serializable] class MaterialSpec { public string name, texture, shader; public float[] color, emission; public float metallic, smoothness, tileMetres; }
         [Serializable] class SpawnPoint { public string name; public float[] position; public float yaw; }
 #pragma warning restore 0649
 
@@ -72,7 +72,7 @@ namespace GroundCrew.EditorTools
             airport.name = k_RootName;
             airport.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
 
-            var swapped = SwapMaterials(airport, spec.materials);
+            var swapped = QuestMaterials.Swap(airport, spec.materials, k_MaterialDir, k_ArtDir);
             var colliders = 0;
             var teleportMask = InteractionLayerMask.GetMask("Teleport");
             foreach (var name in spec.groundNodes ?? new string[0])
@@ -113,9 +113,12 @@ namespace GroundCrew.EditorTools
             RenderSettings.fogEndDistance = 2800f;
 
             var parked = ParkAircraft(spec);
+            var bridges = BuildJetBridges(airport.transform, spec);
+            BuildStandRegistry(airport, spec, bridges);
+            OperationsSetup.Install(false);
             EditorSceneManager.MarkSceneDirty(airport.scene);
             Selection.activeGameObject = airport;
-            Debug.Log($"[Airport] Built the airport: {swapped} materials converted, {colliders} colliders, {parked} parked aircraft. " +
+            Debug.Log($"[Airport] Built the airport: {swapped} materials converted, {colliders} colliders, {parked} parked aircraft, {bridges.Count} jet bridges. " +
                       "Save the scene to keep it.");
         }
 
@@ -135,110 +138,131 @@ namespace GroundCrew.EditorTools
             if (previous != null) Undo.DestroyObjectImmediate(previous);
         }
 
-        // ------------------------------------------------------------------ materials
+        // ------------------------------------------------------------------ jet bridges
 
-        static int SwapMaterials(GameObject root, MaterialSpec[] specs)
+        // Tunnel sections and cab, in each node's local space (see Tools/AirportGenerator JetBridge model):
+        // name, floor centre z, length, width, wall height.
+        static readonly (string node, float z, float length, float width, float height)[] k_BridgeFloors =
         {
-            EnsureFolder(k_MaterialDir);
-            var map = new Dictionary<string, Material>();
-            foreach (var s in specs ?? new MaterialSpec[0]) map[s.name] = SimpleLit(s);
-            var count = 0;
-            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+            ("Tunnel", 6.5f, 9.0f, 2.9f, 3.0f), ("TunnelB", 4.0f, 8.0f, 2.75f, 2.85f), ("TunnelC", 3.75f, 7.5f, 2.6f, 2.7f), ("Cab", 1.15f, 2.9f, 3.4f, 2.8f),
+        };
+
+        static List<JetBridge> BuildJetBridges(Transform airport, Sidecar spec)
+        {
+            var list = new List<JetBridge>();
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{k_ArtDir}/JetBridge.glb");
+            if (model == null || spec.spawnPoints == null) return list;
+            var root = new GameObject("Jet Bridges").transform;
+            root.SetParent(airport, false);
+            var teleportMask = InteractionLayerMask.GetMask("Teleport");
+            foreach (var p in spec.spawnPoints)
             {
-                var mats = r.sharedMaterials;
-                var changed = false;
-                for (var i = 0; i < mats.Length; i++)
+                if (!p.name.StartsWith("Bridge_", StringComparison.Ordinal) || p.position == null || p.position.Length < 3) continue;
+                var gate = p.name.Substring("Bridge_".Length);
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(model, root);
+                PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+                go.name = "Jet Bridge " + gate;
+                go.transform.SetPositionAndRotation(new Vector3(p.position[0], p.position[1], p.position[2]), Quaternion.identity);
+                QuestMaterials.Swap(go, spec.materials, k_MaterialDir, k_ArtDir);
+
+                var floors = new List<Collider>();
+                foreach (var f in k_BridgeFloors)
                 {
-                    if (mats[i] == null) continue;
-                    var key = mats[i].name.Replace(" (Instance)", "");
-                    if (!map.TryGetValue(key, out var m) || m == null) continue;
-                    mats[i] = m;
-                    changed = true;
+                    var t = Find(go.transform, f.node);
+                    if (t == null) continue;
+                    float z = f.z, length = f.length, width = f.width, height = f.height;
+                    floors.Add(Box(t, "Floor", new Vector3(0f, -0.1f, z), new Vector3(width - 0.1f, 0.2f, length)));
+                    Box(t, "Wall L", new Vector3(-width / 2f + 0.04f, height / 2f, z), new Vector3(0.08f, height, length));
+                    Box(t, "Wall R", new Vector3(width / 2f - 0.04f, height / 2f, z), new Vector3(0.08f, height, length));
                 }
-                if (!changed) continue;
-                r.sharedMaterials = mats;
-                count++;
+                var cab = Find(go.transform, "Cab");
+                var barrier = cab != null ? Box(cab, "Doorway Barrier", new Vector3(0f, 1.1f, 2.62f), new Vector3(2.6f, 2.2f, 0.08f)) : null;
+
+                var stop = SpawnPosition(spec, "Gate_" + gate);
+                var bridge = go.AddComponent<JetBridge>();
+                Phase1SandboxBuilder.Props(bridge, ("gateName", "Gate " + gate), ("aircraftStop", stop),
+                    ("slew", Find(go.transform, "Slew")), ("tunnel", Find(go.transform, "Tunnel")), ("tunnelB", Find(go.transform, "TunnelB")),
+                    ("tunnelC", Find(go.transform, "TunnelC")), ("cabMount", Find(go.transform, "CabMount")), ("cab", cab),
+                    ("canopy", Find(go.transform, "Canopy")), ("cabFront", Find(go.transform, "CabFront")),
+                    ("columnMount", Find(go.transform, "ColumnMount")), ("columnLegs", Find(go.transform, "ColumnLegs")),
+                    ("bogie", Find(go.transform, "Bogie")), ("wheelL", Find(go.transform, "Wheel_L")), ("wheelR", Find(go.transform, "Wheel_R")),
+                    ("frontBarrier", barrier), ("stowYaw", p.yaw));
+                VehicleAssembler.Button(go, "Btn_BridgeDock", "DOCK", bridge.Dock);
+                VehicleAssembler.Button(go, "Btn_BridgeRetract", "RETRACT", bridge.Retract);
+
+                // Walk on it / teleport onto it: floors only, not the walls.
+                var area = go.AddComponent<TeleportationArea>();
+                area.colliders.Clear();
+                area.colliders.AddRange(floors);
+                if (teleportMask != 0) area.interactionLayers = teleportMask;
+
+                // Floors of the static fixed link and rotunda (in the airport model).
+                var fixedFloor = Box(root, $"Gate {gate} link floor", new Vector3(p.position[0], p.position[1] - 0.25f, -149.25f), new Vector3(2.5f, 0.2f, 2.8f));
+                var rotundaFloor = Box(root, $"Gate {gate} rotunda floor", new Vector3(p.position[0], p.position[1] - 0.25f, p.position[2]), new Vector3(4.0f, 0.2f, 4.0f));
+                Box(root, $"Gate {gate} link wall L", new Vector3(p.position[0] - 1.25f, p.position[1] + 1.3f, -149.25f), new Vector3(0.1f, 2.8f, 2.8f));
+                Box(root, $"Gate {gate} link wall R", new Vector3(p.position[0] + 1.25f, p.position[1] + 1.3f, -149.25f), new Vector3(0.1f, 2.8f, 2.8f));
+                var fixedArea = fixedFloor.gameObject.AddComponent<TeleportationArea>();
+                if (teleportMask != 0) fixedArea.interactionLayers = teleportMask;
+                var rotundaArea = rotundaFloor.gameObject.AddComponent<TeleportationArea>();
+                if (teleportMask != 0) rotundaArea.interactionLayers = teleportMask;
+                list.Add(bridge);
             }
-            AssetDatabase.SaveAssets();
-            return count;
+            return list;
         }
 
-        static Material SimpleLit(MaterialSpec s)
+        static BoxCollider Box(Transform parent, string name, Vector3 centre, Vector3 size)
         {
-            var path = $"{k_MaterialDir}/{s.name}.mat";
-            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (s.shader == "paint")
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var c = go.AddComponent<BoxCollider>();
+            c.center = centre;
+            c.size = size;
+            return c;
+        }
+
+        static Vector3 SpawnPosition(Sidecar spec, string name)
+        {
+            foreach (var p in spec.spawnPoints ?? new SpawnPoint[0])
+                if (p.name == name && p.position != null && p.position.Length >= 3) return new Vector3(p.position[0], p.position[1], p.position[2]);
+            return Vector3.zero;
+        }
+
+        /// <summary>The stands and gates, for the Ops iPad and the AI crews.</summary>
+        static void BuildStandRegistry(GameObject airport, Sidecar spec, List<JetBridge> bridges)
+        {
+            var stands = new List<StandInfo>();
+            foreach (var p in spec.spawnPoints ?? new SpawnPoint[0])
             {
-                // Ground paint: depth-offset shader, or Simple Lit if it didn't compile on this setup.
-                var paint = Shader.Find("GroundCrew/Ground Paint");
-                if (paint != null && !ShaderUtil.ShaderHasError(paint))
+                if (p.position == null || p.position.Length < 3) continue;
+                var pos = new Vector3(p.position[0], p.position[1], p.position[2]);
+                if (p.name.StartsWith("Stand_", StringComparison.Ordinal))
                 {
-                    if (material == null)
+                    stands.Add(new StandInfo
                     {
-                        material = new Material(paint);
-                        AssetDatabase.CreateAsset(material, path);
-                    }
-                    material.shader = paint;
-                    material.color = s.color != null && s.color.Length >= 3 ? new Color(s.color[0], s.color[1], s.color[2]) : Color.white;
-                    material.enableInstancing = true;
-                    EditorUtility.SetDirty(material);
-                    return material;
+                        name = "Stand " + p.name.Substring(6), stopPosition = pos, yaw = p.yaw,
+                        staging = pos + new Vector3(11f, 0f, -36f), crewEntry = pos + new Vector3(-11f, 0f, -36f),
+                        equipmentPark = pos + new Vector3(11f, 0f, -43f), beltPark = pos + new Vector3(-11f, 0f, -43f),
+                    });
                 }
-                Debug.LogWarning("[Airport] Shader 'GroundCrew/Ground Paint' is missing or has errors - markings use Simple Lit and may flicker in the distance.");
+                else if (p.name.StartsWith("Gate_", StringComparison.Ordinal))
+                {
+                    var gate = "Gate " + p.name.Substring(5);
+                    JetBridge bridge = null;
+                    foreach (var b in bridges) if (b.GateName == gate) bridge = b;
+                    stands.Add(new StandInfo
+                    {
+                        name = gate, stopPosition = pos, yaw = p.yaw, bridge = bridge,
+                        staging = pos + new Vector3(-15f, 0f, -9.5f),
+                        crewEntry = bridge != null ? bridge.transform.position + new Vector3(0f, -0.15f, -4.2f) : pos + new Vector3(10f, 0f, -9f),
+                        equipmentPark = pos + new Vector3(-11f, 0f, -7f), beltPark = pos + new Vector3(-17f, 0f, -7f),
+                    });
+                }
             }
-            // Simple Lit (Blinn-Phong) is noticeably cheaper than Lit (PBR) on Quest.
-            var shader = Shader.Find("Universal Render Pipeline/Simple Lit");
-            if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
-            if (material == null)
-            {
-                material = new Material(shader);
-                AssetDatabase.CreateAsset(material, path);
-            }
-            else if (material.shader != shader) material.shader = shader;
-            var c = s.color != null && s.color.Length >= 3 ? new Color(s.color[0], s.color[1], s.color[2]) : Color.white;
-            material.color = c;
-            if (!string.IsNullOrEmpty(s.texture))
-            {
-                var texPath = $"{k_ArtDir}/{s.texture}";
-                PrepareTexture(texPath);
-                var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
-                if (tex != null) material.mainTexture = tex;
-            }
-            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", Mathf.Clamp01(s.smoothness));
-            var shiny = s.smoothness > 0.45f || s.metallic > 0.5f;
-            if (material.HasProperty("_SpecularHighlights")) material.SetFloat("_SpecularHighlights", shiny ? 1f : 0f);
-            if (shiny)
-            {
-                material.EnableKeyword("_SPECULAR_COLOR");
-                if (material.HasProperty("_SpecColor")) material.SetColor("_SpecColor", Color.white * (0.25f + 0.5f * s.metallic));
-            }
-            else material.DisableKeyword("_SPECULAR_COLOR");
-            if (s.emission != null && s.emission.Length >= 3)
-            {
-                material.EnableKeyword("_EMISSION");
-                material.SetColor("_EmissionColor", new Color(s.emission[0], s.emission[1], s.emission[2]) * 2.5f);
-                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
-            }
-            else
-            {
-                material.DisableKeyword("_EMISSION");
-                if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", Color.black);
-            }
-            material.enableInstancing = true;
-            EditorUtility.SetDirty(material);
-            return material;
-        }
-
-        static void PrepareTexture(string path)
-        {
-            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-            if (importer == null) return;
-            if (importer.anisoLevel == 4 && importer.wrapMode == TextureWrapMode.Repeat && importer.mipmapEnabled) return;
-            importer.anisoLevel = 4;     // ground seen at a grazing angle stays sharp
-            importer.wrapMode = TextureWrapMode.Repeat;
-            importer.mipmapEnabled = true;
-            importer.SaveAndReimport();
+            // Stand 24 (the training stand) first, so the iPad starts there.
+            stands.Sort((a, b) => a.name == "Stand 24" ? -1 : b.name == "Stand 24" ? 1 : string.CompareOrdinal(a.name, b.name));
+            var registry = airport.AddComponent<StandRegistry>();
+            registry.SetStands(stands);
+            EditorUtility.SetDirty(registry);
         }
 
         // ------------------------------------------------------------------ colliders, aircraft

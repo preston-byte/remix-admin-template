@@ -102,6 +102,7 @@ namespace GroundCrew.EditorTools
             BuildGpuStation(Station("E_GPU", new Vector3(3.4f, 0f, -0.3f), "E  GROUND POWER", "Open the panel, plug in the GPU cable. 4 m cable.", 2.85f, 0.6f, false));
 
             VehicleAssembler.InstallSpawnMenu();   // no-op until Add Vehicles has built the catalog
+            OperationsSetup.Install(false);        // Ops iPad, flight crew and AI ground crew
 
             EditorSceneManager.SaveScene(scene, k_ScenePath);
             AddSceneToBuildSettings(k_ScenePath);
@@ -505,7 +506,7 @@ namespace GroundCrew.EditorTools
             MakeItem(root, def, id, null, true);
         }
 
-        static void Cone(string name, Transform parent, Vector3 position, ItemDefinition def, string id)
+        static GameObject Cone(string name, Transform parent, Vector3 position, ItemDefinition def, string id)
         {
             const float baseSize = 0.36f, baseHeight = 0.03f, coneHeight = 0.67f, radius = 0.15f;
             var root = ItemRoot(name, parent, position);
@@ -528,9 +529,10 @@ namespace GroundCrew.EditorTools
             Cylinder("Reflective band", root.transform, new Vector3(0f, 0.33f, 0f), new Vector3(0.165f, 0.03f, 0.165f), s_Mat.Reflective);
 
             MakeItem(root, def, id, null, true);
+            return root;
         }
 
-        static void Chock(string name, Transform parent, Vector3 position, ItemDefinition def, string id)
+        static GameObject Chock(string name, Transform parent, Vector3 position, ItemDefinition def, string id)
         {
             var root = ItemRoot(name, parent, position);
             var wedge = ProceduralMeshes.Wedge(k_MeshDir, 0.45f, 0.17f, 0.22f);
@@ -541,6 +543,18 @@ namespace GroundCrew.EditorTools
             meshCollider.convex = true;
             Box("Rope handle", root.transform, new Vector3(0.24f, 0.12f, 0f), new Vector3(0.04f, 0.015f, 0.12f), s_Mat.Black, false, false);
             MakeItem(root, def, id, null, true);
+            return root;
+        }
+
+        /// <summary>A cone or chock built at the origin (no stable id) for saving as a prefab.</summary>
+        internal static GameObject SafetyItem(bool chock)
+        {
+            s_Mat = s_Mat ?? new Palette();
+            EnsureFolder(k_MeshDir);
+            EnsureFolder(k_ItemDir);
+            return chock
+                ? Chock("Wheel Chock", null, Vector3.zero, Def("Wheel_Chock", "equip.chock", "Wheel Chock", ItemCategory.WheelChock, 6f, impactSpeed: 8f), "")
+                : Cone("Safety Cone", null, Vector3.zero, Def("Safety_Cone", "equip.cone", "Safety Cone", ItemCategory.SafetyCone, 3f, impactSpeed: 8f), "");
         }
 
         static GameObject ItemRoot(string name, Transform parent, Vector3 localPosition)
@@ -652,7 +666,7 @@ namespace GroundCrew.EditorTools
             return tmp;
         }
 
-        static RectTransform UIChild(string name, RectTransform parent, Vector2 anchorMin, Vector2 anchorMax)
+        internal static RectTransform UIChild(string name, RectTransform parent, Vector2 anchorMin, Vector2 anchorMax)
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rect = (RectTransform)go.transform;
@@ -664,7 +678,7 @@ namespace GroundCrew.EditorTools
             return rect;
         }
 
-        static TextMeshProUGUI UIText(string name, RectTransform parent, Vector2 anchorMin, Vector2 anchorMax, float size, TextAlignmentOptions alignment)
+        internal static TextMeshProUGUI UIText(string name, RectTransform parent, Vector2 anchorMin, Vector2 anchorMax, float size, TextAlignmentOptions alignment)
         {
             var text = UIChild(name, parent, anchorMin, anchorMax).gameObject.AddComponent<TextMeshProUGUI>();
             text.fontSize = size;

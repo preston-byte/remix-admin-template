@@ -97,9 +97,18 @@ Remaining:
 - [x] `Tools/AirportGenerator`: remote apron (Stands 21-26, training stand = 24), terminal with 6 contact gates and jet bridges, GSE road, car park, taxiway with exits and runway connectors, runway 09/27 with ICAO-style markings and lights, signs, tower, hangar, cargo shed, fuel farm, fire station, floodlight masts, windsocks (~38k tris)
 - [x] Tiling concrete (with slab joints) / asphalt / grass textures, generated
 - [x] `AirportPlacer` editor menu: Simple Lit materials, colliders, teleport areas, static batching, fog, far clip, parked aircraft
-- [ ] Jet bridges that move and dock (they're static for now)
+- [x] Jet bridges that move and dock themselves: IK for slew / slope / telescope / cab, drive column with steering bogie, canopy, auto-level, auto-retract when the aircraft moves, cab console, walkable floors 🧪
 - [ ] Apron life: AI vehicles, taxiing aircraft, people; night lighting
 - [ ] Baked lighting / lightmaps for the static airport
+
+## Operations — iPad, flight crew, AI ground crew  ✅ 🧪 (first version)
+- [x] Generated low-poly people (`Tools/CharacterGenerator`): pilot, cabin crew, ground crew (hi-vis, ear defenders), ~2.2-2.8k tris each, jointed for procedural animation
+- [x] `CrewAnimator` (walk / idle / sit / drive / crouch / wave / carry) and `CrewAgent` (waypoint walking with floor following, carrying, sitting, riding vehicles), random skin and hair
+- [x] `TurnaroundOps`: chocks, cones, stairs, belt loader, bridge jobs and their removal; flight crew boarding and leaving by bridge or stairs; routes kept outboard of the engines
+- [x] `AutoDriver`: AI vehicle positioning (kinematic path, swing-out when the target is behind), creep-in, hands back to physics, yields to the player
+- [x] Ops iPad (`OpsTablet`): stand selector, setup / clear, bridge, crew, ground jobs, aircraft doors / beacon / flaps / light, news line; waist holster
+- [ ] GPU, fuel, water, lavatory and catering jobs (Phase 6), baggage loading by the AI, marshalling
+- [ ] Passengers boarding; crew announcements / radio
 
 ## Phase 5 — A320-class aircraft  ⬜ (model already generated in Phase 2)
 - [ ] A320 workflow differences: hydraulic cargo door operation (hand pump / selector), containerised (ULD) loading, different sill heights for GSE

@@ -39,9 +39,19 @@ namespace GroundCrew.Vehicles
         readonly List<Transform> m_Treads = new List<Transform>();
         readonly List<Quaternion> m_TreadRest = new List<Quaternion>();
 
+        float m_CommandRise, m_CommandExtend;
+
         public float Rise { get; private set; }
         public float Extension { get; private set; }
         public float FloorHeight => minFloor + Rise;
+        public float ExtensionTravel => extensionTravel;
+
+        /// <summary>Run the platform / plate from code (AI ground crew) for this frame: -1, 0 or +1 each.</summary>
+        public void Command(float rise, float extend)
+        {
+            m_CommandRise = Mathf.Clamp(rise, -1f, 1f);
+            m_CommandExtend = Mathf.Clamp(extend, -1f, 1f);
+        }
 
         void Awake()
         {
@@ -72,6 +82,9 @@ namespace GroundCrew.Vehicles
 
         void Update()
         {
+            var commandRise = m_CommandRise;
+            var commandExtend = m_CommandExtend;
+            m_CommandRise = m_CommandExtend = 0f;
             var wants = AnyHeld(upButtons) || AnyHeld(downButtons) || AnyHeld(outButtons) || AnyHeld(inButtons);
             if (wants && vehicle != null && !vehicle.ParkingBrake)
             {
@@ -81,8 +94,8 @@ namespace GroundCrew.Vehicles
             var parked = vehicle == null || vehicle.ParkingBrake;
             if (parked)
             {
-                var dir = (AnyHeld(upButtons) ? 1f : 0f) - (AnyHeld(downButtons) ? 1f : 0f);
-                var ext = (AnyHeld(outButtons) ? 1f : 0f) - (AnyHeld(inButtons) ? 1f : 0f);
+                var dir = Mathf.Clamp((AnyHeld(upButtons) ? 1f : 0f) - (AnyHeld(downButtons) ? 1f : 0f) + commandRise, -1f, 1f);
+                var ext = Mathf.Clamp((AnyHeld(outButtons) ? 1f : 0f) - (AnyHeld(inButtons) ? 1f : 0f) + commandExtend, -1f, 1f);
                 Rise = Mathf.Clamp(Rise + dir * speed * Time.deltaTime, 0f, maxFloor - minFloor);
                 Extension = Mathf.Clamp(Extension + ext * extensionSpeed * Time.deltaTime, 0f, extensionTravel);
             }

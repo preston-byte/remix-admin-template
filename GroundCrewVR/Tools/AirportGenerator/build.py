@@ -100,7 +100,7 @@ def main():
     tex_index = {name: b.texture(name, rgb, repeat=True) for name, rgb in textures.items()}
     mats = {}
     for name, (rgb, metallic, rough, emissive, texture, _tile) in airport.MATERIALS.items():
-        mats[name] = b.material(name, rgb, metallic, rough, emissive,
+        mats[name] = b.material(name, rgb, metallic, rough, emissive, double_sided=name in airport.DOUBLE_SIDED,
                                 base_texture=tex_index[texture] if texture else None)
     tris = {}
 
@@ -119,6 +119,29 @@ def main():
         return b.node(part.name, mesh, translation, children)
 
     size = b.write(os.path.join(out_dir, "Airport.glb"), [emit(root, None)])
+
+    # The moving jet bridge, one model instanced at every gate.
+    bb = GltfBuilder("GroundCrewVR AirportGenerator")
+    bmats = {}
+
+    def emit_bridge(part, parent_pivot):
+        prims = []
+        for material, buf in part.buffers.items():
+            if buf.count == 0:
+                continue
+            if material not in bmats:
+                rgb, metallic, rough, emissive, _t, _tile = airport.MATERIALS[material]
+                bmats[material] = bb.material(material, rgb, metallic, rough, emissive, double_sided=material in airport.DOUBLE_SIDED)
+            P, N, UV, I = buf.finalize(convert, part.pivot)
+            prims.append((bmats[material], P, N, None, I))
+        mesh = bb.mesh(part.name, prims) if prims else None
+        children = [emit_bridge(c, part.pivot) for c in part.children]
+        translation = convert(part.pivot)[0] - (convert(parent_pivot)[0] if parent_pivot is not None else 0.0)
+        return bb.node(part.name, mesh, translation, children)
+
+    bridge = airport.build_jet_bridge_model()
+    bsize = bb.write(os.path.join(out_dir, "JetBridge.glb"), [emit_bridge(bridge, None)])
+    print(f"JetBridge.glb: {bsize / 1e3:.0f} kB | {bridge.triangle_count():,} tris")
     sidecar = {
         "id": "Airport", "units": "metres",
         "coordinateSystem": "Unity world after glTFast import: +X east, +Y up, +Z north; origin = Stand 24 training area",
@@ -128,12 +151,14 @@ def main():
                        "emission": list(emissive) if emissive else [],
                        "texture": f"Textures/{texture.capitalize()}.png" if texture else "", "tileMetres": tile or 0.0,
                        # Paint lies on the ground: drawn with a depth offset (GroundCrew/Ground Paint) so it can't flicker.
-                       "shader": "paint" if name.startswith("Paint") else ""}
+                       "shader": "paint" if name.startswith("Paint") else "", "doubleSided": name in airport.DOUBLE_SIDED}
                       for name, (rgb, metallic, rough, emissive, texture, tile) in airport.MATERIALS.items()],
         "spawnPoints": spawns,
         "groundNodes": ["Ground_Grass", "Ground_Apron", "Ground_Roads", "Ground_Taxiways", "Ground_Runway"],
         "solidNodes": ["Building_Terminal", "Building_Tower", "Building_Hangar", "Building_Cargo", "Building_FuelFarm",
-                       "Building_FireStation", "Floodlight_Masts", "Signs"] + [f"JetBridge_{n}" for n in airport.GATES],
+                       "Building_FireStation", "Floodlight_Masts", "Signs"],
+        "jetBridge": {"floorHeight": airport.BRIDGE_FLOOR, "stowYaw": airport.BRIDGE_STOW_YAW, "cabMount": airport.BRIDGE_CAB_MOUNT,
+                      "cabLength": airport.BRIDGE_CAB_LENGTH, "columnZ": airport.BRIDGE_COLUMN_Z},
     }
     with open(os.path.join(out_dir, "Airport.json"), "w") as f:
         json.dump(sidecar, f, indent=1)

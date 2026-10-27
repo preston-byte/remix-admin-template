@@ -69,6 +69,9 @@ MATERIALS = {
     "LightBlue": ((0.2, 0.4, 1.0), 0.0, 0.30, (0.1, 0.3, 1.0), None, None),
 }
 
+# Seen from inside as well as outside (walk-through jet bridges).
+DOUBLE_SIDED = {"BridgeGrey", "Bellows", "Glass"}
+
 # Heights above y = 0 for paint (keeps it clear of the surface it lies on, even far away).
 H_APRON = 0.015
 H_TAXI = 0.025
@@ -278,7 +281,8 @@ def build_markings(root):
         ground_text(yel, str(number), x, GATE_STOP_Z + 12.0, (0, -1), 2.6, y)
         outline(red, x - 20, x + 20, -148, -84, 0.15, y)
         # Jet-bridge drive area: a white circle of dashes around the drive column's reach.
-        cx, cz, r = x + 10.5, -142.0, 4.5
+        sx, sz = bridge_stow_column()
+        cx, cz, r = x + sx, sz, 4.0
         for k in range(24):
             a0, a1 = 2 * math.pi * k / 24, 2 * math.pi * (k + 0.55) / 24
             strip(wht, (cx + r * math.cos(a0), cz + r * math.sin(a0)), (cx + r * math.cos(a1), cz + r * math.sin(a1)), 0.12, y)
@@ -513,50 +517,101 @@ def build_terminal(root):
     abox(dark, X1, X1 + 0.5, 0, 16, Z0, Z1)
 
 
+# Apron-drive jet bridge (moving parts in JetBridge.glb; the fixed link and rotunda are static here).
+BRIDGE_DX, BRIDGE_Z, BRIDGE_FLOOR = 16.0, -146.0, 5.0      # rotunda centre relative to the gate line
+BRIDGE_STOW_YAW = -48.0                                       # stowed tunnel heading (deg, 0 = +z)
+BRIDGE_COLUMN_Z = 9.1                                         # drive column, along the tunnel at e = 0
+# Tunnel sections (local, rest pose = fully retracted, tunnel along +z, floor at y 0 through the pivot):
+#   name, start z, length, width, height, floor y
+BRIDGE_SECTIONS = [("Tunnel", 2.0, 9.0, 2.9, 3.0, 0.0), ("TunnelB", 3.0, 8.0, 2.75, 2.85, 0.07), ("TunnelC", 3.6, 7.5, 2.6, 2.7, 0.14)]
+BRIDGE_CAB_MOUNT = 11.1                                       # tunnel end (cab mount), floor y 0.14
+BRIDGE_CAB_LENGTH = 2.6
+
+
+def bridge_stow_column():
+    a = math.radians(BRIDGE_STOW_YAW)
+    return BRIDGE_DX + BRIDGE_COLUMN_Z * math.sin(a), BRIDGE_Z + BRIDGE_COLUMN_Z * math.cos(a)
+
+
 def build_jet_bridges(root):
     for number, gx in GATES.items():
-        b = root.child(Part(f"JetBridge_{number}"))
-        grey, glass, steel = b.buf("BridgeGrey"), b.buf("Glass"), b.buf("Steel")
-        rot = np.array([gx + 16.0, 5.0, -146.0])                # rotunda (floor centre)
-        cab_back = np.array([gx + 5.0, 3.0, -138.1])
-        # Fixed link into the terminal's upper floor, rotunda on its column.
-        obox(grey, (gx + 16.0, 5.0, TERMINAL_Z1 - 0.5), (gx + 16.0, 5.0, -148.0), 2.6, 2.8)
-        lathe(grey, [(0.0, 0.0), (0.0, 2.2), (3.0, 2.2), (3.0, 0.0)], rot, Y, 16, closed_profile=False, outward_sign=-1.0)
-        cylinder(steel, (rot[0], 0, rot[2]), (rot[0], 5.0, rot[2]), 0.55, 12)
-        # Telescopic tunnel: three nested sections from the rotunda to the cab.
-        d = cab_back - rot
-        flat = normalize(np.array([d[0], 0.0, d[2]]))
-        across = normalize(np.cross(Y, flat))
-        start = rot + flat * 2.0
-        for f0, f1, w, h in ((0.00, 0.45, 2.9, 3.0), (0.40, 0.78, 2.75, 2.85), (0.73, 1.00, 2.6, 2.7)):
-            p0, p1 = start + (cab_back - start) * f0, start + (cab_back - start) * f1
-            a, side, up = obox(grey, p0, p1, w, h)
-            for sgn in (-1, 1):                                   # window strips
-                c0 = p0 + side * sgn * (w / 2 + 0.01) + up * (h * 0.55)
-                c1 = p1 + side * sgn * (w / 2 + 0.01) + up * (h * 0.55)
-                obox(glass, c0 - up * 0.3, c1 - up * 0.3, 0.02, 0.6)
-            for f in np.linspace(0.1, 0.9, 4):                    # ribs
-                p = p0 + (p1 - p0) * f
-                box(grey, p + up * (h / 2), (0.12, h + 0.08, w + 0.08), axes=np.stack([a, up, side]))
-        # Drive column: two legs, a bogie beam and two wheels.
-        p = start + (cab_back - start) * 0.7
+        b = root.child(Part(f"JetBridge_{number}_Fixed"))
+        grey, steel = b.buf("BridgeGrey"), b.buf("Steel")
+        rot = np.array([gx + BRIDGE_DX, BRIDGE_FLOOR, BRIDGE_Z])
+        # Fixed link into the terminal's upper floor; rotunda drum on its column.
+        obox(grey, (rot[0], BRIDGE_FLOOR - 0.15, TERMINAL_Z1 - 0.5), (rot[0], BRIDGE_FLOOR - 0.15, BRIDGE_Z - 1.9), 2.6, 3.0)
+        # Rotunda drum: open wall + roof + floor, so you can walk through it (the tunnel turns inside).
+        lathe(grey, [(0.0, 2.2), (3.15, 2.2)], rot - Y * 0.15, Y, 20, closed_profile=False, outward_sign=-1.0)
+        lathe(grey, [(3.15, 2.2), (3.15, 0.0)], rot - Y * 0.15, Y, 20, closed_profile=False, outward_sign=-1.0)
+        lathe(grey, [(0.0, 0.0), (0.0, 2.2)], rot - Y * 0.15, Y, 20, closed_profile=False, outward_sign=-1.0)
+        cylinder(steel, (rot[0], 0, rot[2]), (rot[0], BRIDGE_FLOOR - 0.15, rot[2]), 0.55, 12)
+
+
+def build_jet_bridge_model():
+    """The moving parts of one bridge, root at the rotunda floor centre, rest pose retracted
+    along +z. Node chain: Slew (yaw) > Tunnel (pitch) > TunnelB > TunnelC (telescopic, slide
+    along z) > CabMount (counter-pitch) > Cab (yaw) > Canopy; TunnelC > ColumnMount
+    (counter-pitch) > ColumnLegs (scaled in y) + Bogie (yaw) > Wheel_L / Wheel_R."""
+    root = Part("JetBridge")
+    slew = root.child(Part("Slew"))
+    parent = slew
+    for name, z0, length, w, h, fy in BRIDGE_SECTIONS:
+        sec = parent.child(Part(name, (0.0, 0.0, 0.0) if name == "Tunnel" else (0.0, fy, z0)))
+        grey, glass = sec.buf("BridgeGrey"), sec.buf("Glass")
+        p0, p1 = np.array([0.0, fy, z0]), np.array([0.0, fy, z0 + length])
+        a, side, up = obox(grey, p0, p1, w, h)
         for sgn in (-1, 1):
-            leg = p + across * sgn * 0.9
-            cylinder(steel, (leg[0], 0.9, leg[2]), (leg[0], p[1], leg[2]), 0.16, 8)
-        box(steel, (p[0], 0.9, p[2]), (0.6, 0.3, 2.6), axes=np.stack([flat, Y, across]))
-        for sgn in (-1, 1):
-            hub = np.array([p[0], 0.45, p[2]]) + across * sgn * 1.0
-            cylinder(b.buf("Rubber"), hub - across * 0.18, hub + across * 0.18, 0.45, 12)
-        # Cab facing the aircraft's door 1L, with bellows canopy, bumper, windows, service stair.
-        abox(grey, gx + 2.5, gx + 5.0, 3.0, 5.8, -139.8, -136.4)
-        abox(b.buf("Bellows"), gx + 2.15, gx + 2.5, 3.0, 5.6, -139.5, -136.7)
-        abox(b.buf("Rubber"), gx + 2.05, gx + 2.15, 3.0, 3.15, -139.4, -136.8)
-        for z in (-139.82, -136.38):
-            abox(glass, gx + 2.8, gx + 4.7, 4.4, 5.4, z - 0.01, z + 0.01)
-        for k in range(10):
-            yy = 0.3 * k
-            abox(steel, gx + 5.2 + k * 0.25, gx + 5.5 + k * 0.25, 2.7 - yy, 2.75 - yy, -138.9, -137.9)
-        abox(steel, gx + 5.0, gx + 7.8, 0, 0.05, -139.0, -138.95)
+            c0 = p0 + side * sgn * (w / 2 + 0.01) + up * (h * 0.55)
+            c1 = p1 + side * sgn * (w / 2 + 0.01) + up * (h * 0.55)
+            obox(glass, c0 - up * 0.3, c1 - up * 0.3, 0.02, 0.6)
+        for f in np.linspace(0.06, 0.94, 5):
+            p = p0 + (p1 - p0) * f
+            box(grey, p + up * (h / 2), (0.12, h + 0.08, w + 0.08), axes=np.stack([a, up, side]))
+        box(sec.buf("Bellows"), p0 + up * 0.03 + a * (length / 2), (length - 0.1, 0.02, w - 0.2), axes=np.stack([a, up, side]))   # floor mat
+        parent = sec
+    tunnel_c = parent
+    # Cab: rotates about the tunnel end; canopy (bellows) slides out to the fuselage.
+    mount = tunnel_c.child(Part("CabMount", (0.0, 0.14, BRIDGE_CAB_MOUNT)))
+    cab = mount.child(Part("Cab", (0.0, 0.14, BRIDGE_CAB_MOUNT)))
+    z0, z1 = BRIDGE_CAB_MOUNT - 0.3, BRIDGE_CAB_MOUNT + BRIDGE_CAB_LENGTH
+    grey, glass, steel = cab.buf("BridgeGrey"), cab.buf("Glass"), cab.buf("Steel")
+    abox(grey, -1.7, 1.7, 0.04, 0.14, z0, z1)                        # floor
+    abox(grey, -1.7, 1.7, 2.84, 3.0, z0, z1)                         # roof
+    for x0, x1 in ((-1.7, -1.6), (1.6, 1.7)):
+        abox(grey, x0, x1, 0.14, 1.2, z0, z1)
+        abox(glass, x0, x1, 1.2, 2.5, z0 + 0.2, z1 - 0.1)
+        abox(grey, x0, x1, 2.5, 2.84, z0, z1)
+    abox(grey, -1.7, -1.3, 0.14, 2.84, z1 - 0.1, z1)                 # front frame around the door opening
+    abox(grey, 1.3, 1.7, 0.14, 2.84, z1 - 0.1, z1)
+    abox(grey, -1.3, 1.3, 2.3, 2.84, z1 - 0.1, z1)
+    abox(cab.buf("Rubber"), -1.2, 1.2, 0.0, 0.14, z1, z1 + 0.1)       # floor bumper (the docking face)
+    # Operator console (left of the door) with two buttons; the editor makes them pressable.
+    abox(steel, 0.95, 1.55, 0.14, 1.05, z1 - 0.9, z1 - 0.35)
+    for name, x in (("Btn_BridgeDock", 1.08), ("Btn_BridgeRetract", 1.40)):
+        btn = cab.child(Part(name, (x, 1.07, z1 - 0.62)))
+        cylinder(btn.buf("SignYellow" if "Dock" in name else "SignRed"), (x, 1.05, z1 - 0.62), (x, 1.07, z1 - 0.62), 0.03, 12)
+        btn.child(Part("Out", (x, 1.17, z1 - 0.62)))
+    cab.child(Part("CabFront", (0.0, 0.14, z1 + 0.1)))
+    canopy = cab.child(Part("Canopy", (0.0, 0.14, z1 - 0.25)))
+    cb = canopy.buf("Bellows")
+    for x0, x1, y0, y1 in ((-1.35, -1.2, 0.14, 2.35), (1.2, 1.35, 0.14, 2.35), (-1.35, 1.35, 2.2, 2.35)):
+        abox(cb, x0, x1, y0, y1, z1 - 0.25, z1 + 0.05)
+    # Drive column: legs (scaled to length at runtime), bogie with two wheels.
+    col = tunnel_c.child(Part("ColumnMount", (0.0, 0.04, BRIDGE_COLUMN_Z)))
+    legs = col.child(Part("ColumnLegs", (0.0, 0.04, BRIDGE_COLUMN_Z)))
+    axle_y = -BRIDGE_FLOOR + 0.45
+    leg_len = 0.04 - (axle_y + 0.6)
+    for sgn in (-1, 1):
+        cylinder(legs.buf("Steel"), (sgn * 0.9, 0.04, BRIDGE_COLUMN_Z), (sgn * 0.9, 0.04 - leg_len, BRIDGE_COLUMN_Z), 0.16, 10)
+    box(col.buf("Steel"), (0, -0.12, BRIDGE_COLUMN_Z), (2.3, 0.3, 0.5))
+    bogie = col.child(Part("Bogie", (0.0, axle_y, BRIDGE_COLUMN_Z)))
+    box(bogie.buf("Steel"), (0, axle_y + 0.45, BRIDGE_COLUMN_Z), (2.6, 0.3, 0.7))
+    for sgn in (-1, 1):
+        cylinder(bogie.buf("Steel"), (sgn * 0.9, axle_y + 0.6, BRIDGE_COLUMN_Z), (sgn * 0.9, axle_y + 0.3, BRIDGE_COLUMN_Z), 0.2, 8)
+        wheel = bogie.child(Part("Wheel_L" if sgn < 0 else "Wheel_R", (sgn * 1.0, axle_y, BRIDGE_COLUMN_Z)))
+        cylinder(wheel.buf("Rubber"), (sgn * 0.82, axle_y, BRIDGE_COLUMN_Z), (sgn * 1.18, axle_y, BRIDGE_COLUMN_Z), 0.45, 14)
+        cylinder(wheel.buf("Steel"), (sgn * 0.8, axle_y, BRIDGE_COLUMN_Z), (sgn * 1.2, axle_y, BRIDGE_COLUMN_Z), 0.22, 8)
+    return root
 
 
 def build_tower(root, x=240.0, z=-176.0):
@@ -718,6 +773,8 @@ def build():
         spawns.append({"name": f"Stand_{number}", "position": [x, 0.0, REMOTE_STOP_Z], "yaw": 180.0})
     for number, x in GATES.items():
         spawns.append({"name": f"Gate_{number}", "position": [x, 0.0, GATE_STOP_Z], "yaw": 180.0})
+    for number, x in GATES.items():
+        spawns.append({"name": f"Bridge_{number}", "position": [x + BRIDGE_DX, BRIDGE_FLOOR, BRIDGE_Z], "yaw": BRIDGE_STOW_YAW})
     for s in spawns:
         root.child(Part(s["name"], s["position"]))
     return root, spawns

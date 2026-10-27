@@ -36,7 +36,11 @@ GroundCrewVR/
                            IndicatorLight, ValueReadout, Haptics, InteractionEvents
       Player/              ComfortSettings, LocomotionComfortApplier, FingertipSetup,
                            QuestPerformanceSettings, ControllerHands (gloved hands)
-      UI/                  WristTablet, VehicleSpawnMenu (the tablet's VEHICLES page)
+      UI/                  WristTablet, VehicleSpawnMenu (the tablet's VEHICLES page), OpsTablet (iPad)
+      Airport/             JetBridge, StandRegistry
+      Crew/                CrewAgent, CrewAnimator, CrewAppearance (pilots, cabin crew, ground crew)
+      Operations/          TurnaroundOps (AI jobs + crew boarding), AutoDriver, OpsConfig,
+                           AircraftCrewLayout
       Aircraft/            AircraftRig (doors, flaps, steering, wheels, fans, beacon, LODs)
       Vehicles/            VehicleController, VehicleSeat, VehicleDriverInput, SteeringWheelInput,
                            VehicleLights, VehicleAudio, TowHitch, TowCoupler, TrailerSteering,
@@ -50,15 +54,20 @@ GroundCrewVR/
       VehicleAssembler.cs       menu: Ground Crew > Vehicles > Add Vehicles to Sandbox
       HandsSetup.cs             menu: Ground Crew > Player > Add Gloved Hands to Rig
       AirportPlacer.cs          menu: Ground Crew > Airport > Build Airport Around Sandbox
+      OperationsSetup.cs        menu: Ground Crew > Operations > Set Up iPad, Crew and AI Ground Crew
+      QuestMaterials.cs         glTF -> URP Simple Lit material swap (airport, bridges, people)
       ProceduralMeshes.cs       cone + wheel-chock meshes for the sandbox
     Art/Aircraft/          ← generated .glb aircraft + JSON sidecars
     Art/Vehicles/          ← generated .glb ground vehicles + JSON sidecars
     Art/Hands/             ← generated glove model
-    Art/Airport/           ← generated airport + ground textures
+    Art/Airport/           ← generated airport, jet bridge, ground textures
+    Art/Characters/        ← generated pilot, cabin crew and ground crew figures
+    Shaders/               ← GroundPaint (markings drawn with a depth offset)
   Tools/AircraftGenerator/ ← Python generator for the aircraft models
   Tools/VehicleGenerator/  ← Python generator for the vehicles (reuses the aircraft tools)
   Tools/HandGenerator/     ← Python generator for the glove
-  Tools/AirportGenerator/  ← Python generator for the airport
+  Tools/AirportGenerator/  ← Python generator for the airport and the jet bridge
+  Tools/CharacterGenerator/← Python generator for the people
 ```
 
 Unity generates the `.meta` files, `Data/`, `Generated/` and `Scenes/` folders when you run the builder.
@@ -132,6 +141,7 @@ This creates `Assets/GroundCrew/Scenes/Phase1_Sandbox.unity` and adds it as the 
 | Wrist tablet | Turn your left wrist to look at it like a watch |
 | Change comfort options | Poke **MOVE** / **TURN** on the tablet with your right fingertip |
 | Spawn / reset vehicles | Poke **VEHICLES** on the tablet (see §7) |
+| Ops iPad | Floats at your waist, front-left. Press its keys with a fingertip, or grab it (grip) to hold it closer; let go and it goes back (see §10) |
 
 Comfort settings are saved between sessions. **Teleport only** mode turns off smooth walking for anyone who gets motion sick.
 
@@ -400,12 +410,72 @@ If the frame rate drops, **Ground Crew → Airport → Remove Parked Aircraft (f
 
 - [ ] You start at Stand 24 on the remote apron. The terminal is behind you (south) and the runway is beyond the taxiway (north).
 - [ ] You can walk and teleport on all paved areas and the grass, and drive vehicles anywhere on them.
-- [ ] Jet bridges reach the door height of the parked aircraft. Signs and markings are readable and don't flicker.
+- [ ] Signs and markings are readable and don't flicker. (Jet bridges: see §10.)
 - [ ] The frame rate stays at ~72 fps looking towards the terminal with the parked aircraft in view.
 
 ---
 
-## 10. Updating to a new version
+## 10. Ops iPad, jet bridges, flight crew and AI ground crew
+
+**The iPad** floats at your waist, front-left, tilted towards you. Press its keys with your index fingertip; grab it if you want it closer; let go and it returns. The tabs along the top:
+
+| Tab | What's on it |
+|---|---|
+| **STAND** | Which stand or gate you're working (**< PREV / NEXT >**, **NEAREST**, **GO THERE** teleports you to it), the aircraft and its doors, the bridge, the crew and the ground jobs at a glance. **SETUP ALL**, **CLEAR ALL**, **CALL CREW**, **CREW OFF** |
+| **BRIDGE** | **DOCK**, **RETRACT**, **STOP**, **DOOR 1L**, and what the bridge is doing |
+| **CREW** | **CALL CREW** / **CREW OFF**, and where each crew member is |
+| **GROUND** | One key per job: **CHOCKS**, **CONES**, **STAIRS** (or **BRIDGE** at a gate), **BELT**. A finished job's key becomes **REMOVE ...**. Below: **SETUP ALL**, **CLEAR ALL**, and who's doing what |
+| **PLANE** | Doors 1L / 2L, forward / aft hold, all doors, beacon, flaps, flight-deck light |
+
+The bottom line shows the latest news ("Gate 3: Docked at door 1L", "Stand 24: Wheels chocked").
+
+**Jet bridges** (the six contact gates). **DOCK**, from the iPad or the yellow button on the console in the bridge cab:
+1. The bridge finds door 1L of the aircraft on its gate.
+2. It works out the angles: slew round the rotunda, slope, telescope length, cab angle.
+3. It drives there: the drive column's wheels steer and roll, and its legs stretch to the ground.
+4. It stops 1.2 m short, creeps in to the sill, and closes the canopy.
+5. It opens the door.
+
+While docked it follows the sill (auto-level). If the aircraft moves it retracts by itself. **RETRACT** (or the red button) closes the door, backs off, and parks the bridge. You can walk through the bridge from the terminal end to the aircraft, or teleport onto its floor. A barrier stops you walking out of the cab when it isn't docked.
+
+**Flight crew.** **CALL CREW** brings a captain, a first officer, a purser and three cabin crew:
+1. **At a gate,** they come out of the terminal through the bridge, which docks first if it isn't already.
+2. **On a remote stand,** they walk from the crew drop-off and up the passenger stairs. If the stairs aren't at the door yet, the ground crew bring them first.
+3. Inside, the pilots sit in their seats and the flight-deck light comes on. The purser and one crew member stay at the forward door; two go to the aft galley.
+
+**CREW OFF** walks them all back out.
+
+**AI ground crew.** Give them a job on the GROUND page; up to three workers per stand appear from the equipment area (or the baggage hall door at a gate):
+
+| Job | What they do |
+|---|---|
+| Chocks | Fetch chocks two at a time and wedge the nose gear and both main gears, fore and aft |
+| Cones | Put cones at the nose, wing tips, engines and tail; they walk round outboard of the engines, never under the belly |
+| Stairs | Take the nearest free passenger stairs, drive to door 1L, raise the platform to the sill, creep in, slide the plate out, walk up and open the door |
+| Belt | Same with the belt loader at the forward hold; then open the hold door |
+| Bridge | Dock the jet bridge (gates) |
+
+**REMOVE** / **CLEAR ALL** undoes them:
+- Chocks and cones are collected (not the ones you're holding).
+- The door is closed and the stairs or belt loader is lowered, backed off and parked.
+- The bridge retracts.
+
+If you've already docked the stairs yourself, the AI uses them as they are. If you sit in a vehicle the AI is driving, it hands it over to you. The chocks and cones they place are normal items: you can pick them up and move them.
+
+**Setting up:** it's automatic. **Build Phase 1 Sandbox Scene**, **Add Vehicles** and **Build Airport** all add the iPad and the operations manager to the scene. Without the airport, there is just Stand 24. If you ever need it by hand: **Ground Crew → Operations → Set Up iPad, Crew and AI Ground Crew**, then save the scene.
+
+**On the Quest, check that:**
+- [ ] The iPad sits at your waist and follows you; its keys press with a fingertip; grab and release works.
+- [ ] Gate 2, 4 or 5 (aircraft parked): **DOCK** drives the bridge to door 1L, the canopy closes, the door opens; **RETRACT** reverses it.
+- [ ] You can walk from the rotunda through the tunnel into the aircraft.
+- [ ] Stand 24 with an aircraft: **SETUP ALL** gets chocks, cones, the stairs at 1L (door opened) and the belt loader at the forward hold.
+- [ ] **CALL CREW** at Stand 24 (by the stairs) and at a gate (by the bridge): six people board; the pilots sit in the flight deck.
+- [ ] **CLEAR ALL** and **CREW OFF** tidy everything away.
+- [ ] Frame rate stays at ~72 fps with the crew and workers moving.
+
+---
+
+## 11. Updating to a new version
 
 1. In Unity, close the scene (or quit Unity).
 2. In Finder, replace `Assets/GroundCrew` in your project with the new one from the zip. Copy it in Finder (**Reveal in Finder**), not by dragging into the Unity window.
@@ -415,11 +485,13 @@ If the frame rate drops, **Ground Crew → Airport → Remove Parked Aircraft (f
    2. **Place Aircraft on Stand 24**
    3. **Vehicles → Add Vehicles to Sandbox**
    4. **Airport → Build Airport Around Sandbox**
+
+   The iPad, the crew and the AI ground crew are added by these menus automatically.
 5. Save the scene, then **Build And Run**.
 
 ---
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 | Symptom | Fix |
 |---|---|
@@ -437,4 +509,7 @@ If the frame rate drops, **Ground Crew → Airport → Remove Parked Aircraft (f
 | VEHICLES page says "No vehicle catalog" | Run **Ground Crew → Vehicles → Add Vehicles to Sandbox** once; it builds the prefabs and the catalog. |
 | Controllers still visible / no gloves | Run **Ground Crew → Player → Add Gloved Hands to Rig** (glTFast must have imported `Art/Hands/Hand_R.glb`). |
 | Airport menu says "model not imported" | Install glTFast (§6) and reimport `Assets/GroundCrew/Art/Airport`. |
+| iPad says "No operations manager" | Run **Ground Crew → Operations → Set Up iPad, Crew and AI Ground Crew** and save the scene. |
+| No crew / workers appear | glTFast must have imported `Art/Characters/*.glb`; then rerun the Operations setup menu. |
+| Bridge says "out of reach" | The aircraft isn't on the gate's stop bar (towed away?). Park it at the stop bar (nose gear on the line). |
 | Ground shimmers in the distance | Expected on Quest at grazing angles; anisotropic filtering is set on the ground textures. Raise MSAA to 4x if it's lower. |
