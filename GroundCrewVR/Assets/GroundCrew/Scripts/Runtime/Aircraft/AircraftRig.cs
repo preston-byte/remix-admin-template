@@ -56,6 +56,8 @@ namespace GroundCrew.Aircraft
         bool m_Discovered;
 
         public IEnumerable<string> PartNames => m_Parts.Keys;
+        /// <summary>The generator's JSON sidecar (doors, holds, seats, service points).</summary>
+        public TextAsset Definition => definition;
         public bool BeaconOn => m_BeaconOn;
 
         /// <summary>Fan speed in revolutions per minute (visual only).</summary>

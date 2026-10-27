@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GroundCrew.Crew
 {
-    public enum CrewRole { Captain, FirstOfficer, Purser, CabinCrew, GroundCrew }
+    public enum CrewRole { Captain, FirstOfficer, Purser, CabinCrew, GroundCrew, Passenger }
 
     /// <summary>
     /// A computer-controlled person: walks along routes (following the ground, stairs, bridge

@@ -43,9 +43,20 @@ namespace GroundCrew.Vehicles
         Vector3 m_BoxRest, m_PlatformRest, m_Up, m_Forward;
         float m_SinRest;
 
+        float m_CommandLift, m_CommandPlatform;
+
         public float Rise { get; private set; }
         public float Extension { get; private set; }
         public float FloorHeight => stowedFloor + Rise;
+        public float PlatformTravel => platformTravel;
+        public Transform LiftBox => liftBox;
+
+        /// <summary>Run the lift / platform from code (AI ground crew) for this frame: -1, 0 or +1 each.</summary>
+        public void Command(float lift, float platformDirection)
+        {
+            m_CommandLift = Mathf.Clamp(lift, -1f, 1f);
+            m_CommandPlatform = Mathf.Clamp(platformDirection, -1f, 1f);
+        }
 
         void Awake()
         {
@@ -75,6 +86,9 @@ namespace GroundCrew.Vehicles
 
         void Update()
         {
+            var commandLift = m_CommandLift;
+            var commandPlatform = m_CommandPlatform;
+            m_CommandLift = m_CommandPlatform = 0f;
             var wants = (upButton != null && upButton.IsHeld) || (downButton != null && downButton.IsHeld);
             if (wants && vehicle != null && !vehicle.ParkingBrake)
             {
@@ -82,15 +96,17 @@ namespace GroundCrew.Vehicles
                 else vehicle.Notify("Set the parking brake to use the lift");
             }
             var parked = vehicle == null || (vehicle.ParkingBrake && Mathf.Abs(vehicle.SpeedKmh) < 0.5f);
-            var dir = 0f;
+            var dir = parked ? commandLift : 0f;
             if (parked && upButton != null && upButton.IsHeld) dir += 1f;
             if (parked && downButton != null && downButton.IsHeld) dir -= 1f;
+            dir = Mathf.Clamp(dir, -1f, 1f);
             var maxRise = maxFloor - stowedFloor;
             if (dir != 0f) Rise = Mathf.Clamp(Rise + dir * liftSpeed * Time.deltaTime, 0f, maxRise);
 
-            var pdir = 0f;
+            var pdir = commandPlatform;
             if (platformOutButton != null && platformOutButton.IsHeld) pdir += 1f;
             if (platformInButton != null && platformInButton.IsHeld) pdir -= 1f;
+            pdir = Mathf.Clamp(pdir, -1f, 1f);
             if (pdir != 0f) Extension = Mathf.Clamp(Extension + pdir * platformSpeed * Time.deltaTime, 0f, platformTravel);
 
             if (vehicle != null)

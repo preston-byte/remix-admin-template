@@ -183,6 +183,13 @@ Every joint moves towards its target at its own speed, so the bridge moves as on
 
 **Flight crew positions** come from `AircraftCrewLayout`: the pilot eye point and the bulkhead and galley stations of each type, in the aircraft's local frame.
 
+### Services, bags and passengers
+- **`AircraftServices`** (added to an aircraft on first use) holds the service state: power, fuel, water, waste, catering, the bags in the hold, and the passengers.
+- **Service jobs** (`TurnaroundOps.Services`) follow one pattern: claim a vehicle and remember where it was, drive it with `AutoDriver`, draw a `CableRenderer` hose from the vehicle's reel to the worker's hand and then to an anchor on the aircraft's service point, run the flow, and return the vehicle home. Water, lavatory and catering share a mutex for the aft-right area.
+- **Baggage** (`TurnaroundOps.Baggage`) moves AI-handled bags kinematically along the belt surface and into hold slots generated from the hold box in the aircraft JSON, so nothing tumbles. They are normal grabbable bags.
+- **Passengers** (`TurnaroundOps.Passengers`) take seats from the aircraft JSON's seat map. A seated passenger is swapped for `PassengerSeated` (the same figure with the sitting pose baked into one mesh by the generator), so a full cabin is about one renderer per person instead of about 16.
+- **Colours:** `CrewAppearance` tints by swapping in cached material copies rather than property blocks, which keeps the SRP Batcher working.
+
 ### People
 The figures are rigid segments on joint nodes (no skinning, no clips). `CrewAnimator` sets the joint rotations each frame from the pose and speed. It's cheap: about 15 transforms per person, no animator. Skin and hair vary per person through a `MaterialPropertyBlock`.
 

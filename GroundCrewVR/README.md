@@ -423,9 +423,10 @@ If the frame rate drops, **Ground Crew → Airport → Remove Parked Aircraft (f
 |---|---|
 | **STAND** | Which stand or gate you're working (**< PREV / NEXT >**, **NEAREST**, **GO THERE** teleports you to it), the aircraft and its doors, the bridge, the crew and the ground jobs at a glance. **SETUP ALL**, **CLEAR ALL**, **CALL CREW**, **CREW OFF** |
 | **BRIDGE** | **DOCK**, **RETRACT**, **STOP**, **DOOR 1L**, and what the bridge is doing |
-| **CREW** | **CALL CREW** / **CREW OFF**, and where each crew member is |
-| **GROUND** | One key per job: **CHOCKS**, **CONES**, **STAIRS** (or **BRIDGE** at a gate), **BELT**. A finished job's key becomes **REMOVE ...**. Below: **SETUP ALL**, **CLEAR ALL**, and who's doing what |
-| **PLANE** | Doors 1L / 2L, forward / aft hold, all doors, beacon, flaps, flight-deck light |
+| **CREW** | **CALL CREW** / **CREW OFF**, **BOARD PAX** / **DEPLANE**, and where everyone is |
+| **GROUND** | **CHOCKS**, **CONES**, **STAIRS** (or **BRIDGE** at a gate), **BELT**, **LOAD BAGS** / **UNLOAD BAGS**, **GPU**. A finished job's key becomes **REMOVE ...**. Plus **SETUP ALL**, **CLEAR ALL**, and who's doing what |
+| **SERVICE** | **FUEL**, **WATER**, **LAV**, **CATERING**, **ALL SERVICES**, **GPU**, with fuel (kg), water and waste (%), catering and power |
+| **PLANE** | Doors 1L / 2L, forward / aft hold, all doors, beacon, flaps, flight-deck light; power, fuel, bags and passengers on board |
 
 The bottom line shows the latest news ("Gate 3: Docked at door 1L", "Stand 24: Wheels chocked").
 
@@ -454,6 +455,19 @@ While docked it follows the sill (auto-level). If the aircraft moves it retracts
 | Stairs | Take the nearest free passenger stairs, drive to door 1L, raise the platform to the sill, creep in, slide the plate out, walk up and open the door |
 | Belt | Same with the belt loader at the forward hold; then open the hold door |
 | Bridge | Dock the jet bridge (gates) |
+| GPU | Tow the ground power unit by hand to the nose, run the cable to the receptacle, start it and switch the output on: the aircraft is on ground power (nav lights on) |
+| Load bags | A cart of 16 bags is parked at the foot of the belt loader. One worker lifts bags onto the running belt; the other kneels in the forward hold and stows them in rows from the far end. **UNLOAD BAGS** does it the other way |
+| Fuel | Drive the refueller ahead of the right wing, carry the hose to the underwing coupling, refuel to the planned load (the iPad counts the kg), stay on the deadman, disconnect, drive back |
+| Water / Lav | Back the truck up to the panel under the aft fuselage, ride the platform up, connect the hose, fill the water tank or drain and flush the waste tank |
+| Catering | Drive to door 2R, ride the box up, extend the platform, open the door, exchange the trolleys, close up and drive back |
+
+Water, lavatory and catering all work under the aft fuselage on the right, so they take turns. Fuel, water and waste flow 4x faster than real life (`serviceTimeScale` on `Generated/Operations/OpsConfig`) so you don't wait 15 minutes.
+
+**Passengers:** **BOARD PAX** brings 24 passengers (`passengersPerFlight`).
+- They come from the terminal through the bridge, or from the drop-off up the stairs.
+- The back rows board first, and each walks down the aisle to a real seat from the aircraft's seat map.
+- Once seated, each becomes a single pre-posed mesh, so a full cabin stays cheap to render on Quest.
+- **DEPLANE**: they stand up and walk off, front rows first.
 
 **REMOVE** / **CLEAR ALL** undoes them:
 - Chocks and cones are collected (not the ones you're holding).
@@ -471,6 +485,10 @@ If you've already docked the stairs yourself, the AI uses them as they are. If y
 - [ ] Stand 24 with an aircraft: **SETUP ALL** gets chocks, cones, the stairs at 1L (door opened) and the belt loader at the forward hold.
 - [ ] **CALL CREW** at Stand 24 (by the stairs) and at a gate (by the bridge): six people board; the pilots sit in the flight deck.
 - [ ] **CLEAR ALL** and **CREW OFF** tidy everything away.
+- [ ] **GPU**: the GPU is towed to the nose, the cable reaches the receptacle, the GPU's lamps light and the nav lights come on.
+- [ ] **LOAD BAGS**: bags ride the belt into the hold and are stacked inside; **UNLOAD BAGS** brings them back to the cart.
+- [ ] **FUEL**, **WATER**, **LAV**, **CATERING**: each truck parks at its point without driving under the wing, the hose reaches, and the SERVICE page counts up.
+- [ ] **BOARD PAX** / **DEPLANE**: passengers sit in seats (not floating, not in the aisle) and leave again.
 - [ ] Frame rate stays at ~72 fps with the crew and workers moving.
 
 ---

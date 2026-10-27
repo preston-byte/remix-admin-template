@@ -23,6 +23,14 @@ namespace GroundCrew.Interaction
         LineRenderer m_Line;
         Vector3[] m_Points;
 
+        /// <summary>Attach it to new ends (e.g. a hose carried from the truck to the aircraft).</summary>
+        public void Connect(Transform from, Transform to, float length)
+        {
+            start = from;
+            end = to;
+            cableLength = Mathf.Max(0.1f, length);
+        }
+
         void Awake()
         {
             m_Line = GetComponent<LineRenderer>();

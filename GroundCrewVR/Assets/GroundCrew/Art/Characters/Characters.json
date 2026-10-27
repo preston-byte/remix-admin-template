@@ -11,6 +11,14 @@
   "GroundCrew": {
    "triangles": 2832,
    "height": 1.798
+  },
+  "Passenger": {
+   "triangles": 2012,
+   "height": 1.744
+  },
+  "PassengerSeated": {
+   "triangles": 1964,
+   "height": 1.744
   }
  },
  "materials": [
@@ -205,6 +213,48 @@
    ],
    "metallic": 0.0,
    "smoothness": 0.15,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Top",
+   "color": [
+    0.55,
+    0.2,
+    0.2
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.2,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Bottom",
+   "color": [
+    0.2,
+    0.25,
+    0.4
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.15,
+   "emission": [],
+   "texture": "",
+   "tileMetres": 0.0,
+   "shader": ""
+  },
+  {
+   "name": "Bag",
+   "color": [
+    0.12,
+    0.14,
+    0.18
+   ],
+   "metallic": 0.0,
+   "smoothness": 0.3,
    "emission": [],
    "texture": "",
    "tileMetres": 0.0,

@@ -12,7 +12,7 @@ using Object = UnityEngine.Object;
 
 namespace GroundCrew.Operations
 {
-    public enum OpsTask { Chocks, Cones, Stairs, BeltLoader, Bridge }
+    public enum OpsTask { Chocks, Cones, Stairs, BeltLoader, Bridge, GPU, Fuel, Water, Lavatory, Catering, Bags }
     public enum TaskState { Idle, Working, Done, Failed }
 
     /// <summary>Everything going on at one stand.</summary>
@@ -29,8 +29,30 @@ namespace GroundCrew.Operations
         public string CrewStatus = "Not called";
         public bool CrewBusy;
 
+        /// <summary>Service vehicles in use and where they came from (to return them there).</summary>
+        public readonly Dictionary<OpsTask, VehicleController> Equipment = new Dictionary<OpsTask, VehicleController>();
+        public readonly Dictionary<OpsTask, Pose> Home = new Dictionary<OpsTask, Pose>();
+        public readonly Dictionary<OpsTask, GameObject> Hoses = new Dictionary<OpsTask, GameObject>();
+        /// <summary>Water, lavatory and catering all work under the aft fuselage on the right: one at a time.</summary>
+        public object AftZone;
+        public GameObject BaggageCart;
+        public readonly List<GameObject> CartBags = new List<GameObject>();
+        public string PaxStatus = "None aboard";
+        public bool PaxBusy;
+        public readonly List<SeatedPassenger> SeatedPax = new List<SeatedPassenger>();
+
         public TaskState Get(OpsTask t) => State.TryGetValue(t, out var s) ? s : TaskState.Idle;
         public string NoteFor(OpsTask t) => Note.TryGetValue(t, out var n) ? n : "";
+    }
+
+    /// <summary>A passenger sitting in the aircraft, as one cheap mesh, remembered so they can get up again.</summary>
+    public class SeatedPassenger
+    {
+        public string Seat;
+        public GameObject Body;
+        public Vector3 LocalPosition;
+        public float LocalYaw;
+        public Crew.CrewAppearance.Choice Look;
     }
 
     /// <summary>
@@ -41,7 +63,7 @@ namespace GroundCrew.Operations
     /// The Ops iPad drives this; every job is a coroutine built from <see cref="CrewAgent"/> moves
     /// and <see cref="AutoDriver"/> drives, and reports its state for the iPad to show.
     /// </summary>
-    public class TurnaroundOps : MonoBehaviour
+    public partial class TurnaroundOps : MonoBehaviour
     {
         [SerializeField] OpsConfig config;
 
@@ -99,6 +121,12 @@ namespace GroundCrew.Operations
                 case OpsTask.Stairs: StartCoroutine(PositionEquipment(o, task, true)); break;
                 case OpsTask.BeltLoader: StartCoroutine(PositionEquipment(o, task, false)); break;
                 case OpsTask.Bridge: StartCoroutine(DockBridge(o)); break;
+                case OpsTask.GPU: StartCoroutine(ConnectGpu(o)); break;
+                case OpsTask.Fuel: StartCoroutine(Refuel(o)); break;
+                case OpsTask.Water: StartCoroutine(ServiceTruck(o, task, "SP_PotableWater")); break;
+                case OpsTask.Lavatory: StartCoroutine(ServiceTruck(o, task, "SP_LavService")); break;
+                case OpsTask.Catering: StartCoroutine(Cater(o)); break;
+                case OpsTask.Bags: StartCoroutine(LoadBags(o)); break;
             }
         }
 
@@ -116,7 +144,17 @@ namespace GroundCrew.Operations
                     if (o.Stand.bridge != null) o.Stand.bridge.Retract();
                     Set(o, task, TaskState.Idle, "Retracting");
                     break;
+                case OpsTask.GPU: StartCoroutine(DisconnectGpu(o)); break;
+                case OpsTask.Bags: StartCoroutine(UnloadBags(o)); break;
+                default: Set(o, task, TaskState.Idle, ""); break;      // fuel, water, waste, catering: just done
             }
+        }
+
+        /// <summary>Fuel, water, lavatory and catering (water / lavatory / catering take turns at the aft fuselage).</summary>
+        public void ServiceAll(StandInfo stand)
+        {
+            foreach (var t in new[] { OpsTask.Fuel, OpsTask.Catering, OpsTask.Water, OpsTask.Lavatory })
+                if (For(stand).Get(t) != TaskState.Done) Run(stand, t);
         }
 
         public void SetupAll(StandInfo stand)
@@ -125,12 +163,21 @@ namespace GroundCrew.Operations
             Run(stand, OpsTask.Cones);
             Run(stand, stand.IsGate ? OpsTask.Bridge : OpsTask.Stairs);
             Run(stand, OpsTask.BeltLoader);
+            Run(stand, OpsTask.GPU);
         }
 
         public void ClearAll(StandInfo stand)
         {
-            foreach (OpsTask t in Enum.GetValues(typeof(OpsTask)))
-                if (For(stand).Get(t) == TaskState.Done) Undo(stand, t);
+            var o = For(stand);
+            foreach (var t in new[] { OpsTask.Chocks, OpsTask.Cones, OpsTask.GPU, OpsTask.Stairs, OpsTask.BeltLoader, OpsTask.Bridge })
+                if (o.Get(t) == TaskState.Done) Undo(stand, t);
+            if (o.BaggageCart != null && o.Get(OpsTask.Bags) != TaskState.Working)
+            {
+                foreach (var b in o.CartBags) if (b != null) Destroy(b);
+                o.CartBags.Clear();
+                Destroy(o.BaggageCart);
+                o.BaggageCart = null;
+            }
         }
 
         public void CallCrew(StandInfo stand)
@@ -495,6 +542,33 @@ namespace GroundCrew.Operations
                 foreach (var sensor in v.GetComponentsInChildren<DoorDockingSensor>())
                     if (sensor.State == DockingState.Aligned && sensor.Door == door && Vector3.Distance(v.transform.position, sill.position) < 12f)
                         return v;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The nearest free vehicle that fits; if there's none within reach, one from the catalog,
+        /// parked at a slot beside the stand's equipment area.
+        /// </summary>
+        VehicleController FindVehicle(StandOps o, Func<VehicleController, bool> fits, Func<VehicleCatalog.Entry, bool> fitsEntry, int slot)
+        {
+            VehicleController best = null;
+            var bestDistance = 260f;
+            foreach (var v in FindObjectsByType<VehicleController>(FindObjectsSortMode.None))
+            {
+                if (m_Reserved.Contains(v) || v.Occupied || !fits(v)) continue;
+                var d = Vector3.Distance(v.transform.position, o.Stand.stopPosition);
+                if (d < bestDistance) { bestDistance = d; best = v; }
+            }
+            if (best != null || config == null || config.vehicles == null) return best;
+            foreach (var e in config.vehicles.Entries)
+            {
+                if (e.prefab == null || !fitsEntry(e)) continue;
+                var side = o.Stand.IsGate ? -1f : 1f;
+                var at = o.Stand.staging + new Vector3(side * (6f + 6f * slot), 0f, o.Stand.IsGate ? 6f : -4f);
+                var go = Instantiate(e.prefab, at, Quaternion.Euler(0f, o.Stand.yaw + 180f, 0f));
+                go.name = e.displayName;
+                return go.GetComponentInChildren<VehicleController>();
             }
             return null;
         }

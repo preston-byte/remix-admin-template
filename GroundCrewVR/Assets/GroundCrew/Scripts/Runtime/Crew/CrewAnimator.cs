@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GroundCrew.Crew
 {
-    public enum CrewPose { Idle, Walk, Sit, Drive, Crouch, Wave }
+    public enum CrewPose { Idle, Walk, Sit, Drive, Crouch, Wave, Reach }
 
     /// <summary>
     /// Procedural animation for the generated jointed figures (Tools/CharacterGenerator): walk
@@ -114,6 +114,15 @@ namespace GroundCrew.Crew
                     hips.z = m_HipsRest.z - 0.12f;
                     spineX = 32f;
                     neckX = -15f;
+                    break;
+                case CrewPose.Reach:
+                    // Both hands up to something overhead (a refuel coupling, a service panel).
+                    for (var i = 0; i < 2; i++)
+                    {
+                        ua[i] = new Vector3(-150f, 0f, (i == 0 ? 1f : -1f) * 6f);
+                        la[i] = new Vector3(-15f, 0f, 0f);
+                    }
+                    neckX = -20f;
                     break;
                 case CrewPose.Wave:
                     ua[1] = new Vector3(-10f, 0f, 155f);

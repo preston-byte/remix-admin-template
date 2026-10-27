@@ -473,7 +473,7 @@ namespace GroundCrew.EditorTools
 
         // ------------------------------------------------------------------ props
 
-        static void Suitcase(string name, Transform parent, Vector3 position, Vector3 size, Material shell, ItemDefinition def, string id, bool dynamicAttach = false)
+        static GameObject Suitcase(string name, Transform parent, Vector3 position, Vector3 size, Material shell, ItemDefinition def, string id, bool dynamicAttach = false)
         {
             var root = ItemRoot(name, parent, position);
             var collider = root.AddComponent<BoxCollider>();
@@ -493,6 +493,7 @@ namespace GroundCrew.EditorTools
             attach.localPosition = new Vector3(0f, size.y + 0.035f, 0f);
 
             MakeItem(root, def, id, attach, dynamicAttach);
+            return root;
         }
 
         static void CardboardBox(string name, Transform parent, Vector3 position, Vector3 size, ItemDefinition def, string id)
@@ -544,6 +545,16 @@ namespace GroundCrew.EditorTools
             Box("Rope handle", root.transform, new Vector3(0.24f, 0.12f, 0f), new Vector3(0.04f, 0.015f, 0.12f), s_Mat.Black, false, false);
             MakeItem(root, def, id, null, true);
             return root;
+        }
+
+        /// <summary>A checked suitcase built at the origin (no stable id) for the AI baggage prefabs.</summary>
+        internal static GameObject BagItem(int variant)
+        {
+            s_Mat = s_Mat ?? new Palette();
+            EnsureFolder(k_ItemDir);
+            var def = Def("Bag_Checked", "bag.checked", "Checked Suitcase", ItemCategory.Suitcase, 18f);
+            var shell = variant == 0 ? s_Mat.BagBlack : variant == 1 ? s_Mat.BagRed : s_Mat.BagGreen;
+            return Suitcase("Checked Suitcase", null, Vector3.zero, new Vector3(0.42f, 0.66f, 0.26f), shell, def, "");
         }
 
         /// <summary>A cone or chock built at the origin (no stable id) for saving as a prefab.</summary>

@@ -567,7 +567,8 @@ namespace GroundCrew.EditorTools
             AddBoundsCollider(box, false);
             if (platform != null)
             {
-                AddBoundsCollider(platform, false);
+                // Floor slab only (the platform's bounds include its 1.1 m handrails).
+                LocalBox(platform, "Floor Collider", new Vector3(0f, 0.04f, 0.45f), new Vector3(2.3f, 0.06f, 0.9f));
                 var ride = new GameObject("Ride Volume").AddComponent<BoxCollider>();
                 ride.transform.SetParent(platform, false);
                 var b = LocalBounds(platform);

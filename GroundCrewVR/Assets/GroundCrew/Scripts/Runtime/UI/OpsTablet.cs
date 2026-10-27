@@ -21,14 +21,15 @@ namespace GroundCrew.UI
     /// Tabs along the top: STAND (pick the stand or gate you're working, set it all up or clear
     /// it, call the crew), BRIDGE (dock / retract the jet bridge), CREW (pilots and cabin crew),
     /// GROUND (AI ground crew: chocks, cones, stairs or bridge, belt loader), AIRCRAFT (doors,
-    /// beacon, flaps, flight-deck light). Eight keys underneath change with the page.
+    /// beacon, flaps, flight-deck light), SERVICE (ground power, fuel, water, lavatories, catering).
+    /// Eight keys underneath change with the page.
     /// </summary>
     public class OpsTablet : MonoBehaviour
     {
-        enum Page { Stand, Bridge, Crew, Ground, Aircraft }
+        enum Page { Stand, Bridge, Crew, Ground, Service, Aircraft }
 
         [SerializeField] TMP_Text headerText, bodyText, footerText;
-        [SerializeField] PressButton[] tabs = new PressButton[5];
+        [SerializeField] PressButton[] tabs = new PressButton[6];
         [SerializeField] PressButton[] keys = new PressButton[8];
         [SerializeField] XRGrabInteractable grab;
         [SerializeField, Tooltip("The solid body you grab it by.")] Collider bodyCollider;
@@ -153,6 +154,7 @@ namespace GroundCrew.UI
                 case Page.Bridge: BridgePage(stand, rig); break;
                 case Page.Crew: CrewPage(stand, o); break;
                 case Page.Ground: GroundPage(stand, o); break;
+                case Page.Service: ServicePage(stand, rig, o); break;
                 case Page.Aircraft: AircraftPage(rig); break;
             }
             if (bodyText != null) bodyText.text = m_Text.ToString();
@@ -175,17 +177,17 @@ namespace GroundCrew.UI
             if (stand.IsGate) m_Text.Append("Jet bridge: ").Append(stand.bridge.Message).Append('\n');
             if (o != null)
             {
-                m_Text.Append("Crew: ").Append(o.CrewStatus).Append('\n');
+                m_Text.Append("Crew: ").Append(o.CrewStatus).Append("   Pax: ").Append(o.PaxStatus).Append('\n');
                 m_Text.Append("Ground: ");
-                foreach (OpsTask t in Enum.GetValues(typeof(OpsTask)))
-                {
-                    if (t == OpsTask.Bridge && !stand.IsGate || t == OpsTask.Stairs && stand.IsGate) continue;
+                foreach (var t in new[] { OpsTask.Chocks, OpsTask.Cones, stand.IsGate ? OpsTask.Bridge : OpsTask.Stairs, OpsTask.BeltLoader, OpsTask.GPU, OpsTask.Bags })
                     m_Text.Append(Short(t)).Append(' ').Append(Mark(o.Get(t))).Append("  ");
-                }
+                m_Text.Append("\nService: ");
+                foreach (var t in new[] { OpsTask.Fuel, OpsTask.Water, OpsTask.Lavatory, OpsTask.Catering })
+                    m_Text.Append(Short(t)).Append(' ').Append(Mark(o.Get(t))).Append("  ");
                 m_Text.Append('\n');
             }
             else m_Text.Append("<color=#FF8A80>No operations manager - run Ground Crew > Operations > Set Up</color>\n");
-            m_Text.Append($"\n<color=#9AA7B8>Stand {m_Stand + 1} of {all.Count}. SETUP ALL sends the ground crew to chock, cone and position the equipment.</color>");
+            m_Text.Append($"<color=#9AA7B8>Stand {m_Stand + 1} of {all.Count}</color>");
             SetKey(0, "< PREV", () => { m_Stand = (m_Stand - 1 + all.Count) % all.Count; });
             SetKey(1, "NEXT >", () => { m_Stand = (m_Stand + 1) % all.Count; });
             SetKey(2, "NEAREST", () => { if (Camera.main != null) m_Stand = StandRegistry.Nearest(Camera.main.transform.position); });
@@ -222,9 +224,12 @@ namespace GroundCrew.UI
             foreach (var a in o.FlightCrew)
                 if (a != null) m_Text.Append(a.DisplayName).Append(" <color=#9AA7B8>").Append(a.Activity).Append("</color>\n");
             if (o.FlightCrew.Count == 0)
-                m_Text.Append("\n<color=#9AA7B8>CALL CREW brings two pilots and four cabin crew. They board by the jet bridge, or by the stairs on a remote stand (the stairs are brought first if needed).</color>");
+                m_Text.Append("<color=#9AA7B8>CALL CREW brings two pilots and four cabin crew. They board by the jet bridge, or by the stairs on a remote stand (the stairs are brought first if needed).</color>\n");
+            m_Text.Append("\n<b>Passengers:</b> ").Append(o.PaxStatus).Append(" (").Append(o.SeatedPax.Count).Append(" seated)");
             SetKey(0, "CALL CREW", () => Ops.CallCrew(stand));
             SetKey(1, "CREW OFF", () => Ops.CrewOff(stand));
+            SetKey(2, "BOARD PAX", () => Ops.BoardPassengers(stand));
+            SetKey(3, "DEPLANE", () => Ops.DeplanePassengers(stand));
         }
 
         void GroundPage(StandInfo stand, StandOps o)
@@ -239,13 +244,38 @@ namespace GroundCrew.UI
                 var done = state == TaskState.Done;
                 SetKey(i, (done ? "REMOVE " : "") + Short(t).ToUpperInvariant(), () => { if (done) Ops.Undo(stand, t); else Ops.Run(stand, t); });
             }
-            m_Text.Append("\nWorkers: ");
+            foreach (var t in new[] { OpsTask.GPU, OpsTask.Bags })
+                m_Text.Append(Mark(o.Get(t))).Append(' ').Append(Short(t)).Append(" <color=#9AA7B8>").Append(o.NoteFor(t)).Append("</color>\n");
+            var bagsDone = o.Get(OpsTask.Bags) == TaskState.Done;
+            SetKey(4, bagsDone ? "UNLOAD BAGS" : "LOAD BAGS", () => { if (bagsDone) Ops.Undo(stand, OpsTask.Bags); else Ops.Run(stand, OpsTask.Bags); });
+            var gpuDone = o.Get(OpsTask.GPU) == TaskState.Done;
+            SetKey(5, gpuDone ? "REMOVE GPU" : "GPU", () => { if (gpuDone) Ops.Undo(stand, OpsTask.GPU); else Ops.Run(stand, OpsTask.GPU); });
+            m_Text.Append("Workers: ");
             var any = false;
             foreach (var w in o.Workers)
                 if (w != null) { m_Text.Append(w.DisplayName).Append(" (").Append(w.Busy ? w.Activity : "free").Append(")  "); any = true; }
             if (!any) m_Text.Append("<color=#9AA7B8>none yet - they come when you give them a job</color>");
-            SetKey(4, "SETUP ALL", () => Ops.SetupAll(stand));
-            SetKey(5, "CLEAR ALL", () => Ops.ClearAll(stand));
+            SetKey(6, "SETUP ALL", () => Ops.SetupAll(stand));
+            SetKey(7, "CLEAR ALL", () => Ops.ClearAll(stand));
+        }
+
+        void ServicePage(StandInfo stand, AircraftRig rig, StandOps o)
+        {
+            if (o == null) { m_Text.Append("No operations manager in this scene."); return; }
+            if (rig == null) { m_Text.Append("No aircraft on this stand."); return; }
+            var s = AircraftServices.For(rig);
+            m_Text.Append("Power: ").Append(s.ExternalPower ? "<color=#7CFC9A>GPU 115 V 400 Hz</color>" : "off").Append('\n');
+            m_Text.Append($"Fuel: {s.FuelKg:N0} kg  (plan {s.FuelTargetKg:N0}, max {s.FuelCapacityKg:N0})\n");
+            m_Text.Append($"Water: {s.Water01:P0}   Waste: {s.Waste01:P0}   Catering: {(s.CateringDone ? "loaded" : "not yet")}\n");
+            foreach (var t in new[] { OpsTask.Fuel, OpsTask.Water, OpsTask.Lavatory, OpsTask.Catering })
+                m_Text.Append(Mark(o.Get(t))).Append(' ').Append(Short(t)).Append(" <color=#9AA7B8>").Append(o.NoteFor(t)).Append("</color>\n");
+            SetKey(0, "FUEL", () => Ops.Run(stand, OpsTask.Fuel));
+            SetKey(1, "WATER", () => Ops.Run(stand, OpsTask.Water));
+            SetKey(2, "LAV", () => Ops.Run(stand, OpsTask.Lavatory));
+            SetKey(3, "CATERING", () => Ops.Run(stand, OpsTask.Catering));
+            SetKey(4, "ALL SERVICES", () => Ops.ServiceAll(stand));
+            var gpuDone = o.Get(OpsTask.GPU) == TaskState.Done;
+            SetKey(5, gpuDone ? "REMOVE GPU" : "GPU", () => { if (gpuDone) Ops.Undo(stand, OpsTask.GPU); else Ops.Run(stand, OpsTask.GPU); });
         }
 
         void AircraftPage(AircraftRig rig)
@@ -255,6 +285,8 @@ namespace GroundCrew.UI
             m_Text.Append("Doors: 1L ").Append(DoorState(rig, "Door_1L")).Append("  2L ").Append(DoorState(rig, "Door_2L"))
                 .Append("\nCargo: fwd ").Append(DoorState(rig, "CargoDoor_Fwd")).Append("  aft ").Append(DoorState(rig, "CargoDoor_Aft")).Append('\n');
             m_Text.Append("Beacon ").Append(rig.BeaconOn ? "ON" : "off").Append("   Flight deck light ").Append(rig.FlightDeckLightOn ? "ON" : "off").Append('\n');
+            var s = AircraftServices.For(rig);
+            m_Text.Append($"Power {(s.ExternalPower ? "GPU" : "off")}  Fuel {s.FuelKg:N0} kg  Bags {s.BagCount}  Pax {s.Passengers}\n");
             SetKey(0, "DOOR 1L", () => Toggle(rig, "Door_1L"));
             SetKey(1, "DOOR 2L", () => Toggle(rig, "Door_2L"));
             SetKey(2, "FWD HOLD", () => Toggle(rig, "CargoDoor_Fwd"));
@@ -279,7 +311,7 @@ namespace GroundCrew.UI
         static string Mark(TaskState s) =>
             s == TaskState.Done ? "<color=#7CFC9A>[OK]</color>" : s == TaskState.Working ? "<color=#FFD166>[..]</color>" : s == TaskState.Failed ? "<color=#FF8A80>[!!]</color>" : "<color=#9AA7B8>[  ]</color>";
 
-        static string Short(OpsTask t) => t == OpsTask.BeltLoader ? "Belt" : t.ToString();
+        static string Short(OpsTask t) => t == OpsTask.BeltLoader ? "Belt" : t == OpsTask.Lavatory ? "Lav" : t.ToString();
 
         static string Pretty(string modelName) => modelName.Contains("320") ? "A320-class" : modelName.Contains("737") ? "737-class" : modelName;
 

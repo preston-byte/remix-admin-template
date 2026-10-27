@@ -107,8 +107,13 @@ Remaining:
 - [x] `TurnaroundOps`: chocks, cones, stairs, belt loader, bridge jobs and their removal; flight crew boarding and leaving by bridge or stairs; routes kept outboard of the engines
 - [x] `AutoDriver`: AI vehicle positioning (kinematic path, swing-out when the target is behind), creep-in, hands back to physics, yields to the player
 - [x] Ops iPad (`OpsTablet`): stand selector, setup / clear, bridge, crew, ground jobs, aircraft doors / beacon / flaps / light, news line; waist holster
-- [ ] GPU, fuel, water, lavatory and catering jobs (Phase 6), baggage loading by the AI, marshalling
-- [ ] Passengers boarding; crew announcements / radio
+- [x] GPU (hand-towed, cable to the receptacle, output on, aircraft on ground power) 🧪
+- [x] Refuelling (truck ahead of the wing, hose to the underwing coupling, kg counted to the planned load, deadman) 🧪
+- [x] Potable water and lavatory service (truck backs up, platform lifts the worker, hose, fill / drain) 🧪
+- [x] Catering at door 2R (box raised with the worker, platform out, door open, trolley exchange) 🧪
+- [x] AI baggage loading / unloading through the belt loader (cart at the belt foot, bags ride the belt, stowed in the forward hold) 🧪
+- [x] Passengers: board by bridge or stairs back rows first to seats from the seat map; seated passengers become one pre-posed mesh each; deplane front rows first 🧪
+- [ ] Bonding cable, refuel panel, the aft hold (second belt loader), marshalling, crew announcements / radio
 
 ## Phase 5 — A320-class aircraft  ⬜ (model already generated in Phase 2)
 - [ ] A320 workflow differences: hydraulic cargo door operation (hand pump / selector), containerised (ULD) loading, different sill heights for GSE

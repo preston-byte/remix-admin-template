@@ -4,6 +4,7 @@ Builds the people as low-poly, jointed `.glb` figures in `Assets/GroundCrew/Art/
 - `Pilot.glb`
 - `CabinCrew.glb`
 - `GroundCrew.glb`
+- `Passenger.glb` (walking) and `PassengerSeated.glb` (one mesh, already sitting, for seated passengers)
 - `Characters.json`, which lists the materials for the Quest Simple Lit swap
 
 It needs Python 3.9+ and numpy, and reuses `../AircraftGenerator`'s mesh and glTF tools.
@@ -18,6 +19,7 @@ python3 build.py some/folder
 | Pilot | White shirt, epaulettes (4 / 3 bars), tie, navy trousers, peaked cap | ~2.4k |
 | CabinCrew | Teal uniform, white collar, red scarf, hair in a bun | ~2.2k |
 | GroundCrew | Workwear, hi-vis vest with reflective bands, reflective trouser bands, ear defenders, gloves | ~2.8k |
+| Passenger | Casual top and trousers (colours vary per person: materials `Top`, `Bottom`), optional backpack node `Backpack` | ~2.2k |
 
 The uniforms are generic: no airline or handling-company liveries.
 

@@ -72,6 +72,15 @@ namespace GroundCrew.EditorTools
             config.pilotPrefab = CharacterPrefab("Pilot", CrewRole.Captain, specs, verbose);
             config.cabinCrewPrefab = CharacterPrefab("CabinCrew", CrewRole.CabinCrew, specs, verbose);
             config.groundCrewPrefab = CharacterPrefab("GroundCrew", CrewRole.GroundCrew, specs, verbose);
+            config.passengerPrefab = CharacterPrefab("Passenger", CrewRole.Passenger, specs, verbose);
+            config.seatedPassengerPrefab = SeatedPrefab(specs, verbose);
+            config.bagPrefabs = new[]
+            {
+                Save(Phase1SandboxBuilder.BagItem(0), k_Dir + "/Bag_Black.prefab"),
+                Save(Phase1SandboxBuilder.BagItem(1), k_Dir + "/Bag_Red.prefab"),
+                Save(Phase1SandboxBuilder.BagItem(2), k_Dir + "/Bag_Green.prefab"),
+            };
+            config.hoseMaterial = Phase1SandboxBuilder.Materials.Cable;
             config.chockPrefab = Save(Phase1SandboxBuilder.SafetyItem(true), k_Dir + "/WheelChock.prefab");
             config.conePrefab = Save(Phase1SandboxBuilder.SafetyItem(false), k_Dir + "/SafetyCone.prefab");
             config.vehicles = AssetDatabase.LoadAssetAtPath<VehicleCatalog>(k_CatalogPath);
@@ -100,6 +109,25 @@ namespace GroundCrew.EditorTools
             return Save(go, $"{k_Dir}/{id}.prefab");
         }
 
+        /// <summary>The passenger as one already-sitting mesh: no joints, no animator, just their colours.</summary>
+        static GameObject SeatedPrefab(QuestMaterials.Spec[] specs, bool verbose)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{k_CharDir}/PassengerSeated.glb");
+            if (model == null)
+            {
+                if (verbose) Debug.LogWarning($"[Ops] {k_CharDir}/PassengerSeated.glb isn't imported - seated passengers will be skipped.");
+                return AssetDatabase.LoadAssetAtPath<GameObject>($"{k_Dir}/PassengerSeated.prefab");
+            }
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            go.name = "PassengerSeated";
+            go.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            if (specs != null) QuestMaterials.Swap(go, specs, k_Dir + "/Materials", k_CharDir);
+            var look = go.AddComponent<CrewAppearance>();
+            Phase1SandboxBuilder.Props(look, ("randomise", false));
+            return Save(go, $"{k_Dir}/PassengerSeated.prefab");
+        }
+
         static GameObject Save(GameObject go, string path)
         {
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
@@ -109,7 +137,7 @@ namespace GroundCrew.EditorTools
 
         // ------------------------------------------------------------------ the iPad
 
-        static readonly string[] k_Tabs = { "STAND", "BRIDGE", "CREW", "GROUND", "PLANE" };
+        static readonly string[] k_Tabs = { "STAND", "BRIDGE", "CREW", "GROUND", "SERVICE", "PLANE" };
 
         static GameObject BuildTablet()
         {
@@ -139,10 +167,13 @@ namespace GroundCrew.EditorTools
 
             var tabs = new PressButton[k_Tabs.Length];
             for (var i = 0; i < k_Tabs.Length; i++)
-                tabs[i] = Phase1SandboxBuilder.TabletButton(root.transform, k_Tabs[i], new Vector3(-0.1f + i * 0.05f, 0.078f, 0f), 0.046f);
+                tabs[i] = Phase1SandboxBuilder.TabletButton(root.transform, k_Tabs[i], new Vector3(-0.105f + i * 0.042f, 0.078f, 0f), 0.039f);
             var keys = new PressButton[8];
             for (var i = 0; i < 8; i++)
                 keys[i] = Phase1SandboxBuilder.TabletButton(root.transform, "-", new Vector3(-0.093f + (i % 4) * 0.062f, i < 4 ? -0.047f : -0.075f, 0f), 0.058f);
+            // Long labels ("REMOVE CHOCKS", "ALL SERVICES") shrink to fit their key.
+            foreach (var b in tabs) AutoSize(b);
+            foreach (var b in keys) AutoSize(b);
 
             var grab = root.AddComponent<XRGrabInteractable>();
             grab.colliders.Clear();
@@ -159,6 +190,15 @@ namespace GroundCrew.EditorTools
             SetArray(tablet, "tabs", tabs);
             SetArray(tablet, "keys", keys);
             return root;
+        }
+
+        static void AutoSize(PressButton b)
+        {
+            var text = b != null ? b.GetComponentInChildren<TMP_Text>(true) : null;
+            if (text == null) return;
+            text.enableAutoSizing = true;
+            text.fontSizeMin = 0.04f;
+            text.fontSizeMax = 0.09f;
         }
 
         static void SetArray(Object target, string property, Object[] values)

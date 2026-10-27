@@ -45,6 +45,10 @@ MATERIALS = {
     "Reflective": ((0.78, 0.79, 0.80), 0.5, 0.25),
     "EarDefender": ((0.95, 0.40, 0.05), 0.0, 0.55),
     "Glove": ((0.20, 0.20, 0.22), 0.0, 0.85),
+    # Passengers: recoloured per person at runtime (CrewAppearance).
+    "Top": ((0.55, 0.20, 0.20), 0.0, 0.80),
+    "Bottom": ((0.20, 0.25, 0.40), 0.0, 0.85),
+    "Bag": ((0.12, 0.14, 0.18), 0.0, 0.70),
 }
 
 # Skeleton (metres, for a 1.78 m figure; scaled per character).
@@ -118,16 +122,17 @@ def loft(buf, sections, segments=14):
 
 
 def build(kind):
-    """kind: 'pilot', 'cabin', 'ground'."""
+    """kind: 'pilot', 'cabin', 'ground', 'passenger'."""
     outfit = {
         "pilot": dict(shirt="White", trousers="Navy", sleeves="White", hands="Skin"),
         "cabin": dict(shirt="Teal", trousers="Teal", sleeves="Teal", hands="Skin"),
         "ground": dict(shirt="Workwear", trousers="Workwear", sleeves="Workwear", hands="Glove"),
+        "passenger": dict(shirt="Top", trousers="Bottom", sleeves="Top", hands="Skin"),
     }[kind]
     root = Part("Root")
     hips = root.child(Part("Hips", (0, HIP_Y + 0.02, 0)))
     loft(hips.buf(outfit["trousers"]), [(HIP_Y - 0.08, 0.15, 0.10, 0.0), (HIP_Y + 0.02, 0.165, 0.11, -0.005), (HIP_Y + 0.10, 0.155, 0.10, 0.0)])
-    if kind != "cabin":
+    if kind not in ("cabin", "passenger"):
         loft(hips.buf("Shoes"), [(HIP_Y + 0.085, 0.158, 0.104, 0.0), (HIP_Y + 0.115, 0.158, 0.104, 0.0)])   # belt
 
     spine = hips.child(Part("Spine", (0, HIP_Y + 0.10, 0)))
@@ -159,6 +164,12 @@ def build(kind):
             box(spine.buf("Reflective"), (sx * 0.07, 1.30, 0.124), (0.035, 0.22, 0.008))
             box(spine.buf("Reflective"), (sx * 0.07, 1.30, -0.116), (0.035, 0.22, 0.008))
         box(spine.buf("Workwear"), (0.0, 1.36, 0.125), (0.13, 0.05, 0.006))               # radio patch
+    if kind == "passenger":
+        pack = spine.child(Part("Backpack", (0, 1.25, -0.12)))                          # hidden on some people
+        box(pack.buf("Bag"), (0, 1.22, -0.19), (0.27, 0.36, 0.13))
+        box(pack.buf("Bag"), (0, 1.12, -0.26), (0.20, 0.14, 0.04))
+        for sx in (-1, 1):
+            box(pack.buf("Bag"), (sx * 0.09, 1.33, 0.0), (0.035, 0.012, 0.24))
     neck = spine.child(Part("Neck", (0, NECK_Y, 0)))
     capsule(neck.buf("Skin"), (0, NECK_Y - 0.03, 0.0), (0, HEAD_Y + 0.02, 0.005), 0.05, 0.048)
     head = neck.child(Part("Head", (0, HEAD_Y, 0.0)))
@@ -222,8 +233,54 @@ def build(kind):
     return root
 
 
-def export(kind, name, scale, out_dir, b_meta):
+# Sitting pose, identical to CrewAnimator's Sit (Unity Euler degrees per joint; hips offset in metres).
+SIT_POSE = {
+    "Spine": (-4, 0, 0),
+    "UpperLeg_L": (-88, 0, -4), "UpperLeg_R": (-88, 0, 4), "LowerLeg_L": (85, 0, 0), "LowerLeg_R": (85, 0, 0),
+    "UpperArm_L": (-22, 0, -4), "UpperArm_R": (-22, 0, 4), "LowerArm_L": (-55, 0, 0), "LowerArm_R": (-55, 0, 0),
+}
+SIT_HIPS = (0.0, -0.44, -0.04)
+
+
+def euler(ex, ey, ez):
+    """Unity Quaternion.Euler as a matrix: Ry * Rx * Rz."""
+    x, y, z = math.radians(ex), math.radians(ey), math.radians(ez)
+    rx = np.array([[1, 0, 0], [0, math.cos(x), -math.sin(x)], [0, math.sin(x), math.cos(x)]])
+    ry = np.array([[math.cos(y), 0, math.sin(y)], [0, 1, 0], [-math.sin(y), 0, math.cos(y)]])
+    rz = np.array([[math.cos(z), -math.sin(z), 0], [math.sin(z), math.cos(z), 0], [0, 0, 1]])
+    return ry @ rx @ rz
+
+
+def pose_in_place(part, parent_m=np.eye(3), parent_t=np.zeros(3)):
+    """Forward kinematics: bake the sitting pose into the vertices (each part rotates about its pivot)."""
+    r = euler(*SIT_POSE.get(part.name, (0, 0, 0)))
+    offset = np.array(SIT_HIPS) if part.name == "Hips" else np.zeros(3)
+    # world(v) = parent_m @ (pivot + offset + r @ (v - pivot)) + parent_t
+    m = parent_m @ r
+    t = parent_m @ (part.pivot + offset - r @ part.pivot) + parent_t
+    for buf in part.buffers.values():
+        buf.P = [(m @ np.asarray(P).T).T + t for P in buf.P]
+        buf.R = [(m @ np.asarray(R).T).T for R in buf.R]
+    for c in part.children:
+        pose_in_place(c, m, t)
+
+
+def build_seated(kind):
+    """One mesh, already sitting: one renderer per seated passenger instead of ~16 jointed parts."""
     root = build(kind)
+    for part in [root] + [p for p in root.children]:
+        for c in list(part.children):
+            for g in list(c.children):
+                if g.name == "Backpack":
+                    c.children.remove(g)          # stowed in the overhead bin
+    pose_in_place(root)
+    seated = Part("Seated")
+    seated.absorb(root)
+    return seated
+
+
+def export(kind, name, scale, out_dir, b_meta, seated=False):
+    root = build_seated(kind) if seated else build(kind)
     b = GltfBuilder("GroundCrewVR CharacterGenerator")
     mats = {}
     tris = 0
@@ -255,9 +312,11 @@ def main():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else os.path.normpath(os.path.join(here, "..", "..", "Assets", "GroundCrew", "Art", "Characters"))
     os.makedirs(out_dir, exist_ok=True)
     meta = {}
-    for kind, name, scale in (("pilot", "Pilot", 1.0), ("cabin", "CabinCrew", 0.96), ("ground", "GroundCrew", 1.01)):
+    for kind, name, scale in (("pilot", "Pilot", 1.0), ("cabin", "CabinCrew", 0.96), ("ground", "GroundCrew", 1.01), ("passenger", "Passenger", 0.98)):
         size, tris = export(kind, name, scale, out_dir, meta)
         print(f"{name}.glb: {size / 1e3:.0f} kB | {tris:,} tris")
+    size, tris = export("passenger", "PassengerSeated", 0.98, out_dir, meta, seated=True)
+    print(f"PassengerSeated.glb: {size / 1e3:.0f} kB | {tris:,} tris")
     sidecar = {"characters": meta,
                "materials": [{"name": n, "color": list(rgb), "metallic": m, "smoothness": round(1 - r, 3), "emission": [], "texture": "",
                               "tileMetres": 0.0, "shader": ""} for n, (rgb, m, r) in MATERIALS.items()]}
