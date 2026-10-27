@@ -164,6 +164,9 @@ namespace GroundCrew.EditorTools
             var bodyText = Phase1SandboxBuilder.UIText("Body", rect, new Vector2(0f, 0.40f), new Vector2(1f, 0.745f), 12.5f, TextAlignmentOptions.TopLeft);
             var footer = Phase1SandboxBuilder.UIText("Footer", rect, new Vector2(0f, 0.32f), new Vector2(1f, 0.40f), 11f, TextAlignmentOptions.Left);
             footer.color = new Color(0.55f, 0.85f, 1f);
+            // Never spill into the news line or the keys: cut long text off with "...".
+            bodyText.overflowMode = TextOverflowModes.Ellipsis;
+            footer.overflowMode = TextOverflowModes.Ellipsis;
 
             var tabs = new PressButton[k_Tabs.Length];
             for (var i = 0; i < k_Tabs.Length; i++)

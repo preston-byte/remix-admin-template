@@ -101,7 +101,11 @@ namespace GroundCrew.UI
 
         void OnBridge(JetBridgeEvent e) => m_LastMessage = e.Message;
         void OnOps(OpsEvent e) { if (e.State != TaskState.Working) m_LastMessage = $"{e.Stand}: {e.Note}"; }
-        void OnDocking(DockingEvent e) { if (e.State == DockingState.Aligned) m_LastMessage = $"{e.Sensor.EquipmentName} aligned at {e.Door}"; }
+        void OnDocking(DockingEvent e)
+        {
+            if (e.State == DockingState.Aligned)
+                m_LastMessage = $"{e.Sensor.EquipmentName} aligned at {e.Door.Replace("CargoDoor_", "hold ").Replace("Door_", "door ").Replace("Fwd", "fwd").Replace("Aft", "aft")}";
+        }
 
         // ------------------------------------------------------------------ holster
 
@@ -225,7 +229,7 @@ namespace GroundCrew.UI
                 if (a != null) m_Text.Append(a.DisplayName).Append(" <color=#9AA7B8>").Append(a.Activity).Append("</color>\n");
             if (o.FlightCrew.Count == 0)
                 m_Text.Append("<color=#9AA7B8>CALL CREW brings two pilots and four cabin crew. They board by the jet bridge, or by the stairs on a remote stand (the stairs are brought first if needed).</color>\n");
-            m_Text.Append("\n<b>Passengers:</b> ").Append(o.PaxStatus).Append(" (").Append(o.SeatedPax.Count).Append(" seated)");
+            m_Text.Append("<b>Passengers:</b> ").Append(o.PaxStatus);
             SetKey(0, "CALL CREW", () => Ops.CallCrew(stand));
             SetKey(1, "CREW OFF", () => Ops.CrewOff(stand));
             SetKey(2, "BOARD PAX", () => Ops.BoardPassengers(stand));
