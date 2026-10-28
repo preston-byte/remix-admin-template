@@ -73,6 +73,7 @@ namespace GroundCrew.EditorTools
                 hand.transform.localPosition = left ? new Vector3(-k_RightPosition.x, k_RightPosition.y, k_RightPosition.z) : k_RightPosition;
                 hand.transform.localRotation = Quaternion.Euler(left ? -k_RightEuler : k_RightEuler);
                 hand.transform.localScale = left ? new Vector3(-1f, 1f, 1f) : Vector3.one;
+                GltfToQuest.Convert(hand);
                 foreach (var r in hand.GetComponentsInChildren<Renderer>(true))
                     r.shadowCastingMode = ShadowCastingMode.Off;   // cheap on Quest; hands are close to the eye anyway
 

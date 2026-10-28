@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GroundCrew.Aircraft;
 using GroundCrew.Airport;
+using GroundCrew.Player;
 using Unity.XR.CoreUtils;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -75,14 +76,29 @@ namespace GroundCrew.EditorTools
             var swapped = QuestMaterials.Swap(airport, spec.materials, k_MaterialDir, k_ArtDir);
             var colliders = 0;
             var teleportMask = InteractionLayerMask.GetMask("Teleport");
+            // The ground is flat: one solid box under the whole airport (top at y = 0) is the most
+            // reliable floor there is - no mesh-collider cooking of huge triangles, works in every build.
+            var groundBounds = new Bounds(airport.transform.position, Vector3.zero);
+            var anyGround = false;
             foreach (var name in spec.groundNodes ?? new string[0])
             {
                 var node = Find(airport.transform, name);
                 if (node == null) continue;
-                colliders += AddMeshColliders(node);
-                var area = node.gameObject.AddComponent<TeleportationArea>();
-                if (teleportMask != 0) area.interactionLayers = teleportMask;
+                foreach (var r in node.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (!anyGround) { groundBounds = r.bounds; anyGround = true; }
+                    else groundBounds.Encapsulate(r.bounds);
+                }
             }
+            if (!anyGround) groundBounds = new Bounds(new Vector3(0f, 0f, 135f), new Vector3(3500f, 0f, 930f));
+            var floor = new GameObject("Airport Ground Collider");
+            floor.transform.SetParent(airport.transform, false);
+            var floorBox = floor.AddComponent<BoxCollider>();
+            floorBox.center = new Vector3(groundBounds.center.x, -1f, groundBounds.center.z);
+            floorBox.size = new Vector3(groundBounds.size.x + 20f, 2f, groundBounds.size.z + 20f);
+            var floorArea = floor.AddComponent<TeleportationArea>();
+            if (teleportMask != 0) floorArea.interactionLayers = teleportMask;
+            colliders++;
             foreach (var name in spec.solidNodes ?? new string[0])
             {
                 var node = Find(airport.transform, name);
@@ -101,6 +117,7 @@ namespace GroundCrew.EditorTools
             }
 
             var origin = Object.FindAnyObjectByType<XROrigin>();
+            if (origin != null && origin.GetComponent<FallSafety>() == null) Undo.AddComponent<FallSafety>(origin.gameObject);
             if (origin != null && origin.Camera != null)
             {
                 Undo.RecordObject(origin.Camera, "Build airport");
@@ -300,6 +317,7 @@ namespace GroundCrew.EditorTools
                 var aircraft = (GameObject)PrefabUtility.InstantiatePrefab(model, holder);
                 aircraft.transform.localPosition = Vector3.zero;
                 aircraft.transform.localRotation = Quaternion.identity;
+                GltfToQuest.Convert(aircraft);
                 var rig = aircraft.AddComponent<AircraftRig>();
                 var json = AssetDatabase.LoadAssetAtPath<TextAsset>($"{k_AircraftDir}/{id}.json");
                 if (json != null) Phase1SandboxBuilder.Props(rig, ("definition", json));

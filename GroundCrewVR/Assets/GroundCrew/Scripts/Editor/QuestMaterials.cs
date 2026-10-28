@@ -140,3 +140,176 @@ namespace GroundCrew.EditorTools
         }
     }
 }
+
+namespace GroundCrew.EditorTools
+{
+    /// <summary>
+    /// Converts glTFast's own materials (shader-graph PBR, which carries a very large number of
+    /// shader variants and makes Quest builds slow) on the aircraft, vehicles and gloves into URP
+    /// Simple Lit materials with the same colour, texture, emission, transparency and culling.
+    /// One converted material per source material, shared by every instance.
+    /// </summary>
+    internal static class GltfToQuest
+    {
+        const string k_Dir = "Assets/GroundCrew/Generated/QuestMaterials";
+
+        static readonly System.Collections.Generic.Dictionary<UnityEngine.Material, UnityEngine.Material> s_Cache =
+            new System.Collections.Generic.Dictionary<UnityEngine.Material, UnityEngine.Material>();
+
+        /// <summary>Swap every glTFast material under `root`; returns how many renderers changed.</summary>
+        internal static int Convert(UnityEngine.GameObject root)
+        {
+            if (root == null) return 0;
+            var simpleLit = UnityEngine.Shader.Find("Universal Render Pipeline/Simple Lit");
+            if (simpleLit == null) return 0;
+            EnsureFolder(k_Dir);
+            var count = 0;
+            foreach (var r in root.GetComponentsInChildren<UnityEngine.Renderer>(true))
+            {
+                if (r is UnityEngine.LineRenderer || r is UnityEngine.ParticleSystemRenderer) continue;
+                var mats = r.sharedMaterials;
+                var changed = false;
+                for (var i = 0; i < mats.Length; i++)
+                {
+                    var src = mats[i];
+                    if (src == null || src.shader == null || !IsGltf(src.shader.name)) continue;
+                    mats[i] = Converted(src, simpleLit);
+                    changed = true;
+                }
+                if (!changed) continue;
+                r.sharedMaterials = mats;
+                count++;
+            }
+            UnityEditor.AssetDatabase.SaveAssets();
+            return count;
+        }
+
+        static bool IsGltf(string shaderName) => shaderName.IndexOf("glTF", System.StringComparison.OrdinalIgnoreCase) >= 0;
+
+        static UnityEngine.Material Converted(UnityEngine.Material src, UnityEngine.Shader simpleLit)
+        {
+            if (s_Cache.TryGetValue(src, out var cached) && cached != null) return cached;
+            var owner = System.IO.Path.GetFileNameWithoutExtension(UnityEditor.AssetDatabase.GetAssetPath(src));
+            var path = $"{k_Dir}/{Safe(owner)}_{Safe(src.name)}.mat";
+            var m = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Material>(path);
+            if (m == null)
+            {
+                m = new UnityEngine.Material(simpleLit);
+                UnityEditor.AssetDatabase.CreateAsset(m, path);
+            }
+            m.shader = simpleLit;
+
+            var color = Color(src, "baseColorFactor", "_BaseColor", "_Color");
+            m.color = color;
+            var tex = Texture(src, "baseColorTexture", "_BaseMap", "_MainTex");
+            m.mainTexture = tex;
+            if (tex != null && src.HasProperty("baseColorTexture_ST"))
+            {
+                var st = src.GetVector("baseColorTexture_ST");
+                m.mainTextureScale = new UnityEngine.Vector2(st.x, st.y);
+                m.mainTextureOffset = new UnityEngine.Vector2(st.z, st.w);
+            }
+
+            // Shininess: glTF roughness -> Simple Lit smoothness; specular highlights only on shiny things.
+            var roughness = Float(src, 0.5f, "roughnessFactor", "_Roughness");
+            var metallic = Float(src, 0f, "metallicFactor", "_Metallic");
+            var smooth = UnityEngine.Mathf.Clamp01(1f - roughness);
+            if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth);
+            var shiny = smooth > 0.45f || metallic > 0.5f;
+            if (m.HasProperty("_SpecularHighlights")) m.SetFloat("_SpecularHighlights", shiny ? 1f : 0f);
+            if (shiny)
+            {
+                m.EnableKeyword("_SPECULAR_COLOR");
+                if (m.HasProperty("_SpecColor")) m.SetColor("_SpecColor", UnityEngine.Color.white * (0.25f + 0.5f * metallic));
+            }
+            else m.DisableKeyword("_SPECULAR_COLOR");
+
+            // Emission (lamps, screens).
+            var emission = Color(src, "emissiveFactor", "_EmissionColor");
+            var emissionTex = Texture(src, "emissiveTexture", "_EmissionMap");
+            var emissive = emission.maxColorComponent > 0.001f;
+            if (emissive)
+            {
+                m.EnableKeyword("_EMISSION");
+                m.SetColor("_EmissionColor", emission);
+                if (emissionTex != null && m.HasProperty("_EmissionMap")) m.SetTexture("_EmissionMap", emissionTex);
+                m.globalIlluminationFlags = UnityEngine.MaterialGlobalIlluminationFlags.None;
+            }
+            else
+            {
+                m.DisableKeyword("_EMISSION");
+                if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", UnityEngine.Color.black);
+            }
+
+            // Transparency (windows, lenses).
+            var transparent = src.renderQueue >= 2900 || color.a < 0.99f;
+            if (transparent)
+            {
+                SetF(m, "_Surface", 1f);
+                SetF(m, "_Blend", 0f);
+                SetF(m, "_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                SetF(m, "_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                SetF(m, "_ZWrite", 0f);
+                m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            }
+            else
+            {
+                SetF(m, "_Surface", 0f);
+                SetF(m, "_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
+                SetF(m, "_DstBlend", (float)UnityEngine.Rendering.BlendMode.Zero);
+                SetF(m, "_ZWrite", 1f);
+                m.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                m.SetOverrideTag("RenderType", "Opaque");
+                m.renderQueue = -1;
+            }
+
+            // Culling: glTF double-sided -> off.
+            var doubleSided = src.doubleSidedGI || Float(src, 2f, "_CullMode", "_Cull") < 0.5f;
+            SetF(m, "_Cull", doubleSided ? 0f : 2f);
+            m.doubleSidedGI = doubleSided;
+            m.enableInstancing = true;
+            UnityEditor.EditorUtility.SetDirty(m);
+            s_Cache[src] = m;
+            return m;
+        }
+
+        static UnityEngine.Color Color(UnityEngine.Material m, params string[] names)
+        {
+            foreach (var n in names) if (m.HasProperty(n)) return m.GetColor(n);
+            return UnityEngine.Color.white;
+        }
+
+        static UnityEngine.Texture Texture(UnityEngine.Material m, params string[] names)
+        {
+            foreach (var n in names) if (m.HasProperty(n) && m.GetTexture(n) != null) return m.GetTexture(n);
+            return null;
+        }
+
+        static float Float(UnityEngine.Material m, float fallback, params string[] names)
+        {
+            foreach (var n in names) if (m.HasProperty(n)) return m.GetFloat(n);
+            return fallback;
+        }
+
+        static void SetF(UnityEngine.Material m, string name, float value)
+        {
+            if (m.HasProperty(name)) m.SetFloat(name, value);
+        }
+
+        static string Safe(string s)
+        {
+            foreach (var c in System.IO.Path.GetInvalidFileNameChars()) s = s.Replace(c, '_');
+            return s.Replace(' ', '_');
+        }
+
+        static void EnsureFolder(string path)
+        {
+            if (UnityEditor.AssetDatabase.IsValidFolder(path)) return;
+            var parent = path.Substring(0, path.LastIndexOf('/'));
+            EnsureFolder(parent);
+            UnityEditor.AssetDatabase.CreateFolder(parent, path.Substring(path.LastIndexOf('/') + 1));
+        }
+    }
+}

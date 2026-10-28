@@ -55,6 +55,7 @@ namespace GroundCrew.EditorTools
             aircraft.transform.localPosition = Vector3.zero;
             aircraft.transform.localRotation = Quaternion.identity;
 
+            GltfToQuest.Convert(aircraft);
             var rig = aircraft.AddComponent<AircraftRig>();
             var json = AssetDatabase.LoadAssetAtPath<TextAsset>($"{k_ArtDir}/{id}.json");
             if (json != null) Phase1SandboxBuilder.Props(rig, ("definition", json));

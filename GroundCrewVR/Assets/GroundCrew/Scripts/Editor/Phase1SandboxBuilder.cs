@@ -89,6 +89,7 @@ namespace GroundCrew.EditorTools
             rig.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             rig.AddComponent<LocomotionComfortApplier>();
             rig.AddComponent<FingertipSetup>();
+            rig.AddComponent<FallSafety>();
             HandsSetup.Install(rig.transform);
 
             var leftController = FindDeep(rig.transform, "Left Controller");

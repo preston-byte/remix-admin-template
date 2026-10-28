@@ -509,7 +509,21 @@ If you've already docked the stairs yourself, the AI uses them as they are. If y
 
 ---
 
-## 12. Troubleshooting
+## 12. Faster Quest builds
+
+The first build of a big update can take 30-40 minutes, mostly compiling shaders. To cut that down:
+
+1. **Once:** **Ground Crew → Quest → Apply Fast Build Settings.** This:
+   - sets IL2CPP code generation to *Faster (smaller) builds*;
+   - stops compiling lightmap and fog shader variants we don't use;
+   - turns off soft shadows and HDR in the URP assets.
+2. **Lighter materials.** The menus now convert the aircraft, vehicles and gloves from glTFast's PBR shader graph to URP *Simple Lit*, like the airport and the people. The glTF shader graph accounted for most of the shader-compile time; Simple Lit is also cheaper to draw. This happens automatically when you rerun the menus.
+3. **Keep the `Library` folder.** It's Unity's cache; deleting it makes the next build start from scratch.
+4. **Code-only updates:** tick **Development Build** in **File → Build Profiles** and use **Patch And Run**. It sends only the changed code to the Quest. You need a full build after rerunning the scene menus.
+
+---
+
+## 13. Troubleshooting
 
 | Symptom | Fix |
 |---|---|
@@ -523,6 +537,7 @@ If you've already docked the stairs yourself, the AI uses them as they are. If y
 | Aircraft menu says "model not imported" | Install glTFast (see §6) and reimport `Assets/GroundCrew/Art/Aircraft`. |
 | Aircraft looks too shiny / costs too much on Quest | glTFast imports glTF PBR materials. For Quest, switch them to URP *Simple Lit*, keeping colour and emission. |
 | Compile errors mentioning XRI members | Copy the exact errors and your XRI version from Package Manager; they'll be adapted. |
+| Quest shows only blue sky (yellow sun, grey below) | You fell through the ground. Update, rerun **Airport → Build Airport Around Sandbox** (it now adds one solid ground box under the whole airport), save and build. The rig also has `FallSafety`, which puts you back at the start if you fall and logs why. Read it in **Window → Analysis → Android Logcat** (search for `FallSafety`). |
 | A vehicle won't move | Read the dash display: it says why (engine, parking brake, gear, or equipment still deployed). With assists on, the throttle handles the first three. If it's stuck on something, use **FIX** on the tablet's VEHICLES page. |
 | VEHICLES page says "No vehicle catalog" | Run **Ground Crew → Vehicles → Add Vehicles to Sandbox** once; it builds the prefabs and the catalog. |
 | Controllers still visible / no gloves | Run **Ground Crew → Player → Add Gloved Hands to Rig** (glTFast must have imported `Art/Hands/Hand_R.glb`). |

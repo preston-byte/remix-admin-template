@@ -121,6 +121,7 @@ namespace GroundCrew.EditorTools
                     var kind = kinds[i];
                     EditorUtility.DisplayProgressBar("Building vehicle prefabs", kind.Name, (float)i / kinds.Length);
                     var go = kind.Build();
+                    GltfToQuest.Convert(go);   // Simple Lit: far fewer shader variants, faster builds and frames
                     var displayName = kind.Name.Substring(0, 1).ToUpperInvariant() + kind.Name.Substring(1);
                     go.name = displayName;
                     go.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
